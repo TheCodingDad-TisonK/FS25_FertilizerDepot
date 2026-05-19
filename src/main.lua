@@ -36,6 +36,13 @@ local function onMissionLoad(mission, ...)
 end
 
 local function onMissionLoadFinished(mission, ...)
+    -- All mods are initialized by now — SF global is available if installed.
+    -- Invalidate bridge cache so getFillTypeList() rebuilds with correct SF state.
+    if g_DepotManager then
+        g_DepotManager.sfBridge:invalidateCache()
+        DepotLogger.info("Post-load: SF installed: %s",
+            tostring(g_DepotManager.sfBridge:isInstalled()))
+    end
     -- Register dialog class after GUI system is ready
     DepotDialog.register()
 end
