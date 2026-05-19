@@ -2,9 +2,9 @@
 <placeable type="fertilizerDepotType">
 
     <storeData>
-        <name>$l10n_fd_shop_name</name>
+        <name>Fertilizer Depot</name>
         <functions>
-            <function>$l10n_fd_shop_function</function>
+            <function>Buy, store, and sell fertilizers</function>
         </functions>
         <image>store/store_depot.dds</image>
         <price>25000</price>
