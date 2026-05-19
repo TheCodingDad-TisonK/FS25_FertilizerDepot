@@ -58,22 +58,21 @@
     </hotspots>
 
     <i3dMappings>
-        <!-- Building geometry (not referenced by XML, just for reference) -->
+        <!-- root children (0-based): [0]=depot_building [1]=triggerRoot [2]=placementRoot [3]=mapHotspot -->
 
-        <!-- Trigger nodes (nodeId 20, 21 in i3d) -->
-        <!-- i3d path: root(1) > triggerRoot(3) > child index -->
-        <i3dMapping id="vehicleTrigger" node="0>2|0"/>
-        <i3dMapping id="playerTrigger"  node="0>2|1"/>
+        <!-- Triggers: root child 1 (triggerRoot) > child 0/1 -->
+        <i3dMapping id="vehicleTrigger" node="0>1|0"/>
+        <i3dMapping id="playerTrigger"  node="0>1|1"/>
 
-        <!-- Placement nodes: root(1) > placementRoot(4) > children -->
-        <i3dMapping id="clearAreaStart"  node="0>3|0"/>
-        <i3dMapping id="clearAreaWidth"  node="0>3|1"/>
-        <i3dMapping id="clearAreaHeight" node="0>3|2"/>
-        <i3dMapping id="testAreaStart"   node="0>3|3"/>
-        <i3dMapping id="testAreaEnd"     node="0>3|4"/>
+        <!-- Placement nodes: root child 2 (placementRoot) > children -->
+        <i3dMapping id="clearAreaStart"  node="0>2|0"/>
+        <i3dMapping id="clearAreaWidth"  node="0>2|1"/>
+        <i3dMapping id="clearAreaHeight" node="0>2|2"/>
+        <i3dMapping id="testAreaStart"   node="0>2|3"/>
+        <i3dMapping id="testAreaEnd"     node="0>2|4"/>
 
-        <!-- Map hotspot -->
-        <i3dMapping id="mapHotspot" node="0>4"/>
+        <!-- Map hotspot: root child 3 -->
+        <i3dMapping id="mapHotspot" node="0>3"/>
     </i3dMappings>
 
 </placeable>

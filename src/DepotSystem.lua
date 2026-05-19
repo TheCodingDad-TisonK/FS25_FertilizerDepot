@@ -134,7 +134,7 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
     end
 
     -- Deduct money
-    g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_SEEDS, true, true)
+    g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
 
     -- Fill the vehicle
     vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,

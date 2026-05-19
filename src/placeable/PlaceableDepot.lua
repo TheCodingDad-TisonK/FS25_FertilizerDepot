@@ -65,8 +65,9 @@ function PlaceableDepot:onPostFinalizePlacement()
 
     -- Load saved storage state (server only on savegame resume)
     if g_server and spec.depotId and spec.savegame then
+        local sg = spec.savegame
         g_DepotManager.depotSystem:loadFromXML(
-            self.xmlFile, spec.depotId, "placeable.storage")
+            sg.xmlFile, spec.depotId, sg.key .. ".storage")
     end
 
     -- Install triggers (server only — triggers drive authoritative logic)
