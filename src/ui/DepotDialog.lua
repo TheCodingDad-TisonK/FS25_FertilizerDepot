@@ -294,15 +294,6 @@ end
 
 -- ─── Buy / Sell Actions ──────────────────────────────────
 
-function DepotDialog:executeBuy(rowSlot, liters)
-    local ftIdx = self.pageIndex + rowSlot
-    local ft    = self.fillTypes[ftIdx]
-    if not ft then return end
-    local farmId = g_localPlayer and g_localPlayer.farmId or 1
-    DepotPurchaseEvent.sendToServer(
-        self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
-end
-
 function DepotDialog:executeSell(rowSlot)
     -- In SELL tab, rowSlot refers to the visible sell entry
     -- We need to find the corresponding fill type
@@ -325,12 +316,6 @@ function DepotDialog:executeSell(rowSlot)
             end
         end
     end
-end
-
--- ─── Close ───────────────────────────────────────────────
-
-function DepotDialog:onClose()
-    DepotDialog:superClass().onClose(self)
 end
 
 -- ─── Generated Buy Callbacks (8 rows × 3 quantities) ─────
@@ -374,16 +359,18 @@ function DepotDialog:_sellDispatch(rowSlot)
     end
 end
 
--- Sell tab uses buy3 button as "Sell All"; re-route in SELL mode
--- (buy1/buy2 are hidden in sell tab, buy3 text changes to "Sell All")
--- The onClick callbacks for buy3 are already bound above.
--- We override executeBuy for slot when in sell mode:
-local _origExecuteBuy = DepotDialog.executeBuy
+-- In SELL tab, buy3 (1kL slot) is repurposed as "Sell All".
+-- The executeBuy method handles this dispatch.
 function DepotDialog:executeBuy(rowSlot, liters)
-    if self.tab == DepotDialog.TAB_SELL and liters == 1000 then
-        -- liters=1000 comes from onBuyX_1000 = buy3 = "Sell All" in sell tab
+    if self.tab == DepotDialog.TAB_SELL then
+        -- Any buy3 click in sell mode means "Sell All" for that row
         self:executeSell(rowSlot)
     else
-        _origExecuteBuy(self, rowSlot, liters)
+        local ftIdx = self.pageIndex + rowSlot
+        local ft    = self.fillTypes[ftIdx]
+        if not ft then return end
+        local farmId = g_localPlayer and g_localPlayer.farmId or 1
+        DepotPurchaseEvent.sendToServer(
+            self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
     end
 end
