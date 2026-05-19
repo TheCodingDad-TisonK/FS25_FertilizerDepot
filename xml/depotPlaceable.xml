@@ -22,8 +22,14 @@
         </brush>
     </storeData>
 
+    <!--
+        Use the vanilla limeStation building for visual + collision.
+        It already has a vehicle loading trigger and a player refill trigger,
+        plus proper clear/level/test areas and PBR textures.
+        $data = game data root (equivalent of $dataS in Lua).
+    -->
     <base>
-        <filename>i3d/depot.i3d</filename>
+        <filename>$data/placeables/brandless/limeStation/limeStation.i3d</filename>
         <canBeDeleted>true</canBeDeleted>
         <canBeRenamed>true</canBeRenamed>
     </base>
@@ -42,37 +48,60 @@
                    heightNode="clearAreaHeight"/>
     </clearAreas>
 
-    <leveling requireLeveling="true" maxSmoothDistance="2" maxSlope="75" maxEdgeAngle="30">
+    <leveling requireLeveling="true" maxSmoothDistance="1" maxSlope="75" maxEdgeAngle="30">
         <levelAreas>
-            <levelArea startNode="clearAreaStart" widthNode="clearAreaWidth"
-                       heightNode="clearAreaHeight" groundType="gravel"/>
+            <levelArea startNode="levelAreaStart" widthNode="levelAreaWidth"
+                       heightNode="levelAreaHeight" groundType="gravel"/>
         </levelAreas>
     </leveling>
 
-    <!-- Custom specialization data -->
+    <!-- Custom specialization: hook our trigger nodes from the limeStation i3d -->
     <fertilizerDepot vehicleTrigger="vehicleTrigger" playerTrigger="playerTrigger"/>
 
-    <!-- Hotspot on farm map -->
+    <!-- Map hotspot -->
     <hotspots>
         <hotspot type="PRODUCTION_POINT" linkNode="mapHotspot"/>
     </hotspots>
 
     <i3dMappings>
-        <!-- root children (0-based): [0]=depot_building [1]=triggerRoot [2]=placementRoot [3]=mapHotspot -->
+        <!--
+          limeStation.i3d root children (0-based):
+            [0] clearAreas
+            [1] levelAreas
+            [2] testAreas
+            [3] tipOcclusionUpdateAreas
+            [4] buyingStation
+                  [0] teleportNode
+                  [1] markerLoading
+                  [2] mapPosition          ← map hotspot anchor
+                  [3] loadingStation
+                        [0] loadingTrigger ← vehicle trigger (mask=trailers)
+            [5] silo
+                  [0] unloadingStation
+                  [1] loadingStation
+                  [2] refillPlayerTrigger  ← player trigger (mask=player)
+            [6] visuals                    ← building mesh (PBR, GIANTS textures)
+            [7] collisions                 ← building collision mesh
+        -->
 
-        <!-- Triggers: root child 1 (triggerRoot) > child 0/1 -->
-        <i3dMapping id="vehicleTrigger" node="0>1|0"/>
-        <i3dMapping id="playerTrigger"  node="0>1|1"/>
+        <!-- Our trigger nodes -->
+        <i3dMapping id="vehicleTrigger" node="0>4|3|0"/>
+        <i3dMapping id="playerTrigger"  node="0>5|2"/>
 
-        <!-- Placement nodes: root child 2 (placementRoot) > children -->
-        <i3dMapping id="clearAreaStart"  node="0>2|0"/>
-        <i3dMapping id="clearAreaWidth"  node="0>2|1"/>
-        <i3dMapping id="clearAreaHeight" node="0>2|2"/>
-        <i3dMapping id="testAreaStart"   node="0>2|3"/>
-        <i3dMapping id="testAreaEnd"     node="0>2|4"/>
+        <!-- Map hotspot -->
+        <i3dMapping id="mapHotspot"     node="0>4|2"/>
 
-        <!-- Map hotspot: root child 3 -->
-        <i3dMapping id="mapHotspot" node="0>3"/>
+        <!-- Placement / clear / level areas -->
+        <i3dMapping id="clearAreaStart"  node="0>0|0"/>
+        <i3dMapping id="clearAreaWidth"  node="0>0|0|0"/>
+        <i3dMapping id="clearAreaHeight" node="0>0|0|1"/>
+
+        <i3dMapping id="levelAreaStart"  node="0>1|0"/>
+        <i3dMapping id="levelAreaWidth"  node="0>1|0|0"/>
+        <i3dMapping id="levelAreaHeight" node="0>1|0|1"/>
+
+        <i3dMapping id="testAreaStart"   node="0>2|0"/>
+        <i3dMapping id="testAreaEnd"     node="0>2|0|0"/>
     </i3dMappings>
 
 </placeable>
