@@ -2,8 +2,10 @@
 
 <!--
     FS25 Fertilizer Depot - i3d Scene
-    Minimal valid GIANTS i3d. Building is invisible (no mesh).
-    Triggers and placement anchors are TransformGroup nodes.
+    Box primitives for building collision + trigger volumes.
+    Note: Box shapes in GIANTS Engine are collision-only (no visual mesh).
+    Visual appearance comes from collision silhouette + shadows.
+    materialIds is set on the <Shape> scene node, NOT the <Box> definition.
 -->
 
 <i3D name="depot" version="1.6"
@@ -16,69 +18,105 @@
 
   <Files/>
 
-  <Materials/>
+  <Materials>
+    <Material name="building_mat" materialId="1"
+              ambientColor="0.4 0.4 0.4"
+              diffuseColor="0.72 0.70 0.65 1"
+              specularColor="0.1 0.1 0.1"
+              shininess="16"/>
+    <Material name="roof_mat" materialId="2"
+              ambientColor="0.3 0.3 0.3"
+              diffuseColor="0.4 0.42 0.45 1"
+              specularColor="0.05 0.05 0.05"
+              shininess="8"/>
+  </Materials>
 
-  <Shapes/>
+  <Shapes>
+    <!-- Building geometry (collision boxes) -->
+    <Box name="floor_shape"    shapeId="1" sx="12"   sy="0.2"  sz="8"/>
+    <Box name="wall_f_shape"   shapeId="2" sx="12"   sy="4"    sz="0.25"/>
+    <Box name="wall_b_shape"   shapeId="3" sx="12"   sy="4"    sz="0.25"/>
+    <Box name="wall_l_shape"   shapeId="4" sx="0.25" sy="4"    sz="8"/>
+    <Box name="wall_r_shape"   shapeId="5" sx="0.25" sy="4"    sz="8"/>
+    <Box name="roof_shape"     shapeId="6" sx="12.5" sy="0.3"  sz="8.5"/>
+    <!-- Trigger volumes (physics trigger shapes, not visual) -->
+    <Box name="veh_trig_shape" shapeId="7" sx="12"   sy="3"    sz="14"/>
+    <Box name="ply_trig_shape" shapeId="8" sx="3"    sy="2.5"  sz="3"/>
+  </Shapes>
 
   <Scene>
 
     <!--
-      Root transform = component 0.
-      Children in order: [0]=depot_building [1]=triggerRoot [2]=placementRoot [3]=mapHotspot
+      Root = component 0.
+      Children (0-based): [0]=depot_building [1]=triggerRoot [2]=placementRoot [3]=mapHotspot
     -->
     <TransformGroup name="root" nodeId="1"
                     translation="0 0 0" rotation="0 0 0" scale="1 1 1"
                     visibility="true" clipDistance="300" objectMask="255">
 
-      <!-- Building placeholder (invisible — geometry to be added later) -->
-      <TransformGroup name="depot_building" nodeId="2"
-                      translation="0 0 0"/>
+      <!-- Building: collision boxes (no visual mesh, solid walls + roof) -->
+      <TransformGroup name="depot_building" nodeId="2">
 
-      <!-- Trigger volumes -->
-      <TransformGroup name="triggerRoot" nodeId="3"
-                      translation="0 0 0">
+        <Shape name="floor" nodeId="10" shapeId="1"
+               translation="0 -0.1 0" materialIds="1"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
 
-        <!--
-          Vehicle trigger: 12×3×14m zone in front of building.
-          collisionGroup=24 = trigger layer
-          collisionMask=255 = detect all
-        -->
-        <TransformGroup name="vehicleTrigger" nodeId="20"
-                        translation="0 1.5 -11"
-                        collisionGroup="24" collisionMask="255"
-                        collision="false" trigger="true"
-                        objectMask="0">
-          <Attribute name="size" type="float3_vector" value="12 3 14"/>
-        </TransformGroup>
+        <Shape name="wall_front" nodeId="11" shapeId="2"
+               translation="0 2 -4" materialIds="1"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
 
-        <!--
-          Player trigger: 3×2.5×3m zone at building entrance.
-        -->
-        <TransformGroup name="playerTrigger" nodeId="21"
-                        translation="0 1.25 -4.5"
-                        collisionGroup="24" collisionMask="255"
-                        collision="false" trigger="true"
-                        objectMask="0">
-          <Attribute name="size" type="float3_vector" value="3 2.5 3"/>
-        </TransformGroup>
+        <Shape name="wall_back" nodeId="12" shapeId="3"
+               translation="0 2 4" materialIds="1"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
+
+        <Shape name="wall_left" nodeId="13" shapeId="4"
+               translation="-6 2 0" materialIds="1"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
+
+        <Shape name="wall_right" nodeId="14" shapeId="5"
+               translation="6 2 0" materialIds="1"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
+
+        <Shape name="roof" nodeId="15" shapeId="6"
+               translation="0 4.15 0" materialIds="2"
+               collision="true" collisionGroup="3" collisionMask="255"
+               castsShadows="true" receiveShadows="true"/>
 
       </TransformGroup>
 
-      <!-- Placement helper nodes (define clear/test area for building placement) -->
-      <TransformGroup name="placementRoot" nodeId="4"
-                      translation="0 0 0">
+      <!-- Trigger volumes -->
+      <TransformGroup name="triggerRoot" nodeId="3">
 
+        <!-- Vehicle trigger: 12×3×14m zone in front of building -->
+        <Shape name="vehicleTrigger" nodeId="20" shapeId="7"
+               translation="0 1.5 -11"
+               collision="false" trigger="true"
+               collisionGroup="24" collisionMask="255"/>
+
+        <!-- Player trigger: 3×2.5×3m zone at building entrance -->
+        <Shape name="playerTrigger" nodeId="21" shapeId="8"
+               translation="0 1.25 -4.5"
+               collision="false" trigger="true"
+               collisionGroup="24" collisionMask="255"/>
+
+      </TransformGroup>
+
+      <!-- Placement helper nodes -->
+      <TransformGroup name="placementRoot" nodeId="4">
         <TransformGroup name="clearAreaStart"  nodeId="30" translation="-6 0 -4"/>
         <TransformGroup name="clearAreaWidth"  nodeId="31" translation="6 0 -4"/>
         <TransformGroup name="clearAreaHeight" nodeId="32" translation="-6 0 4"/>
         <TransformGroup name="testAreaStart"   nodeId="33" translation="-6 0 -4"/>
         <TransformGroup name="testAreaEnd"     nodeId="34" translation="6 0 4"/>
-
       </TransformGroup>
 
       <!-- Map hotspot anchor -->
-      <TransformGroup name="mapHotspot" nodeId="5"
-                      translation="0 0 0"/>
+      <TransformGroup name="mapHotspot" nodeId="5"/>
 
     </TransformGroup>
 
