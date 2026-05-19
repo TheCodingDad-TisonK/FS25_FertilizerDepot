@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<l10n>
+    <!-- Store -->
+    <text name="fd_shop_name"     text="Fertilizer Depot"/>
+    <text name="fd_shop_desc"     text="A placeable Fertilizer Depot where you can buy, store, and sell all fertilizer types at seasonally-adjusted prices."/>
+    <text name="fd_shop_function" text="Buy, store, and sell fertilizers"/>
+
+    <!-- Dialog -->
+    <text name="fd_depot_title"       text="Fertilizer Depot"/>
+    <text name="fd_depot_buy"         text="Buy"/>
+    <text name="fd_depot_sell"        text="Sell"/>
+    <text name="fd_depot_close"       text="Close"/>
+
+    <!-- Column headers -->
+    <text name="fd_col_type"  text="Fill Type"/>
+    <text name="fd_col_stock" text="Depot Stock"/>
+    <text name="fd_col_price" text="Price / 1kL"/>
+
+    <!-- Buttons -->
+    <text name="fd_depot_buy_btn"     text="Buy"/>
+    <text name="fd_depot_sell_btn"    text="Sell All"/>
+    <text name="fd_depot_deposit_btn" text="Deposit"/>
+
+    <!-- Stock labels -->
+    <text name="fd_depot_stock_full"     text="Full"/>
+    <text name="fd_depot_stock_stocking" text="Stocking"/>
+
+    <!-- Seasons -->
+    <text name="fd_season_spring" text="Spring"/>
+    <text name="fd_season_summer" text="Summer"/>
+    <text name="fd_season_fall"   text="Fall"/>
+    <text name="fd_season_winter" text="Winter"/>
+
+    <!-- Status / errors -->
+    <text name="fd_depot_no_money"      text="Not enough money."/>
+    <text name="fd_depot_no_trailer"    text="No compatible trailer nearby."/>
+    <text name="fd_depot_tank_full"     text="Trailer tank is full."/>
+    <text name="fd_depot_tank_empty"    text="Trailer tank is empty."/>
+    <text name="fd_depot_storage_full"  text="Depot storage is full."/>
+    <text name="fd_depot_buy_success"   text="Purchase complete."/>
+    <text name="fd_depot_sell_success"  text="Sale complete."/>
+
+    <!-- Errors -->
+    <text name="fd_error_server" text="Server error."/>
+    <text name="fd_error_depot"  text="Depot not found."/>
+    <text name="fd_error_farm"   text="Farm not found."/>
+</l10n>
