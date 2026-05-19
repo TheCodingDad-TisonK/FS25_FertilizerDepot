@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<modDesc descVersion="83">
+    <author>TisonK</author>
+    <version>1.0.0.0</version>
+
+    <title>
+        <en>Fertilizer Depot</en>
+        <de>Düngerdepot</de>
+        <fr>Dépôt d'Engrais</fr>
+        <nl>Kunstmestdepot</nl>
+        <it>Deposito Fertilizzanti</it>
+        <pl>Skład Nawozów</pl>
+        <es>Depósito de Fertilizantes</es>
+        <ea>Depósito de Fertilizantes</ea>
+        <pt>Depósito de Fertilizantes</pt>
+        <br>Depósito de Fertilizantes</br>
+        <ru>Склад удобрений</ru>
+        <uk>Склад добрив</uk>
+        <cz>Sklad hnojiv</cz>
+        <hu>Műtrágya Raktár</hu>
+        <ro>Depozit de Îngrășăminte</ro>
+        <tr>Gübre Deposu</tr>
+        <fi>Lannoitevarasto</fi>
+        <no>Gjødsellager</no>
+        <sv>Gödselförråd</sv>
+        <da>Gødningsdepot</da>
+        <kr>비료 창고</kr>
+        <jp>肥料倉庫</jp>
+        <ct>肥料倉庫</ct>
+        <fc>肥料仓库</fc>
+        <id>Depot Pupuk</id>
+        <vi>Kho Phân Bón</vi>
+    </title>
+
+    <description>
+        <en>A placeable Fertilizer Depot where you can buy, store, and sell all fertilizer types at
+seasonally-adjusted prices. Drive up with your trailer or tank, browse the full selection of
+fertilizers, and fill up directly from depot storage. Works seamlessly with FS25_SoilFertilizer —
+all 23+ custom fill types are automatically available. Falls back to vanilla fertilizer types if
+SoilFertilizer is not installed.
+
+Features:
+- Buy all SF fertilizer types at seasonal prices
+- Per-type silo storage (50,000L per fill type)
+- Sell excess fertilizer back at 80% of buy price
+- Seasonal price fluctuation (Spring +15%, Winter -15%)
+- Full multiplayer support with server-authoritative transactions
+- FarmTablet integration via g_DepotManager global
+        </en>
+        <de>Ein platzierbares Düngerdepot zum Kauf, Lagerung und Verkauf aller Düngertypen.</de>
+        <fr>Un dépôt d'engrais plaçable pour acheter, stocker et vendre tous les types d'engrais.</fr>
+        <nl>Een plaatsbaar kunstmestdepot om alle mestsoorten te kopen, opslaan en verkopen.</nl>
+        <it>Un deposito fertilizzanti posizionabile per acquistare, stoccare e vendere ogni tipo.</it>
+        <pl>Skład nawozów do kupowania, przechowywania i sprzedaży wszystkich rodzajów nawozów.</pl>
+        <es>Un depósito de fertilizantes para comprar, almacenar y vender todos los tipos.</es>
+        <ea>Un depósito de fertilizantes para comprar, almacenar y vender todos los tipos.</ea>
+        <pt>Um depósito de fertilizantes para comprar, armazenar e vender todos os tipos.</pt>
+        <br>Um depósito de fertilizantes para comprar, armazenar e vender todos os tipos.</br>
+        <ru>Склад удобрений для покупки, хранения и продажи всех видов удобрений.</ru>
+        <uk>Склад добрив для купівлі, зберігання та продажу всіх видів добрив.</uk>
+        <cz>Sklad hnojiv pro nákup, skladování a prodej všech typů hnojiv.</cz>
+        <hu>Műtrágya raktár minden típusú trágya vásárlásához, tárolásához és eladásához.</hu>
+        <ro>Un depozit de îngrășăminte pentru cumpărare, stocare și vânzare.</ro>
+        <tr>Tüm gübre türlerini satın almak, depolamak ve satmak için gübre deposu.</tr>
+        <fi>Lannoitevarasto kaikkien lannoitetyyppien ostamiseen, varastointiin ja myymiseen.</fi>
+        <no>Et lager for gjødsel for kjøp, lagring og salg av alle gjødseltyper.</no>
+        <sv>Ett gödselförråd för att köpa, lagra och sälja alla gödseltyper.</sv>
+        <da>Et gødningsdepot til køb, oplagring og salg af alle gødningstyper.</da>
+        <kr>모든 비료 유형을 구매, 저장 및 판매하는 비료 창고.</kr>
+        <jp>すべての肥料タイプを購入、保管、販売できる肥料倉庫。</jp>
+        <ct>可放置的肥料倉庫，用於購買、儲存和出售各種肥料。</ct>
+        <fc>可放置的肥料仓库，用于购买、储存和出售各种肥料。</fc>
+        <id>Depot pupuk yang dapat ditempatkan untuk membeli, menyimpan, dan menjual semua jenis pupuk.</id>
+        <vi>Kho phân bón có thể đặt để mua, lưu trữ và bán tất cả các loại phân bón.</vi>
+    </description>
+
+    <iconFilename>icon.dds</iconFilename>
+
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourceFile filename="src/main.lua"/>
+    </extraSourceFiles>
+
+    <placeableSpecializations>
+        <specialization name="fertilizerDepot"
+                        className="PlaceableDepot"
+                        filename="src/placeable/PlaceableDepot.lua"/>
+    </placeableSpecializations>
+
+    <placeableTypes>
+        <type name="fertilizerDepotType"
+              parent="simplePlaceable"
+              filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="fertilizerDepot"/>
+        </type>
+    </placeableTypes>
+
+    <storeItems>
+        <storeItem xmlFilename="xml/depotPlaceable.xml"/>
+    </storeItems>
+
+    <l10n filenamePrefix="translations/translation"/>
+</modDesc>
