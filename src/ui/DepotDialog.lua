@@ -57,24 +57,24 @@ function DepotDialog:onGuiSetupFinished()
     DepotDialog:superClass().onGuiSetupFinished(self)
 
     local t = self.target
-    self.seasonLabel = t:getFirstDescendant("seasonLabel")
-    self.pageLabel   = t:getFirstDescendant("pageLabel")
-    self.statusText  = t:getFirstDescendant("statusText")
-    self.prevPageBtn = t:getFirstDescendant("prevPageBtn")
-    self.nextPageBtn = t:getFirstDescendant("nextPageBtn")
-    self.tabBuyBtn   = t:getFirstDescendant("tabBuyBtn")
-    self.tabSellBtn  = t:getFirstDescendant("tabSellBtn")
+    self.seasonLabel = t:getDescendantById("seasonLabel")
+    self.pageLabel   = t:getDescendantById("pageLabel")
+    self.statusText  = t:getDescendantById("statusText")
+    self.prevPageBtn = t:getDescendantById("prevPageBtn")
+    self.nextPageBtn = t:getDescendantById("nextPageBtn")
+    self.tabBuyBtn   = t:getDescendantById("tabBuyBtn")
+    self.tabSellBtn  = t:getDescendantById("tabSellBtn")
 
     -- Cache per-row elements
     for i = 0, DepotDialog.ROWS - 1 do
         local prefix = "row" .. i
         self.rows[i + 1] = {
-            nameEl  = t:getFirstDescendant(prefix .. "name"),
-            stockEl = t:getFirstDescendant(prefix .. "stock"),
-            priceEl = t:getFirstDescendant(prefix .. "price"),
-            buy1    = t:getFirstDescendant(prefix .. "buy1"),
-            buy2    = t:getFirstDescendant(prefix .. "buy2"),
-            buy3    = t:getFirstDescendant(prefix .. "buy3"),
+            nameEl  = t:getDescendantById(prefix .. "name"),
+            stockEl = t:getDescendantById(prefix .. "stock"),
+            priceEl = t:getDescendantById(prefix .. "price"),
+            buy1    = t:getDescendantById(prefix .. "buy1"),
+            buy2    = t:getDescendantById(prefix .. "buy2"),
+            buy3    = t:getDescendantById(prefix .. "buy3"),
         }
     end
 end

@@ -2,10 +2,8 @@
 
 <!--
     FS25 Fertilizer Depot - i3d Scene
-    Box primitives for building collision + trigger volumes.
-    Note: Box shapes in GIANTS Engine are collision-only (no visual mesh).
-    Visual appearance comes from collision silhouette + shadows.
-    materialIds is set on the <Shape> scene node, NOT the <Box> definition.
+    Building geometry: IndexedTriangleSet shapes for visual rendering + collision.
+    Trigger volumes: Box shapes (invisible by design, collision/trigger only).
 -->
 
 <i3D name="depot" version="1.6"
@@ -32,16 +30,56 @@
   </Materials>
 
   <Shapes>
-    <!-- Building geometry (collision boxes) -->
-    <Box name="floor_shape"    shapeId="1" sx="12"   sy="0.2"  sz="8"/>
-    <Box name="wall_f_shape"   shapeId="2" sx="12"   sy="4"    sz="0.25"/>
-    <Box name="wall_b_shape"   shapeId="3" sx="12"   sy="4"    sz="0.25"/>
-    <Box name="wall_l_shape"   shapeId="4" sx="0.25" sy="4"    sz="8"/>
-    <Box name="wall_r_shape"   shapeId="5" sx="0.25" sy="4"    sz="8"/>
-    <Box name="roof_shape"     shapeId="6" sx="12.5" sy="0.3"  sz="8.5"/>
-    <!-- Trigger volumes (physics trigger shapes, not visual) -->
-    <Box name="veh_trig_shape" shapeId="7" sx="12"   sy="3"    sz="14"/>
-    <Box name="ply_trig_shape" shapeId="8" sx="3"    sy="2.5"  sz="3"/>
+
+    <!-- Floor: thin Box for ground-level collision (not rendered) -->
+    <Box name="floor_shape" shapeId="1" sx="12" sy="0.2" sz="8"/>
+
+    <!--
+      Building walls: IndexedTriangleSet — renders visually AND provides collision.
+      4 faces (front/back/left/right), 16 vertices, 8 triangles.
+      Building footprint: 12m wide (X: -6..6), 4m tall (Y: 0..4), 8m deep (Z: -4..4).
+      Each face has its own 4 vertices with outward normals for correct lighting.
+      Winding order: CCW as seen from outside the building.
+    -->
+    <IndexedTriangleSet name="walls_shape" shapeId="2"
+                        bVertexBuffer="true"
+                        numVertices="16" numIndices="24">
+      <Vertices count="16" normal="true" uv0="true" uv1="false" tangent="false">
+        -6 0 -4 0 0 -1 0 0   6 0 -4 0 0 -1 1 0   6 4 -4 0 0 -1 1 1   -6 4 -4 0 0 -1 0 1
+         6 0  4 0 0  1 0 0  -6 0  4 0 0  1 1 0  -6 4  4 0 0  1 1 1    6 4  4 0 0  1 0 1
+        -6 0  4 -1 0 0 0 0  -6 0 -4 -1 0 0 1 0  -6 4 -4 -1 0 0 1 1   -6 4  4 -1 0 0 0 1
+         6 0 -4  1 0 0 0 0   6 0  4  1 0 0 1 0   6 4  4  1 0 0 1 1    6 4 -4  1 0 0 0 1
+      </Vertices>
+      <Triangles count="8">
+        0 1 2  0 2 3
+        4 5 6  4 6 7
+        8 9 10  8 10 11
+        12 13 14  12 14 15
+      </Triangles>
+    </IndexedTriangleSet>
+
+    <!--
+      Roof: flat slab with slight overhang (12.5 x 8.5m), 15cm thick.
+      Top face normal (0,1,0) for lighting; bottom face (0,-1,0) visible from inside/edges.
+      8 vertices, 4 triangles.
+    -->
+    <IndexedTriangleSet name="roof_shape" shapeId="3"
+                        bVertexBuffer="true"
+                        numVertices="8" numIndices="12">
+      <Vertices count="8" normal="true" uv0="true" uv1="false" tangent="false">
+        -6.25 4.15 -4.25 0  1 0 0 0   6.25 4.15 -4.25 0  1 0 1 0   6.25 4.15  4.25 0  1 0 1 1   -6.25 4.15  4.25 0  1 0 0 1
+         6.25 4.00 -4.25 0 -1 0 0 0  -6.25 4.00 -4.25 0 -1 0 1 0  -6.25 4.00  4.25 0 -1 0 1 1    6.25 4.00  4.25 0 -1 0 0 1
+      </Vertices>
+      <Triangles count="4">
+        0 1 2  0 2 3
+        4 5 6  4 6 7
+      </Triangles>
+    </IndexedTriangleSet>
+
+    <!-- Trigger volumes (Box shapes — invisible, physics trigger only) -->
+    <Box name="veh_trig_shape" shapeId="4" sx="12" sy="3" sz="14"/>
+    <Box name="ply_trig_shape" shapeId="5" sx="3"  sy="2.5" sz="3"/>
+
   </Shapes>
 
   <Scene>
@@ -54,36 +92,20 @@
                     translation="0 0 0" rotation="0 0 0" scale="1 1 1"
                     visibility="true" clipDistance="300" objectMask="255">
 
-      <!-- Building: collision boxes (no visual mesh, solid walls + roof) -->
+      <!-- Building: floor collision + wall mesh + roof mesh -->
       <TransformGroup name="depot_building" nodeId="2">
 
         <Shape name="floor" nodeId="10" shapeId="1"
-               translation="0 -0.1 0" materialIds="1"
+               translation="0 -0.1 0"
+               collision="true" collisionGroup="3" collisionMask="255"/>
+
+        <Shape name="walls" nodeId="11" shapeId="2"
+               translation="0 0 0" materialIds="1"
                collision="true" collisionGroup="3" collisionMask="255"
                castsShadows="true" receiveShadows="true"/>
 
-        <Shape name="wall_front" nodeId="11" shapeId="2"
-               translation="0 2 -4" materialIds="1"
-               collision="true" collisionGroup="3" collisionMask="255"
-               castsShadows="true" receiveShadows="true"/>
-
-        <Shape name="wall_back" nodeId="12" shapeId="3"
-               translation="0 2 4" materialIds="1"
-               collision="true" collisionGroup="3" collisionMask="255"
-               castsShadows="true" receiveShadows="true"/>
-
-        <Shape name="wall_left" nodeId="13" shapeId="4"
-               translation="-6 2 0" materialIds="1"
-               collision="true" collisionGroup="3" collisionMask="255"
-               castsShadows="true" receiveShadows="true"/>
-
-        <Shape name="wall_right" nodeId="14" shapeId="5"
-               translation="6 2 0" materialIds="1"
-               collision="true" collisionGroup="3" collisionMask="255"
-               castsShadows="true" receiveShadows="true"/>
-
-        <Shape name="roof" nodeId="15" shapeId="6"
-               translation="0 4.15 0" materialIds="2"
+        <Shape name="roof" nodeId="12" shapeId="3"
+               translation="0 0 0" materialIds="2"
                collision="true" collisionGroup="3" collisionMask="255"
                castsShadows="true" receiveShadows="true"/>
 
@@ -93,13 +115,13 @@
       <TransformGroup name="triggerRoot" nodeId="3">
 
         <!-- Vehicle trigger: 12×3×14m zone in front of building -->
-        <Shape name="vehicleTrigger" nodeId="20" shapeId="7"
+        <Shape name="vehicleTrigger" nodeId="20" shapeId="4"
                translation="0 1.5 -11"
                collision="false" trigger="true"
                collisionGroup="24" collisionMask="255"/>
 
         <!-- Player trigger: 3×2.5×3m zone at building entrance -->
-        <Shape name="playerTrigger" nodeId="21" shapeId="8"
+        <Shape name="playerTrigger" nodeId="21" shapeId="5"
                translation="0 1.25 -4.5"
                collision="false" trigger="true"
                collisionGroup="24" collisionMask="255"/>
