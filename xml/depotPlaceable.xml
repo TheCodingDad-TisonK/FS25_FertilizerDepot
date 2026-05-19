@@ -23,7 +23,7 @@
     </storeData>
 
     <base>
-        <filename>$modDir/i3d/depot.i3d</filename>
+        <filename>i3d/depot.i3d</filename>
         <canBeDeleted>true</canBeDeleted>
         <canBeRenamed>true</canBeRenamed>
     </base>
