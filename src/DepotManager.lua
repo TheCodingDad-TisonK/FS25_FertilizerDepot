@@ -66,12 +66,11 @@ end
 
 function DepotManager:openDialog(depotId)
     if self.activeDialog then
-        self.activeDialog:close()
+        g_gui:closeDialog(self.activeDialog)
         self.activeDialog = nil
     end
-    local dlg = DepotDialog.new(depotId)
-    dlg:open()
-    self.activeDialog = dlg
+    DepotDialog.show(depotId)
+    self.activeDialog = DepotDialog.INSTANCE
 end
 
 function DepotManager:closeDialog()

@@ -103,6 +103,13 @@ function DepotDialog:onSyncReceived(depotId)
     end
 end
 
+-- Show a temporary status message in the footer bar
+function DepotDialog:showStatus(text)
+    if self.statusText then
+        self.statusText:setText(text)
+    end
+end
+
 -- ─── Refresh ─────────────────────────────────────────────
 
 function DepotDialog:refresh()
@@ -309,6 +316,8 @@ function DepotDialog:executeSell(rowSlot)
                 if count == target then
                     local liters = v:getFillUnitFillLevel(u)
                     local farmId = g_localPlayer and g_localPlayer.farmId or 1
+                    self:showStatus(string.format("Selling %.0fL %s...",
+                        liters, ft.displayName or ft.name))
                     DepotSellEvent.sendToServer(
                         self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
                     return
@@ -363,13 +372,13 @@ end
 -- The executeBuy method handles this dispatch.
 function DepotDialog:executeBuy(rowSlot, liters)
     if self.tab == DepotDialog.TAB_SELL then
-        -- Any buy3 click in sell mode means "Sell All" for that row
         self:executeSell(rowSlot)
     else
         local ftIdx = self.pageIndex + rowSlot
         local ft    = self.fillTypes[ftIdx]
         if not ft then return end
         local farmId = g_localPlayer and g_localPlayer.farmId or 1
+        self:showStatus(string.format("Buying %dL %s...", liters, ft.displayName or ft.name))
         DepotPurchaseEvent.sendToServer(
             self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
     end

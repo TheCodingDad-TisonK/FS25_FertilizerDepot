@@ -13,12 +13,12 @@ function PlaceableDepot.prerequisitesPresent(...)
 end
 
 function PlaceableDepot.registerEventListeners(placeableType)
-    SpecializationUtil.registerEventListener(placeableType, "onLoad",               PlaceableDepot)
-    SpecializationUtil.registerEventListener(placeableType, "onPostFinalizePlacement", PlaceableDepot)
-    SpecializationUtil.registerEventListener(placeableType, "onDelete",             PlaceableDepot)
-    SpecializationUtil.registerEventListener(placeableType, "onReadStream",          PlaceableDepot)
-    SpecializationUtil.registerEventListener(placeableType, "onWriteStream",         PlaceableDepot)
-    SpecializationUtil.registerEventListener(placeableType, "saveToXMLFile",         PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "onLoad",                  PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "onPostFinalizePlacement",  PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "onDelete",                PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "onReadStream",             PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "onWriteStream",            PlaceableDepot)
+    SpecializationUtil.registerEventListener(placeableType, "saveToXMLFile",            PlaceableDepot)
 end
 
 function PlaceableDepot.registerXMLPaths(schema, basePath)
@@ -27,29 +27,21 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
         "Vehicle proximity trigger node")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#playerTrigger",
         "Player interaction trigger node")
-    schema:register(XMLValueType.STRING,  basePath .. ".storage.fill(?)#type",   "Fill type name")
-    schema:register(XMLValueType.FLOAT,   basePath .. ".storage.fill(?)#liters", "Stored liters")
+    schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
+    schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:setXMLSpecializationType()
 end
 
--- ─── onLoad ──────────────────────────────────────────────
+-- ─── onLoad — runs on ALL machines ───────────────────────
 
 function PlaceableDepot:onLoad(savegame)
     local spec = {}
     self[PlaceableDepot.SPEC_TABLE_NAME] = spec
 
-    spec.depotId          = nil
-    spec.vehicleTriggerNode = nil
-    spec.playerTriggerNode  = nil
-    spec.savegame         = savegame
-end
+    spec.depotId = nil
+    spec.savegame = savegame
 
--- ─── onPostFinalizePlacement ──────────────────────────────
-
-function PlaceableDepot:onPostFinalizePlacement()
-    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-
-    -- Read trigger nodes from i3dMappings via XML
+    -- Load trigger nodes here so both server and clients have them
     spec.vehicleTriggerNode = self.xmlFile:getValue(
         "placeable.fertilizerDepot#vehicleTrigger", nil,
         self.components, self.i3dMappings)
@@ -58,63 +50,77 @@ function PlaceableDepot:onPostFinalizePlacement()
         "placeable.fertilizerDepot#playerTrigger", nil,
         self.components, self.i3dMappings)
 
-    -- Register with DepotManager (server and client)
-    if g_DepotManager then
+    if spec.vehicleTriggerNode == nil then
+        DepotLogger.warning("vehicleTrigger node not found — check i3dMappings")
+    end
+    if spec.playerTriggerNode == nil then
+        DepotLogger.warning("playerTrigger node not found — check i3dMappings")
+    end
+end
+
+-- ─── onPostFinalizePlacement ──────────────────────────────
+
+function PlaceableDepot:onPostFinalizePlacement()
+    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+
+    -- Register with DepotManager (server only — authoritative state)
+    if g_server and g_DepotManager then
         spec.depotId = g_DepotManager:registerDepot(self)
     end
 
-    -- Load saved storage state (server only on savegame resume)
+    -- Load saved storage state
     if g_server and spec.depotId and spec.savegame then
         local sg = spec.savegame
         g_DepotManager.depotSystem:loadFromXML(
             sg.xmlFile, spec.depotId, sg.key .. ".storage")
     end
+    spec.savegame = nil
 
-    -- Install triggers (server only — triggers drive authoritative logic)
-    if g_server then
-        if spec.vehicleTriggerNode then
-            addTrigger(spec.vehicleTriggerNode,
-                "onVehicleTrigger", self)
-        end
-        if spec.playerTriggerNode then
-            addTrigger(spec.playerTriggerNode,
-                "onPlayerTrigger", self)
-        end
+    -- Vehicle trigger: server only (drives authoritative buy/sell logic)
+    if g_server and spec.vehicleTriggerNode then
+        addTrigger(spec.vehicleTriggerNode, "onVehicleTrigger", self)
     end
 
-    spec.savegame = nil  -- release reference after load
+    -- Player trigger: ALL machines so dialog opens for any local player
+    if spec.playerTriggerNode then
+        addTrigger(spec.playerTriggerNode, "onPlayerTrigger", self)
+    end
 end
 
 -- ─── Trigger Callbacks ───────────────────────────────────
 
 function PlaceableDepot:onVehicleTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    if not g_server then return end
+    -- Server only (vehicle trigger only registered on server)
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    if not spec.depotId then return end
+    if not spec or not spec.depotId then return end
 
     local vehicle = g_currentMission:getNodeObject(otherId)
     if not vehicle or not vehicle.getFillUnits then return end
 
     if onEnter then
         g_DepotManager.depotSystem:addVehicleNearby(spec.depotId, vehicle)
-        DepotLogger.debug("Vehicle entered depot #%d trigger: %s",
-            spec.depotId, tostring(vehicle.configFileName))
+        DepotLogger.debug("Vehicle entered depot #%d: %s", spec.depotId,
+            tostring(vehicle.configFileName))
     elseif onLeave then
         g_DepotManager.depotSystem:removeVehicleNearby(spec.depotId, vehicle)
     end
 end
 
 function PlaceableDepot:onPlayerTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    -- Player trigger fires on all machines; only act for local player
+    -- Fires locally on each machine. Only respond to the local player.
     if not g_localPlayer then return end
     if otherId ~= g_localPlayer.rootNode then return end
 
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    if not spec.depotId then return end
+    if not spec then return end
+
+    -- depotId may be nil on client — use the stored network id instead
+    local depotId = spec.depotId or spec.netDepotId
+    if not depotId then return end
 
     if onEnter then
         if g_DepotManager then
-            g_DepotManager:openDialog(spec.depotId)
+            g_DepotManager:openDialog(depotId)
         end
     elseif onLeave then
         if g_DepotManager then
@@ -129,13 +135,14 @@ function PlaceableDepot:onDelete()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
 
-    if g_server then
-        if spec.vehicleTriggerNode then
-            removeTrigger(spec.vehicleTriggerNode)
-        end
-        if spec.playerTriggerNode then
-            removeTrigger(spec.playerTriggerNode)
-        end
+    -- Vehicle trigger: only server registered it
+    if g_server and spec.vehicleTriggerNode then
+        removeTrigger(spec.vehicleTriggerNode)
+    end
+
+    -- Player trigger: all machines registered it
+    if spec.playerTriggerNode then
+        removeTrigger(spec.playerTriggerNode)
     end
 
     if g_DepotManager and spec.depotId then
@@ -147,37 +154,11 @@ end
 
 -- ─── Network Sync ────────────────────────────────────────
 
-function PlaceableDepot:onReadStream(streamId, connection)
-    -- Client receives depot ID assigned by server
-    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    spec.depotId = streamReadInt32(streamId)
-    if g_DepotManager then
-        -- Ensure a local depot state table exists for this id
-        if not g_DepotManager.depotSystem:getDepot(spec.depotId) then
-            g_DepotManager.depotSystem._depots[spec.depotId] = {
-                id            = spec.depotId,
-                storageLevel  = {},
-                vehiclesNearby = {},
-            }
-        end
-        g_DepotManager.depots[spec.depotId] = self
-    end
-    -- Read initial storage state
-    local count = streamReadUInt16(streamId)
-    local depot = g_DepotManager and g_DepotManager.depotSystem:getDepot(spec.depotId)
-    for _ = 1, count do
-        local name   = streamReadString(streamId)
-        local liters = streamReadFloat32(streamId)
-        if depot then
-            depot.storageLevel[name] = liters
-        end
-    end
-end
-
 function PlaceableDepot:onWriteStream(streamId, connection)
+    -- Server → joining client: send depotId and initial storage state
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     streamWriteInt32(streamId, spec.depotId or 0)
-    -- Send current storage state to joining client
+
     local depot = g_DepotManager and g_DepotManager.depotSystem:getDepot(spec.depotId)
     if depot then
         local count = 0
@@ -189,6 +170,36 @@ function PlaceableDepot:onWriteStream(streamId, connection)
         end
     else
         streamWriteUInt16(streamId, 0)
+    end
+end
+
+function PlaceableDepot:onReadStream(streamId, connection)
+    -- Client receives depotId and initial storage state from server
+    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+
+    local netId = streamReadInt32(streamId)
+    spec.netDepotId = netId  -- used by onPlayerTrigger on clients
+
+    -- Ensure a local depot state table exists for display purposes
+    if g_DepotManager then
+        if not g_DepotManager.depotSystem:getDepot(netId) then
+            g_DepotManager.depotSystem._depots[netId] = {
+                id             = netId,
+                storageLevel   = {},
+                vehiclesNearby = {},
+            }
+        end
+        g_DepotManager.depots[netId] = self
+    end
+
+    local count = streamReadUInt16(streamId)
+    local depot = g_DepotManager and g_DepotManager.depotSystem:getDepot(netId)
+    for _ = 1, count do
+        local name   = streamReadString(streamId)
+        local liters = streamReadFloat32(streamId)
+        if depot then
+            depot.storageLevel[name] = liters
+        end
     end
 end
 
