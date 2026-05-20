@@ -68,7 +68,7 @@ end
 
 -- ─── Vehicle Search ──────────────────────────────────────
 
-local VEHICLE_SEARCH_RADIUS_SQ = 60 * 60  -- 60-metre radius around depot root
+local VEHICLE_SEARCH_RADIUS_SQ = 60 * 60  -- 60-metre radius
 
 local function collectVehiclesRecursive(v, list)
     table.insert(list, v)
@@ -82,16 +82,11 @@ local function collectVehiclesRecursive(v, list)
     end
 end
 
--- Returns vehicle + fillUnitIndex for the nearest compatible unit.
--- forSell=true  → looks for a unit that currently HAS the fill type loaded (drain pattern).
--- forSell=false → looks for a unit that can ACCEPT the fill type and has free capacity.
-function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
+-- Finds a compatible vehicle+fillUnit near a world position (px, pz).
+-- forSell=true  → unit currently HAS the fill type loaded.
+-- forSell=false → unit can ACCEPT the fill type and has free capacity.
+local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
     if not g_currentMission then return nil, nil end
-
-    local placeable = g_DepotManager and g_DepotManager.depots[depotId]
-    if not placeable or not placeable.rootNode then return nil, nil end
-
-    local px, _, pz = getWorldTranslation(placeable.rootNode)
 
     for _, vehicle in pairs(g_currentMission.vehicles or {}) do
         if vehicle and vehicle.rootNode then
@@ -105,17 +100,13 @@ function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
                     if spec and spec.fillUnits then
                         for fuIdx, fillUnit in ipairs(spec.fillUnits) do
                             if forSell then
-                                -- Drain pattern (from FS25_SoilFertilizer): check what's currently loaded
                                 if fillUnit.fillType == fillTypeIndex and (fillUnit.fillLevel or 0) > 0 then
                                     return veh, fuIdx
                                 end
                             else
-                                -- Buy: unit must support the type and have free space
                                 if veh.fillUnitSupportsFillType and veh:fillUnitSupportsFillType(fuIdx, fillTypeIndex) then
                                     local free = veh:getFillUnitFreeCapacity(fuIdx) or 0
-                                    if free > 0 then
-                                        return veh, fuIdx
-                                    end
+                                    if free > 0 then return veh, fuIdx end
                                 end
                             end
                         end
@@ -127,7 +118,15 @@ function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
     return nil, nil
 end
 
--- ─── Buy Transaction ─────────────────────────────────────
+-- Public wrapper using the depot's root node as search origin.
+function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
+    local placeable = g_DepotManager and g_DepotManager.depots[depotId]
+    if not placeable or not placeable.rootNode then return nil, nil end
+    local px, _, pz = getWorldTranslation(placeable.rootNode)
+    return findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
+end
+
+-- ─── Buy Transaction (from Depot dialog, vehicle must be near DEPOT) ─────
 -- Returns: success (bool), message key (string), actualLiters (number)
 function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requestedLiters, farmId)
     if not g_server then return false, "fd_error_server", 0 end
@@ -135,37 +134,68 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0 end
 
-    -- Clamp to purchase limits
     local liters = math.max(DepotConstants.MIN_PURCHASE_LITERS,
                    math.min(DepotConstants.MAX_PURCHASE_LITERS, requestedLiters))
 
-    -- Find compatible vehicle and fill unit (buy mode: needs free capacity)
     local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex, false)
     if not vehicle then return false, "fd_depot_no_trailer", 0 end
 
-    -- Check available space in fill unit
     local freeCapacity = vehicle:getFillUnitFreeCapacity(unitIndex)
     if freeCapacity <= 0 then return false, "fd_depot_tank_full", 0 end
     liters = math.min(liters, freeCapacity)
 
-    -- Calculate cost
     local cost = self._pricing:calculateBuyCost(fillTypeName, liters)
 
-    -- Check farm balance
     local farm = g_farmManager and g_farmManager:getFarmById(farmId)
     if not farm then return false, "fd_error_farm", 0 end
     if farm.balance < cost then return false, "fd_depot_no_money", 0 end
 
-    -- Draw from depot storage first, remainder is fresh supply
     local fromStorage = math.min(liters, depot.storageLevel[fillTypeName] or 0)
     if fromStorage > 0 then
         depot.storageLevel[fillTypeName] = (depot.storageLevel[fillTypeName] or 0) - fromStorage
     end
 
-    -- Deduct money
     g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
+    vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
+                                 ToolType.UNDEFINED, nil)
 
-    -- Fill the vehicle
+    return true, "fd_depot_buy_success", liters
+end
+
+-- ─── Silo Fill (pre-order collected at Silo, vehicle must be near SILO) ──
+-- siloNode: world node to use as vehicle search origin (silo's root node).
+-- Returns: success (bool), message key (string), actualLiters (number)
+function DepotSystem:buyFromSilo(depotId, siloNode, fillTypeName, fillTypeIndex, requestedLiters, farmId)
+    if not g_server then return false, "fd_error_server", 0 end
+
+    local depot = self._depots[depotId]
+    if not depot then return false, "fd_error_depot", 0 end
+
+    if not siloNode then return false, "fd_error_depot", 0 end
+
+    local liters = math.max(DepotConstants.MIN_PURCHASE_LITERS,
+                   math.min(DepotConstants.MAX_PURCHASE_LITERS, requestedLiters))
+
+    local px, _, pz = getWorldTranslation(siloNode)
+    local vehicle, unitIndex = findVehicleNearPosition(px, pz, fillTypeIndex, false)
+    if not vehicle then return false, "fd_depot_no_trailer", 0 end
+
+    local freeCapacity = vehicle:getFillUnitFreeCapacity(unitIndex)
+    if freeCapacity <= 0 then return false, "fd_depot_tank_full", 0 end
+    liters = math.min(liters, freeCapacity)
+
+    local cost = self._pricing:calculateBuyCost(fillTypeName, liters)
+
+    local farm = g_farmManager and g_farmManager:getFarmById(farmId)
+    if not farm then return false, "fd_error_farm", 0 end
+    if farm.balance < cost then return false, "fd_depot_no_money", 0 end
+
+    local fromStorage = math.min(liters, depot.storageLevel[fillTypeName] or 0)
+    if fromStorage > 0 then
+        depot.storageLevel[fillTypeName] = (depot.storageLevel[fillTypeName] or 0) - fromStorage
+    end
+
+    g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
     vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
                                  ToolType.UNDEFINED, nil)
 
@@ -173,7 +203,6 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
 end
 
 -- ─── Sell Transaction ────────────────────────────────────
--- Drains fillTypeName from the nearest compatible vehicle into depot storage.
 -- Returns: success (bool), message key (string), liters sold (number), revenue (number)
 function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requestedLiters, farmId)
     if not g_server then return false, "fd_error_server", 0, 0 end
@@ -181,7 +210,6 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0, 0 end
 
-    -- Sell mode: look for a vehicle that currently HAS this fill type loaded
     local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex, true)
     if not vehicle then return false, "fd_depot_no_trailer", 0, 0 end
 
@@ -190,7 +218,6 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
 
     local liters = math.min(requestedLiters or available, available)
 
-    -- Check depot storage space
     local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity)
                 or DepotConstants.STORAGE_CAPACITY
     local currentStored = depot.storageLevel[fillTypeName] or 0
@@ -198,17 +225,13 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
     liters = math.min(liters, math.max(0, space))
     if liters <= 0 then return false, "fd_depot_storage_full", 0, 0 end
 
-    -- Calculate revenue
     local revenue = self._pricing:calculateSellRevenue(fillTypeName, liters)
 
-    -- Drain vehicle
     vehicle:addFillUnitFillLevel(farmId, unitIndex, -liters, fillTypeIndex,
                                  ToolType.UNDEFINED, nil)
 
-    -- Store in depot
     depot.storageLevel[fillTypeName] = currentStored + liters
 
-    -- Pay farm
     g_currentMission:addMoney(revenue, farmId, MoneyType.HARVEST_INCOME, true, true)
 
     return true, "fd_depot_sell_success", liters, revenue

@@ -20,11 +20,13 @@ source(modDir .. "src/DepotManager.lua")
 -- Phase 3: Network
 source(modDir .. "src/network/DepotPurchaseEvent.lua")
 source(modDir .. "src/network/DepotSellEvent.lua")
+source(modDir .. "src/network/DepotSiloFillEvent.lua")
 source(modDir .. "src/network/DepotSyncEvent.lua")
 source(modDir .. "src/network/DepotSettingsEvent.lua")
 
--- Phase 4: Placeable
+-- Phase 4: Placeables
 source(modDir .. "src/placeable/PlaceableDepot.lua")
+source(modDir .. "src/placeable/PlaceableSilo.lua")
 
 -- Phase 5: UI (lazy-loaded on first open, but class must be defined)
 source(modDir .. "src/ui/DepotDialog.lua")

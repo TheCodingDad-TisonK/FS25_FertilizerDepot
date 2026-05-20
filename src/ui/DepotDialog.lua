@@ -1,13 +1,8 @@
 -- =========================================================
 -- FS25 Fertilizer Depot - Buy/Sell Dialog
 -- =========================================================
--- MessageDialog pattern (proven: WTListDialog / NPCListDialog).
--- Rules:
---   onClose NEVER named "onClose" (reserved — causes double-call)
---   onCreate required for MessageDialog init
---   Content-area buttons: 3-layer GuiElement container (Bitmap+Text+emptyPanel hit)
 
-local _depotDialogModDir  = g_currentModDirectory  -- captured at source() time
+local _depotDialogModDir  = g_currentModDirectory
 local _depotDialogModName = g_currentModName
 local _depotDialogInstance = nil
 
@@ -25,30 +20,40 @@ end
 
 ---@class DepotDialog
 DepotDialog = {}
-DepotDialog.ROWS     = 8
-DepotDialog.TAB_BUY  = "buy"
-DepotDialog.TAB_SELL = "sell"
+DepotDialog.ROWS        = 8
+DepotDialog.TAB_BUY     = "buy"
+DepotDialog.TAB_SELL    = "sell"
+DepotDialog.ORDER_STEP  = 500
+DepotDialog.ORDER_MIN   = 500
+DepotDialog.ORDER_MAX   = 50000
 
 local DepotDialog_mt = Class(DepotDialog, MessageDialog)
 
 function DepotDialog.new(depotId)
     local self = MessageDialog.new(nil, DepotDialog_mt)
-    self.depotId      = depotId
-    self.tab          = DepotDialog.TAB_BUY
-    self.pageIndex    = 0
-    self.fillTypes    = {}
+    self.depotId          = depotId
+    self.tab              = DepotDialog.TAB_BUY
+    self.pageIndex        = 0
+    self.fillTypes        = {}
+    self.selectedFillType = nil
+    self.orderAmount      = 1000
+
     -- Element caches
-    self.seasonLabel    = nil
-    self.pageLabel      = nil
-    self.statusText     = nil
-    self.prevPageBtn    = nil
-    self.nextPageBtn    = nil
-    self.tabBuyText     = nil   -- Text element inside tab container
-    self.tabSellText    = nil
-    self.colTypeHeader  = nil
-    self.colStockHeader = nil
-    self.colPriceHeader = nil
-    self.rows           = {}    -- [1..ROWS] = {nameEl, stockEl, priceEl, buy1, buy2, buy3, buy3txt}
+    self.seasonLabel      = nil
+    self.pageLabel        = nil
+    self.statusText       = nil
+    self.prevPageBtn      = nil
+    self.nextPageBtn      = nil
+    self.colTypeHeader    = nil
+    self.colStockHeader   = nil
+    self.colPriceHeader   = nil
+    self.preOrderDivider  = nil
+    self.preOrderRow      = nil
+    self.selectedTypeName = nil
+    self.amountDisplay    = nil
+
+    -- [1..ROWS] = {nameEl, stockEl, priceEl, actionBtn, actionTxt}
+    self.rows = {}
     return self
 end
 
@@ -72,55 +77,49 @@ function DepotDialog.show(depotId)
         DepotDialog.register()
     end
     local dlg = _depotDialogInstance
-    dlg.depotId   = depotId
-    dlg.tab       = DepotDialog.TAB_BUY
-    dlg.pageIndex = 0
+    dlg.depotId        = depotId
+    dlg.tab            = DepotDialog.TAB_BUY
+    dlg.pageIndex      = 0
+    dlg.selectedFillType = nil
+    dlg.orderAmount    = 1000
     g_gui:showDialog("DepotDialog")
 end
 
 -- ─── Lifecycle ───────────────────────────────────────────
 
 function DepotDialog:onCreate()
-    local ok, err = pcall(function()
-        DepotDialog:superClass().onCreate(self)
-    end)
-    if not ok then
-        DepotLogger.error("DepotDialog:onCreate error: %s", tostring(err))
-    end
+    local ok, err = pcall(function() DepotDialog:superClass().onCreate(self) end)
+    if not ok then DepotLogger.error("DepotDialog:onCreate error: %s", tostring(err)) end
 end
 
 function DepotDialog:onGuiSetupFinished()
     DepotDialog:superClass().onGuiSetupFinished(self)
 
-    self.seasonLabel    = self:getDescendantById("seasonLabel")
-    self.pageLabel      = self:getDescendantById("pageLabel")
-    self.statusText     = self:getDescendantById("statusText")
-    self.prevPageBtn    = self:getDescendantById("prevPageBtn")
-    self.nextPageBtn    = self:getDescendantById("nextPageBtn")
-    self.tabBuyText     = self:getDescendantById("tabBuyText")
-    self.tabSellText    = self:getDescendantById("tabSellText")
-    self.colTypeHeader  = self:getDescendantById("colTypeHeader")
-    self.colStockHeader = self:getDescendantById("colStockHeader")
-    self.colPriceHeader = self:getDescendantById("colPriceHeader")
+    self.seasonLabel     = self:getDescendantById("seasonLabel")
+    self.pageLabel       = self:getDescendantById("pageLabel")
+    self.statusText      = self:getDescendantById("statusText")
+    self.prevPageBtn     = self:getDescendantById("prevPageBtn")
+    self.nextPageBtn     = self:getDescendantById("nextPageBtn")
+    self.colTypeHeader   = self:getDescendantById("colTypeHeader")
+    self.colStockHeader  = self:getDescendantById("colStockHeader")
+    self.colPriceHeader  = self:getDescendantById("colPriceHeader")
+    self.preOrderDivider = self:getDescendantById("preOrderDivider")
+    self.preOrderRow     = self:getDescendantById("preOrderRow")
+    self.selectedTypeName = self:getDescendantById("selectedTypeName")
+    self.amountDisplay   = self:getDescendantById("amountDisplay")
 
-    -- Set translated static labels
-    if self.tabBuyText     then self.tabBuyText:setText(tr("fd_depot_buy",    "Buy"))          end
-    if self.tabSellText    then self.tabSellText:setText(tr("fd_depot_sell",   "Sell"))         end
-    if self.colTypeHeader  then self.colTypeHeader:setText(tr("fd_col_type",   "Fill Type"))    end
-    if self.colStockHeader then self.colStockHeader:setText(tr("fd_col_stock", "Depot Stock"))  end
-    if self.colPriceHeader then self.colPriceHeader:setText(tr("fd_col_price", "Price / 1kL")) end
+    if self.colTypeHeader   then self.colTypeHeader:setText(tr("fd_col_type",   "Fill Type"))    end
+    if self.colStockHeader  then self.colStockHeader:setText(tr("fd_col_stock", "Depot Stock"))  end
+    if self.colPriceHeader  then self.colPriceHeader:setText(tr("fd_col_price", "Price / 1kL")) end
 
-    -- Cache per-row elements (buy3txt = Text inside the buy3 container for sell-mode label)
     for i = 0, DepotDialog.ROWS - 1 do
         local p = "row" .. i
         self.rows[i + 1] = {
-            nameEl  = self:getDescendantById(p .. "name"),
-            stockEl = self:getDescendantById(p .. "stock"),
-            priceEl = self:getDescendantById(p .. "price"),
-            buy1    = self:getDescendantById(p .. "buy1"),
-            buy2    = self:getDescendantById(p .. "buy2"),
-            buy3    = self:getDescendantById(p .. "buy3"),
-            buy3txt = self:getDescendantById(p .. "buy3txt"),
+            nameEl    = self:getDescendantById(p .. "name"),
+            stockEl   = self:getDescendantById(p .. "stock"),
+            priceEl   = self:getDescendantById(p .. "price"),
+            actionBtn = self:getDescendantById(p .. "action"),
+            actionTxt = self:getDescendantById(p .. "actionTxt"),
         }
     end
 end
@@ -132,6 +131,7 @@ function DepotDialog:onOpen()
     else
         self.fillTypes = {}
     end
+    self:_syncPreOrderVisibility()
     self:refresh()
 end
 
@@ -142,17 +142,34 @@ function DepotDialog:fdOnClose()
     end
 end
 
--- Called by DepotSyncEvent when server pushes new storage state
 function DepotDialog:onSyncReceived(depotId)
-    if depotId == self.depotId then
-        self:refresh()
-    end
+    if depotId == self.depotId then self:refresh() end
 end
 
 function DepotDialog:showStatus(text)
-    if self.statusText then
-        self.statusText:setText(text)
-    end
+    if self.statusText then self.statusText:setText(text) end
+end
+
+-- ─── Tab Switching ───────────────────────────────────────
+
+function DepotDialog:onTabBuy()
+    self.tab = DepotDialog.TAB_BUY
+    self.pageIndex = 0
+    self:_syncPreOrderVisibility()
+    self:refresh()
+end
+
+function DepotDialog:onTabSell()
+    self.tab = DepotDialog.TAB_SELL
+    self.pageIndex = 0
+    self:_syncPreOrderVisibility()
+    self:refresh()
+end
+
+function DepotDialog:_syncPreOrderVisibility()
+    local show = (self.tab == DepotDialog.TAB_BUY)
+    if self.preOrderDivider then self.preOrderDivider:setVisible(show) end
+    if self.preOrderRow     then self.preOrderRow:setVisible(show) end
 end
 
 -- ─── Refresh ─────────────────────────────────────────────
@@ -201,11 +218,13 @@ function DepotDialog:refreshBuyTab()
             if row.nameEl  then row.nameEl:setText(ft.displayName or ft.name) end
             if row.stockEl then row.stockEl:setText(stockStr) end
             if row.priceEl then row.priceEl:setText(priceStr) end
-            -- Restore 1kL label in case row was previously in sell mode
-            if row.buy3txt then row.buy3txt:setText("1kL") end
-            if row.buy1    then row.buy1:setVisible(true)  end
-            if row.buy2    then row.buy2:setVisible(true)  end
-            if row.buy3    then row.buy3:setVisible(true)  end
+
+            -- Highlight if this row is the currently selected type
+            local isSelected = self.selectedFillType and self.selectedFillType.name == ft.name
+            if row.actionTxt then
+                row.actionTxt:setText(isSelected and "Selected" or tr("fd_depot_select_btn", "Select"))
+            end
+            if row.actionBtn then row.actionBtn:setVisible(true) end
         else
             self:clearRow(slot)
         end
@@ -238,14 +257,11 @@ function DepotDialog:refreshSellTab()
         if entry and row then
             local litersStr = string.format("%.0fL", entry.liters)
             local revStr    = string.format("$%.2f", entry.revenue)
-            if row.nameEl  then row.nameEl:setText(entry.ft.displayName or entry.ft.name) end
-            if row.stockEl then row.stockEl:setText(litersStr) end
-            if row.priceEl then row.priceEl:setText(revStr) end
-            if row.buy1    then row.buy1:setVisible(false) end
-            if row.buy2    then row.buy2:setVisible(false) end
-            -- buy3 container repurposed as "Sell All"; set label on its Text child
-            if row.buy3txt then row.buy3txt:setText(tr("fd_depot_sell_btn", "Sell All")) end
-            if row.buy3    then row.buy3:setVisible(true) end
+            if row.nameEl   then row.nameEl:setText(entry.ft.displayName or entry.ft.name) end
+            if row.stockEl  then row.stockEl:setText(litersStr) end
+            if row.priceEl  then row.priceEl:setText(revStr) end
+            if row.actionTxt then row.actionTxt:setText(tr("fd_depot_sell_btn", "Sell All")) end
+            if row.actionBtn then row.actionBtn:setVisible(true) end
         else
             self:clearRow(slot)
         end
@@ -263,29 +279,22 @@ end
 function DepotDialog:clearRow(slot)
     local row = self.rows[slot]
     if not row then return end
-    if row.nameEl  then row.nameEl:setText("") end
-    if row.stockEl then row.stockEl:setText("") end
-    if row.priceEl then row.priceEl:setText("") end
-    if row.buy1    then row.buy1:setVisible(false) end
-    if row.buy2    then row.buy2:setVisible(false) end
-    if row.buy3    then row.buy3:setVisible(false) end
+    if row.nameEl   then row.nameEl:setText("") end
+    if row.stockEl  then row.stockEl:setText("") end
+    if row.priceEl  then row.priceEl:setText("") end
+    if row.actionBtn then row.actionBtn:setVisible(false) end
 end
 
 function DepotDialog:updatePagination()
-    local total     = self.tab == DepotDialog.TAB_BUY and #self.fillTypes or self:getSellCount()
-    local maxPage   = math.max(0, math.ceil(total / DepotDialog.ROWS) - 1)
-    local curPage   = math.floor(self.pageIndex / DepotDialog.ROWS)
+    local total   = self.tab == DepotDialog.TAB_BUY and #self.fillTypes or self:getSellCount()
+    local maxPage = math.max(0, math.ceil(total / DepotDialog.ROWS) - 1)
+    local curPage = math.floor(self.pageIndex / DepotDialog.ROWS)
 
     if self.pageLabel then
         self.pageLabel:setText(string.format("%d / %d", curPage + 1, maxPage + 1))
     end
-    -- Pagination containers: use setVisible (containers, not Buttons)
-    if self.prevPageBtn then
-        self.prevPageBtn:setVisible(self.pageIndex > 0)
-    end
-    if self.nextPageBtn then
-        self.nextPageBtn:setVisible(self.pageIndex + DepotDialog.ROWS < total)
-    end
+    if self.prevPageBtn then self.prevPageBtn:setVisible(self.pageIndex > 0) end
+    if self.nextPageBtn then self.nextPageBtn:setVisible(self.pageIndex + DepotDialog.ROWS < total) end
 end
 
 function DepotDialog:getSellCount()
@@ -295,48 +304,74 @@ function DepotDialog:getSellCount()
     for _, ft in ipairs(self.fillTypes) do
         if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
             local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
-            if v and u and v:getFillUnitFillLevel(u) > 0 then
-                count = count + 1
-            end
+            if v and u and v:getFillUnitFillLevel(u) > 0 then count = count + 1 end
         end
     end
     return count
 end
 
--- ─── Close ───────────────────────────────────────────────
+-- ─── Pre-order Actions ───────────────────────────────────
 
-function DepotDialog:onClickClose()
-    self:close()
+function DepotDialog:onAmountMinus()
+    self.orderAmount = math.max(DepotDialog.ORDER_MIN, self.orderAmount - DepotDialog.ORDER_STEP)
+    if self.amountDisplay then
+        self.amountDisplay:setText(string.format("%dL", self.orderAmount))
+    end
 end
 
--- ─── Tab Buttons ─────────────────────────────────────────
-
-function DepotDialog:onTabBuy()
-    self.tab = DepotDialog.TAB_BUY
-    self.pageIndex = 0
-    self:refresh()
+function DepotDialog:onAmountPlus()
+    self.orderAmount = math.min(DepotDialog.ORDER_MAX, self.orderAmount + DepotDialog.ORDER_STEP)
+    if self.amountDisplay then
+        self.amountDisplay:setText(string.format("%dL", self.orderAmount))
+    end
 end
 
-function DepotDialog:onTabSell()
-    self.tab = DepotDialog.TAB_SELL
-    self.pageIndex = 0
-    self:refresh()
+function DepotDialog:onConfirmOrder()
+    if not self.selectedFillType then
+        self:showStatus(tr("fd_depot_select_first", "Select a fill type first."))
+        return
+    end
+    local farmId = g_localPlayer and g_localPlayer.farmId or 1
+    if g_DepotManager then
+        g_DepotManager:setPendingOrder(
+            farmId, self.depotId,
+            self.selectedFillType.name,
+            self.selectedFillType.fillTypeIndex,
+            self.orderAmount,
+            self.selectedFillType.displayName or self.selectedFillType.name)
+    end
+    self:showStatus(string.format(
+        tr("fd_depot_order_set", "Order set: %s %.0fL — drive to silo to collect."),
+        self.selectedFillType.displayName or self.selectedFillType.name,
+        self.orderAmount))
 end
 
--- ─── Pagination ──────────────────────────────────────────
+-- ─── Row Action (Select for Buy, Sell All for Sell) ──────
 
-function DepotDialog:onPrevPage()
-    self.pageIndex = math.max(0, self.pageIndex - DepotDialog.ROWS)
-    self:refresh()
+function DepotDialog:onRowAction(rowSlot)
+    if self.tab == DepotDialog.TAB_SELL then
+        self:executeSell(rowSlot)
+    else
+        self:selectRow(rowSlot)
+    end
 end
 
-function DepotDialog:onNextPage()
-    local total = self.tab == DepotDialog.TAB_BUY and #self.fillTypes or self:getSellCount()
-    self.pageIndex = math.min(self.pageIndex + DepotDialog.ROWS, math.max(0, total - 1))
-    self:refresh()
+function DepotDialog:selectRow(rowSlot)
+    local ftIdx = self.pageIndex + rowSlot
+    local ft    = self.fillTypes[ftIdx]
+    if not ft then return end
+    self.selectedFillType = ft
+    self.orderAmount      = 1000
+    if self.selectedTypeName then
+        self.selectedTypeName:setText(ft.displayName or ft.name)
+    end
+    if self.amountDisplay then
+        self.amountDisplay:setText(string.format("%dL", self.orderAmount))
+    end
+    self:showStatus("")
+    -- Refresh buy rows so the selected row shows "Selected"
+    self:refreshBuyTab()
 end
-
--- ─── Buy / Sell Actions ──────────────────────────────────
 
 function DepotDialog:executeSell(rowSlot)
     local system = g_DepotManager and g_DepotManager.depotSystem
@@ -360,49 +395,32 @@ function DepotDialog:executeSell(rowSlot)
     end
 end
 
-function DepotDialog:executeBuy(rowSlot, liters)
-    if self.tab == DepotDialog.TAB_SELL then
-        self:executeSell(rowSlot)
-        return
-    end
-    local ftIdx = self.pageIndex + rowSlot
-    local ft    = self.fillTypes[ftIdx]
-    if not ft then return end
-    local farmId = g_localPlayer and g_localPlayer.farmId or 1
-    self:showStatus(string.format("Buying %dL %s...", liters, ft.displayName or ft.name))
-    DepotPurchaseEvent.sendToServer(self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
+-- ─── Close ───────────────────────────────────────────────
+
+function DepotDialog:onClickClose()
+    self:close()
 end
 
--- ─── Generated Buy Callbacks (8 rows x 3 quantities) ─────
+-- ─── Pagination ──────────────────────────────────────────
 
-function DepotDialog:onBuy0_100()  self:executeBuy(1, 100)  end
-function DepotDialog:onBuy0_500()  self:executeBuy(1, 500)  end
-function DepotDialog:onBuy0_1000() self:executeBuy(1, 1000) end
+function DepotDialog:onPrevPage()
+    self.pageIndex = math.max(0, self.pageIndex - DepotDialog.ROWS)
+    self:refresh()
+end
 
-function DepotDialog:onBuy1_100()  self:executeBuy(2, 100)  end
-function DepotDialog:onBuy1_500()  self:executeBuy(2, 500)  end
-function DepotDialog:onBuy1_1000() self:executeBuy(2, 1000) end
+function DepotDialog:onNextPage()
+    local total = self.tab == DepotDialog.TAB_BUY and #self.fillTypes or self:getSellCount()
+    self.pageIndex = math.min(self.pageIndex + DepotDialog.ROWS, math.max(0, total - 1))
+    self:refresh()
+end
 
-function DepotDialog:onBuy2_100()  self:executeBuy(3, 100)  end
-function DepotDialog:onBuy2_500()  self:executeBuy(3, 500)  end
-function DepotDialog:onBuy2_1000() self:executeBuy(3, 1000) end
+-- ─── Generated Row Callbacks ─────────────────────────────
 
-function DepotDialog:onBuy3_100()  self:executeBuy(4, 100)  end
-function DepotDialog:onBuy3_500()  self:executeBuy(4, 500)  end
-function DepotDialog:onBuy3_1000() self:executeBuy(4, 1000) end
-
-function DepotDialog:onBuy4_100()  self:executeBuy(5, 100)  end
-function DepotDialog:onBuy4_500()  self:executeBuy(5, 500)  end
-function DepotDialog:onBuy4_1000() self:executeBuy(5, 1000) end
-
-function DepotDialog:onBuy5_100()  self:executeBuy(6, 100)  end
-function DepotDialog:onBuy5_500()  self:executeBuy(6, 500)  end
-function DepotDialog:onBuy5_1000() self:executeBuy(6, 1000) end
-
-function DepotDialog:onBuy6_100()  self:executeBuy(7, 100)  end
-function DepotDialog:onBuy6_500()  self:executeBuy(7, 500)  end
-function DepotDialog:onBuy6_1000() self:executeBuy(7, 1000) end
-
-function DepotDialog:onBuy7_100()  self:executeBuy(8, 100)  end
-function DepotDialog:onBuy7_500()  self:executeBuy(8, 500)  end
-function DepotDialog:onBuy7_1000() self:executeBuy(8, 1000) end
+function DepotDialog:onAction0() self:onRowAction(1) end
+function DepotDialog:onAction1() self:onRowAction(2) end
+function DepotDialog:onAction2() self:onRowAction(3) end
+function DepotDialog:onAction3() self:onRowAction(4) end
+function DepotDialog:onAction4() self:onRowAction(5) end
+function DepotDialog:onAction5() self:onRowAction(6) end
+function DepotDialog:onAction6() self:onRowAction(7) end
+function DepotDialog:onAction7() self:onRowAction(8) end

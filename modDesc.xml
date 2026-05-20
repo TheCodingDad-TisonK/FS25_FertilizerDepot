@@ -96,6 +96,9 @@ Features:
         <specialization name="fertilizerDepot"
                         className="PlaceableDepot"
                         filename="src/placeable/PlaceableDepot.lua"/>
+        <specialization name="fertilizerSilo"
+                        className="PlaceableSilo"
+                        filename="src/placeable/PlaceableSilo.lua"/>
     </placeableSpecializations>
 
     <placeableTypes>
@@ -105,11 +108,11 @@ Features:
               filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="fertilizerDepot"/>
         </type>
-        <!-- Silo: vehicle drive-up filling station using vanilla buyingStation -->
+        <!-- Silo: vehicle drive-up filling station for pre-ordered fill types -->
         <type name="fertilizerSiloType"
-              parent="warehouse"
-              filename="$dataS/scripts/vehicles/Vehicle.lua">
-            <specialization name="buyingStation"/>
+              parent="simplePlaceable"
+              filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="fertilizerSilo"/>
         </type>
     </placeableTypes>
 

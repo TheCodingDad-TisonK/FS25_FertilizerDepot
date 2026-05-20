@@ -1,8 +1,6 @@
 -- =========================================================
 -- FS25 Fertilizer Depot - Manager Singleton
 -- =========================================================
--- Set as g_DepotManager via getfenv(0) during Mission00.load.
--- Owns all subsystems and handles Mission00 lifecycle hooks.
 
 local _depotMgrModName = g_currentModName
 
@@ -22,7 +20,8 @@ end
 DepotManager = {}
 local DepotManager_mt = Class(DepotManager)
 
-local PROXIMITY_THRESHOLD = 8.0  -- meters, on-foot interaction radius
+local PROXIMITY_THRESHOLD  = 8.0   -- metres, on-foot depot trigger radius
+local SILO_VEHICLE_RADIUS  = 20.0  -- metres, vehicle-at-silo detection radius
 
 function DepotManager.new()
     local self = setmetatable({}, DepotManager_mt)
@@ -30,14 +29,30 @@ function DepotManager.new()
     self.sfBridge     = SoilFertilizerBridge.new()
     self.pricing      = DepotPricing.new(self.sfBridge)
     self.depotSystem  = DepotSystem.new(self.pricing)
-    self.depots       = {}    -- public: [depotId] = PlaceableDepot instance
-    self.depotNodes   = {}    -- [depotId] = world-position node for proximity check
-    self.activeDialog = nil   -- currently open DepotDialog (if any)
-    self._initialized      = false
-    self._nearDepotId      = nil   -- depot we're currently near
-    self._nearActionEventId = nil  -- registered F-key action event
-    self._proximityTimer   = 0     -- ms accumulator for 500ms polling
-    self._settingsEventId  = nil   -- Shift+D event ID (set by main.lua hook)
+
+    -- Depot tracking
+    self.depots       = {}    -- [depotId]  = PlaceableDepot instance
+    self.depotNodes   = {}    -- [depotId]  = world-position node for proximity check
+
+    -- Silo tracking
+    self.silos        = {}    -- [siloId]   = PlaceableSilo instance
+    self.siloNodes    = {}    -- [siloId]   = world-position node (rootNode)
+    self._nextSiloId  = 1
+
+    -- Pending pre-orders: [farmId] = {depotId, fillTypeName, fillTypeIndex, maxLiters, displayName}
+    self.pendingOrders = {}
+
+    self.activeDialog = nil
+
+    self._initialized         = false
+    self._nearDepotId         = nil
+    self._nearActionEventId   = nil
+    self._proximityTimer      = 0
+    self._settingsEventId     = nil
+
+    self._nearSiloId          = nil
+    self._nearSiloActionEventId = nil
+
     return self
 end
 
@@ -57,29 +72,26 @@ function DepotManager:delete()
         g_inputBinding:removeActionEvent(self._nearActionEventId)
         self._nearActionEventId = nil
     end
+    if self._nearSiloActionEventId and g_inputBinding then
+        g_inputBinding:removeActionEvent(self._nearSiloActionEventId)
+        self._nearSiloActionEventId = nil
+    end
     self.sfBridge:invalidateCache()
     DepotLogger.info("DepotManager deleted")
 end
 
 -- ─── Depot Registration ──────────────────────────────────
 
--- Called by PlaceableDepot:onFinalizePlacement
 function DepotManager:registerDepot(placeableDepot)
     local id = self.depotSystem:registerDepot()
     self.depots[id] = placeableDepot
     placeableDepot.depotId = id
-
-    -- Store the interaction-point node for proximity detection.
-    -- Use playerTriggerNode (entrance) if available, fall back to root.
     local spec = placeableDepot[PlaceableDepot.SPEC_TABLE_NAME]
     self.depotNodes[id] = (spec and spec.playerTriggerNode) or placeableDepot.rootNode
-
-    DepotLogger.info("Depot #%d registered (node: %s)", id,
-        tostring(self.depotNodes[id]))
+    DepotLogger.info("Depot #%d registered (node: %s)", id, tostring(self.depotNodes[id]))
     return id
 end
 
--- Called by PlaceableDepot:onDelete
 function DepotManager:unregisterDepot(depotId)
     self.depotSystem:unregisterDepot(depotId)
     self.depots[depotId] = nil
@@ -88,6 +100,47 @@ function DepotManager:unregisterDepot(depotId)
         self:_leaveDepotProximity()
     end
     DepotLogger.info("Depot #%d unregistered", depotId)
+end
+
+-- ─── Silo Registration ───────────────────────────────────
+
+function DepotManager:registerSilo(placeableSilo)
+    local id = self._nextSiloId
+    self._nextSiloId = self._nextSiloId + 1
+    self.silos[id] = placeableSilo
+    self.siloNodes[id] = placeableSilo.rootNode
+    DepotLogger.info("Silo #%d registered (node: %s)", id, tostring(placeableSilo.rootNode))
+    return id
+end
+
+function DepotManager:unregisterSilo(siloId)
+    self.silos[siloId] = nil
+    self.siloNodes[siloId] = nil
+    if self._nearSiloId == siloId then
+        self:_leaveSiloProximity()
+    end
+    DepotLogger.info("Silo #%d unregistered", siloId)
+end
+
+-- ─── Pending Orders ──────────────────────────────────────
+
+function DepotManager:setPendingOrder(farmId, depotId, fillTypeName, fillTypeIndex, maxLiters, displayName)
+    self.pendingOrders[farmId] = {
+        depotId      = depotId,
+        fillTypeName  = fillTypeName,
+        fillTypeIndex = fillTypeIndex,
+        maxLiters     = maxLiters,
+        displayName   = displayName or fillTypeName,
+    }
+    DepotLogger.info("Pending order set for farm %d: %s %.0fL", farmId, fillTypeName, maxLiters)
+end
+
+function DepotManager:getPendingOrder(farmId)
+    return self.pendingOrders[farmId]
+end
+
+function DepotManager:clearPendingOrder(farmId)
+    self.pendingOrders[farmId] = nil
 end
 
 -- ─── Network Helpers ─────────────────────────────────────
@@ -115,42 +168,35 @@ function DepotManager:closeDialog()
     end
 end
 
--- ─── Settings Dialog ─────────────────────────────────────
-
 function DepotManager:openSettingsDialog()
     DepotSettingsDialog.show()
 end
 
--- ─── Proximity Detection (replaces addTrigger) ───────────
--- Polled every 500ms from FSBaseMission.update.
--- Registers/removes ACTIVATE_HANDTOOL (F key) based on
--- on-foot player distance to depot entrance node.
+-- ─── Update ──────────────────────────────────────────────
 
 function DepotManager:update(dt)
     self._proximityTimer = self._proximityTimer + dt
     if self._proximityTimer < 500 then return end
     self._proximityTimer = 0
     self:_checkProximity()
+    self:_checkSiloVehicles()
 end
 
+-- ─── Depot Proximity (on-foot player) ────────────────────
+
 function DepotManager:_checkProximity()
-    -- One-shot diagnostic on first run after depot is registered
     if not self._proximityDiagDone and next(self.depotNodes) then
         self._proximityDiagDone = true
         local hasPlayer = g_localPlayer ~= nil
         local hasNode   = g_localPlayer and g_localPlayer.rootNode ~= nil
         local depotNode = next(self.depotNodes) and select(2, next(self.depotNodes))
         local depotOk, dx, dy, dz = false, 0, 0, 0
-        if depotNode then
-            depotOk, dx, dy, dz = pcall(getWorldTranslation, depotNode)
-        end
+        if depotNode then depotOk, dx, dy, dz = pcall(getWorldTranslation, depotNode) end
         DepotLogger.info("Proximity diag: g_localPlayer=%s rootNode=%s depotNode=%s depotPos=%s,%.1f,%.1f,%.1f",
             tostring(hasPlayer), tostring(hasNode), tostring(depotNode),
             tostring(depotOk), dx, dy, dz)
     end
 
-    -- Get local player position.
-    -- Try g_localPlayer first; fall back to controlled vehicle position.
     local px, pz
     if g_localPlayer and g_localPlayer.rootNode then
         local ok, x, y, z = pcall(getWorldTranslation, g_localPlayer.rootNode)
@@ -169,7 +215,6 @@ function DepotManager:_checkProximity()
         return
     end
 
-    -- Find nearest depot within threshold
     local nearId, nearDist = nil, PROXIMITY_THRESHOLD + 1
     for id, node in pairs(self.depotNodes) do
         if node then
@@ -201,8 +246,6 @@ function DepotManager:_enterDepotProximity(depotId)
             g_inputBinding:setActionEventTextVisibility(evId, true)
             g_inputBinding:setActionEventActive(evId, true)
             DepotLogger.info("Proximity: entered depot #%d", depotId)
-        else
-            DepotLogger.warning("Proximity: ACTIVATE_HANDTOOL registration failed for depot #%d", depotId)
         end
     end
 end
@@ -222,4 +265,113 @@ function DepotManager:_onInteractAction()
     if self._nearDepotId then
         self:openDialog(self._nearDepotId)
     end
+end
+
+-- ─── Silo Proximity (vehicle detection for pre-order fill) ───────────────
+
+function DepotManager:_checkSiloVehicles()
+    if not next(self.siloNodes) then return end
+
+    local player = g_localPlayer
+    if not player then return end
+
+    local farmId = player.farmId or 0
+
+    -- Require player to be in a vehicle
+    local vehicle = nil
+    if player.getIsInVehicle and player:getIsInVehicle() then
+        if player.getCurrentVehicle then
+            vehicle = player:getCurrentVehicle()
+        end
+    end
+    if not vehicle then
+        vehicle = g_currentMission and g_currentMission.controlledVehicle
+    end
+
+    local nearSiloId = nil
+    if vehicle and vehicle.rootNode then
+        local ok, vx, vy, vz = pcall(getWorldTranslation, vehicle.rootNode)
+        if ok and vx then
+            for id, node in pairs(self.siloNodes) do
+                if node then
+                    local ok2, sx, sy, sz = pcall(getWorldTranslation, node)
+                    if ok2 and sx then
+                        local dist = math.sqrt((vx - sx) ^ 2 + (vz - sz) ^ 2)
+                        if dist <= SILO_VEHICLE_RADIUS then
+                            nearSiloId = id
+                            break
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if nearSiloId ~= self._nearSiloId then
+        if self._nearSiloId then self:_leaveSiloProximity() end
+        if nearSiloId then self:_enterSiloProximity(nearSiloId, farmId) end
+    end
+end
+
+function DepotManager:_enterSiloProximity(siloId, farmId)
+    self._nearSiloId = siloId
+    local order = self.pendingOrders[farmId]
+    if not order then
+        DepotLogger.debug("Near silo #%d but no pending order for farm %d", siloId, farmId)
+        return
+    end
+
+    if not g_inputBinding then return end
+    local label = string.format(
+        tr("fd_silo_collect_action", "Collect %s (%.0fL)"),
+        order.displayName, order.maxLiters)
+
+    local ok, evId = g_inputBinding:registerActionEvent(
+        InputAction.ACTIVATE_HANDTOOL, self,
+        DepotManager._onSiloFillAction, false, true, false, true)
+    if ok then
+        self._nearSiloActionEventId = evId
+        g_inputBinding:setActionEventText(evId, label)
+        g_inputBinding:setActionEventTextVisibility(evId, true)
+        g_inputBinding:setActionEventActive(evId, true)
+        DepotLogger.info("Silo proximity: silo #%d, order %s %.0fL",
+            siloId, order.fillTypeName, order.maxLiters)
+    end
+end
+
+function DepotManager:_leaveSiloProximity()
+    if self._nearSiloActionEventId and g_inputBinding then
+        g_inputBinding:removeActionEvent(self._nearSiloActionEventId)
+        self._nearSiloActionEventId = nil
+    end
+    self._nearSiloId = nil
+end
+
+function DepotManager:_onSiloFillAction()
+    local player = g_localPlayer
+    if not player then return end
+    local farmId = player.farmId or 0
+    local order = self.pendingOrders[farmId]
+    if not order or not self._nearSiloId then return end
+
+    -- Find nearest depot (use order.depotId preferably)
+    local depotId = order.depotId
+    if not depotId or not self.depots[depotId] then
+        depotId = next(self.depots)
+    end
+    if not depotId then
+        DepotLogger.warning("Silo fill: no depot registered")
+        return
+    end
+
+    DepotLogger.info("Silo fill: sending event depot=%d silo=%d %s %.0fL farm=%d",
+        depotId, self._nearSiloId, order.fillTypeName, order.maxLiters, farmId)
+
+    DepotSiloFillEvent.sendToServer(
+        depotId, self._nearSiloId,
+        order.fillTypeName, order.fillTypeIndex, order.maxLiters, farmId)
+
+    -- Optimistically clear on client so prompt disappears immediately
+    self.pendingOrders[farmId] = nil
+    self:_leaveSiloProximity()
 end
