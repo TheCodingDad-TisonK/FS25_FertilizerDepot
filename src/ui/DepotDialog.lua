@@ -220,7 +220,7 @@ function DepotDialog:refreshSellTab()
     if system and self.depotId then
         for _, ft in ipairs(self.fillTypes) do
             if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-                local vehicle, unitIndex = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex)
+                local vehicle, unitIndex = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
                 if vehicle and unitIndex then
                     local level = vehicle:getFillUnitFillLevel(unitIndex)
                     if level and level > 0 then
@@ -294,7 +294,7 @@ function DepotDialog:getSellCount()
     local count = 0
     for _, ft in ipairs(self.fillTypes) do
         if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex)
+            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
             if v and u and v:getFillUnitFillLevel(u) > 0 then
                 count = count + 1
             end
@@ -345,7 +345,7 @@ function DepotDialog:executeSell(rowSlot)
     local target = self.pageIndex + rowSlot
     for _, ft in ipairs(self.fillTypes) do
         if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex)
+            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
             if v and u and v:getFillUnitFillLevel(u) > 0 then
                 count = count + 1
                 if count == target then

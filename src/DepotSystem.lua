@@ -68,12 +68,24 @@ end
 
 -- ─── Vehicle Search ──────────────────────────────────────
 
-local VEHICLE_SEARCH_RADIUS_SQ = 25 * 25  -- 25-metre radius around depot root
+local VEHICLE_SEARCH_RADIUS_SQ = 60 * 60  -- 60-metre radius around depot root
 
--- Returns the first vehicle within range that has a compatible fill unit, or nil.
--- Searches g_currentMission.vehicles by world-position proximity rather than
--- relying on a dedicated vehicle trigger, since farmersMarketUS.i3d has none.
-function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex)
+local function collectVehiclesRecursive(v, list)
+    table.insert(list, v)
+    local ok, impls = pcall(function() return v:getAttachedImplements() end)
+    if ok and impls then
+        for _, impl in ipairs(impls) do
+            if impl.object then
+                collectVehiclesRecursive(impl.object, list)
+            end
+        end
+    end
+end
+
+-- Returns vehicle + fillUnitIndex for the nearest compatible unit.
+-- forSell=true  → looks for a unit that currently HAS the fill type loaded (drain pattern).
+-- forSell=false → looks for a unit that can ACCEPT the fill type and has free capacity.
+function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
     if not g_currentMission then return nil, nil end
 
     local placeable = g_DepotManager and g_DepotManager.depots[depotId]
@@ -82,15 +94,30 @@ function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex)
     local px, _, pz = getWorldTranslation(placeable.rootNode)
 
     for _, vehicle in pairs(g_currentMission.vehicles or {}) do
-        if vehicle and vehicle.getFillUnits and vehicle.rootNode then
+        if vehicle and vehicle.rootNode then
             local vx, _, vz = getWorldTranslation(vehicle.rootNode)
             local dx, dz = vx - px, vz - pz
             if dx * dx + dz * dz <= VEHICLE_SEARCH_RADIUS_SQ then
-                local units = vehicle:getFillUnits()
-                if units then
-                    for unitIndex, _ in ipairs(units) do
-                        if vehicle:fillUnitSupportsFillType(unitIndex, fillTypeIndex) then
-                            return vehicle, unitIndex
+                local targets = {}
+                collectVehiclesRecursive(vehicle, targets)
+                for _, veh in ipairs(targets) do
+                    local spec = veh.spec_fillUnit
+                    if spec and spec.fillUnits then
+                        for fuIdx, fillUnit in ipairs(spec.fillUnits) do
+                            if forSell then
+                                -- Drain pattern (from FS25_SoilFertilizer): check what's currently loaded
+                                if fillUnit.fillType == fillTypeIndex and (fillUnit.fillLevel or 0) > 0 then
+                                    return veh, fuIdx
+                                end
+                            else
+                                -- Buy: unit must support the type and have free space
+                                if veh.fillUnitSupportsFillType and veh:fillUnitSupportsFillType(fuIdx, fillTypeIndex) then
+                                    local free = veh:getFillUnitFreeCapacity(fuIdx) or 0
+                                    if free > 0 then
+                                        return veh, fuIdx
+                                    end
+                                end
+                            end
                         end
                     end
                 end
@@ -112,8 +139,8 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
     local liters = math.max(DepotConstants.MIN_PURCHASE_LITERS,
                    math.min(DepotConstants.MAX_PURCHASE_LITERS, requestedLiters))
 
-    -- Find compatible vehicle and fill unit
-    local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex)
+    -- Find compatible vehicle and fill unit (buy mode: needs free capacity)
+    local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex, false)
     if not vehicle then return false, "fd_depot_no_trailer", 0 end
 
     -- Check available space in fill unit
@@ -154,7 +181,8 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0, 0 end
 
-    local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex)
+    -- Sell mode: look for a vehicle that currently HAS this fill type loaded
+    local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex, true)
     if not vehicle then return false, "fd_depot_no_trailer", 0, 0 end
 
     local available = vehicle:getFillUnitFillLevel(unitIndex)

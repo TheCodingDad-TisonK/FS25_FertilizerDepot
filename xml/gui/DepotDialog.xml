@@ -28,7 +28,7 @@
     <GuiElement profile="newLayer"/>
     <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
 
-    <GuiElement profile="dialogBg" id="dialogElement" size="920px 580px">
+    <GuiElement profile="depotDialogBg" id="dialogElement">
         <ThreePartBitmap profile="fs25_dialogBgMiddle"/>
         <ThreePartBitmap profile="fs25_dialogBgTop"/>
         <ThreePartBitmap profile="fs25_dialogBgBottom"/>
@@ -246,6 +246,11 @@
 
     <!-- ── Custom Profiles ──────────────────────────── -->
     <GUIProfiles>
+
+        <!-- Outer dialog bg — must extend fs25_dialogBg for correct coordinate system -->
+        <Profile name="depotDialogBg" extends="fs25_dialogBg">
+            <size value="920px 580px"/>
+        </Profile>
 
         <!-- Title (large) -->
         <Profile name="depotTitle" extends="fs25_textDefault" with="anchorTopCenter">
