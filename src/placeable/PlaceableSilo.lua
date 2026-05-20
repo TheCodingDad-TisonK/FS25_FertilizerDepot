@@ -23,17 +23,26 @@ end
 
 function PlaceableSilo.registerXMLPaths(schema, basePath)
     schema:setXMLSpecializationType("FertilizerSilo")
+    schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerSilo#loadingStation",
+        "Loading station node used as vehicle search origin for fill orders")
     schema:setXMLSpecializationType()
 end
 
 function PlaceableSilo:onLoad(savegame)
-    self[PlaceableSilo.SPEC_TABLE_NAME] = { siloId = nil }
+    local spec = { siloId = nil, loadStationNode = nil }
+    self[PlaceableSilo.SPEC_TABLE_NAME] = spec
+    spec.loadStationNode = self.xmlFile:getValue(
+        "placeable.fertilizerSilo#loadingStation", nil,
+        self.components, self.i3dMappings)
+    if spec.loadStationNode == nil then
+        DepotLogger.warning("PlaceableSilo: loadingStation node not found — using rootNode for vehicle search")
+    end
 end
 
 function PlaceableSilo:onPostFinalizePlacement()
     if g_DepotManager then
         local spec = self[PlaceableSilo.SPEC_TABLE_NAME]
-        spec.siloId = g_DepotManager:registerSilo(self)
+        spec.siloId = g_DepotManager:registerSilo(self, spec.loadStationNode)
     end
 end
 

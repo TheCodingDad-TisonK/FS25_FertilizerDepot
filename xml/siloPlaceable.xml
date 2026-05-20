@@ -34,7 +34,6 @@
     <!--   0>11 = sellingStation (nodeId 207)                                                 -->
     <!--   0>12 = warehouse (nodeId 213)                                                      -->
     <deletedNodes>
-        <deletedNode node="0>4|3"/>
         <deletedNode node="0>5"/>
         <deletedNode node="0>10"/>
         <deletedNode node="0>11"/>
@@ -42,7 +41,7 @@
     </deletedNodes>
 
     <!-- Custom silo specialization: registers with DepotManager for pre-order fill flow -->
-    <fertilizerSilo/>
+    <fertilizerSilo loadingStation="loadingStation_0"/>
 
     <placement useRandomYRotation="false" useManualYRotation="true">
         <testAreas>

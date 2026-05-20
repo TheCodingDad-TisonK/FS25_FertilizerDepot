@@ -62,6 +62,7 @@ DepotManager = {}
 local DepotManager_mt = Class(DepotManager)
 
 local PROXIMITY_THRESHOLD     = 5.0    -- metres, depot & silo on-foot radius (keep < gate distance)
+local SILO_VEHICLE_PROXIMITY  = 10.0   -- metres, vehicle near silo (larger — harder to park precisely)
 local VEHICLE_UNLOAD_PROXIMITY= 15.0   -- metres, vehicle near depot unload marker
 local SILO_FILL_COOLDOWN      = 2000   -- ms between silo fill triggers
 local DEPOT_SELL_COOLDOWN     = 5000   -- ms cooldown after sell dialog closes
@@ -83,12 +84,13 @@ function DepotManager.new()
     self.pendingOrders = {}
     self.activeDialog  = nil
 
-    self._initialized     = false
-    self._nearDepotId     = nil
-    self._nearSiloId      = nil
+    self._initialized       = false
+    self._nearDepotId       = nil
+    self._nearSiloId        = nil       -- on-foot silo proximity
+    self._nearVehicleSiloId = nil       -- vehicle silo proximity (auto-trigger)
     self._nearUnloadDepotId = nil
-    self._proximityTimer  = 0
-    self._settingsEventId = nil
+    self._proximityTimer    = 0
+    self._settingsEventId   = nil
 
     -- Single persistent ACTIVATE_HANDTOOL event (shared for depot + silo)
     self._interactEventId  = nil
@@ -156,12 +158,12 @@ end
 
 -- ─── Silo Registration ───────────────────────────────────
 
-function DepotManager:registerSilo(placeableSilo)
+function DepotManager:registerSilo(placeableSilo, loadStationNode)
     local id = self._nextSiloId
     self._nextSiloId = self._nextSiloId + 1
     self.silos[id] = placeableSilo
-    self.siloNodes[id] = placeableSilo.rootNode
-    DepotLogger.info("Silo #%d registered (node: %s)", id, tostring(placeableSilo.rootNode))
+    self.siloNodes[id] = loadStationNode or placeableSilo.rootNode
+    DepotLogger.info("Silo #%d registered (loadStation node: %s)", id, tostring(self.siloNodes[id]))
     return id
 end
 
@@ -171,6 +173,9 @@ function DepotManager:unregisterSilo(siloId)
     if self._nearSiloId == siloId then
         self._nearSiloId = nil
         self:_updateInteractPrompt()
+    end
+    if self._nearVehicleSiloId == siloId then
+        self._nearVehicleSiloId = nil
     end
     DepotLogger.info("Silo #%d unregistered", siloId)
 end
@@ -252,6 +257,7 @@ function DepotManager:_getOrRegisterInteractEvent()
     if self._interactEventId then return self._interactEventId end
     if not g_inputBinding then return nil end
 
+    g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
     local ok, evId = g_inputBinding:registerActionEvent(
         InputAction.FD_INTERACT, self,
         DepotManager._onInteractAction, false, true, false, true)
@@ -259,8 +265,9 @@ function DepotManager:_getOrRegisterInteractEvent()
         self._interactEventId = evId
         g_inputBinding:setActionEventTextVisibility(evId, false)
         g_inputBinding:setActionEventActive(evId, false)
-        DepotLogger.info("ACTIVATE_HANDTOOL registered (id=%s)", tostring(evId))
+        DepotLogger.info("FD_INTERACT registered (id=%s)", tostring(evId))
     end
+    g_inputBinding:endActionEventsModification()
     return self._interactEventId
 end
 
@@ -305,40 +312,13 @@ function DepotManager:_updateInteractPrompt()
 end
 
 function DepotManager:_onInteractAction()
-    -- Silo fill (on foot)
+    -- Silo fill (on foot E-key path)
     if self._nearSiloId then
         if self._siloFillCooldown > 0 then return end
-
         local farmId = g_localPlayer and g_localPlayer.farmId or 0
         local order = self.pendingOrders[farmId]
         if not order then return end
-
-        local depotId = order.depotId
-        if not depotId or not self.depots[depotId] then
-            depotId = next(self.depots)
-        end
-        if not depotId then
-            DepotLogger.warning("Silo fill: no depot registered")
-            return
-        end
-
-        -- Store context for the YesNo callback
-        self._pendingSiloFill = {
-            depotId      = depotId,
-            siloId       = self._nearSiloId,
-            fillTypeName = order.fillTypeName,
-            fillTypeIndex= order.fillTypeIndex,
-            maxLiters    = order.maxLiters,
-            displayName  = order.displayName,
-            farmId       = farmId,
-        }
-
-        self._siloFillCooldown = SILO_FILL_COOLDOWN
-
-        local text = string.format(
-            tr("fd_silo_fill_confirm", "Collect %.0fL of %s?\n\nYour vehicle will be filled."),
-            order.maxLiters, order.displayName)
-        YesNoDialog.show(DepotManager._onSiloFillConfirm, self, text)
+        self:_tryShowSiloFillDialog(self._nearSiloId, farmId, order)
         return
     end
 
@@ -418,18 +398,67 @@ function DepotManager:_checkDepotProximity()
     end
 end
 
--- ─── Silo Proximity (on-foot player, not in vehicle) ─────
+-- ─── Silo Proximity ──────────────────────────────────────
+-- On foot : sets _nearSiloId → shows E-key prompt → player presses E → YesNo.
+-- In vehicle: auto-shows YesNo when vehicle pulls up (same pattern as depot sell).
 
 function DepotManager:_checkSiloProximity()
     if not next(self.siloNodes) then return end
 
-    -- Only detect when player is ON FOOT
-    if g_currentMission and g_currentMission.controlledVehicle then
-        if self._nearSiloId then
-            self._nearSiloId = nil
-            self:_updateInteractPrompt()
+    local cv = g_currentMission and g_currentMission.controlledVehicle
+
+    if cv then
+        self:_checkSiloProximityVehicle(cv)
+    else
+        self:_checkSiloProximityOnFoot()
+    end
+end
+
+function DepotManager:_checkSiloProximityVehicle(cv)
+    -- Clear any on-foot silo state when the player gets in a vehicle
+    if self._nearSiloId then
+        self._nearSiloId = nil
+        self:_updateInteractPrompt()
+    end
+
+    if not cv.rootNode then return end
+    local ok, vx, vy, vz = pcall(getWorldTranslation, cv.rootNode)
+    if not ok or not vx then return end
+
+    local nearSiloId = nil
+    for id, node in pairs(self.siloNodes) do
+        if node then
+            local nok, sx, sy, sz = pcall(getWorldTranslation, node)
+            if nok and sx then
+                local dist = math.sqrt((vx - sx) ^ 2 + (vz - sz) ^ 2)
+                if dist <= SILO_VEHICLE_PROXIMITY then
+                    nearSiloId = id
+                    break
+                end
+            end
         end
-        return
+    end
+
+    if nearSiloId ~= self._nearVehicleSiloId then
+        local prev = self._nearVehicleSiloId
+        self._nearVehicleSiloId = nearSiloId
+        if nearSiloId and not prev then
+            DepotLogger.info("Silo proximity: vehicle entered silo #%d", nearSiloId)
+            local farmId = g_localPlayer and g_localPlayer.farmId or 0
+            local order = self.pendingOrders[farmId]
+            if order and self._siloFillCooldown <= 0 then
+                self:_tryShowSiloFillDialog(nearSiloId, farmId, order)
+            end
+        elseif not nearSiloId and prev then
+            DepotLogger.info("Silo proximity: vehicle left silo #%d", prev)
+        end
+    end
+end
+
+function DepotManager:_checkSiloProximityOnFoot()
+    -- Clear vehicle silo state when player exits vehicle
+    if self._nearVehicleSiloId then
+        self._nearVehicleSiloId = nil
     end
 
     local px, pz
@@ -464,14 +493,44 @@ function DepotManager:_checkSiloProximity()
         local prev = self._nearSiloId
         self._nearSiloId = nearSiloId
         if nearSiloId then
-            DepotLogger.info("Silo proximity: entered silo #%d", nearSiloId)
+            DepotLogger.info("Silo proximity: entered silo #%d (on foot)", nearSiloId)
         elseif prev then
-            DepotLogger.info("Silo proximity: left silo #%d", prev)
+            DepotLogger.info("Silo proximity: left silo #%d (on foot)", prev)
         end
         self:_updateInteractPrompt()
     elseif nearSiloId then
         self:_updateInteractPrompt()
     end
+end
+
+-- Shared: builds context and shows YesNo confirmation for silo fill.
+-- Called from both the on-foot E-key path and the vehicle auto-trigger path.
+function DepotManager:_tryShowSiloFillDialog(siloId, farmId, order)
+    local depotId = order.depotId
+    if not depotId or not self.depots[depotId] then
+        depotId = next(self.depots)
+    end
+    if not depotId then
+        DepotLogger.warning("Silo fill: no depot registered")
+        return
+    end
+
+    self._pendingSiloFill = {
+        depotId      = depotId,
+        siloId       = siloId,
+        fillTypeName = order.fillTypeName,
+        fillTypeIndex= order.fillTypeIndex,
+        maxLiters    = order.maxLiters,
+        displayName  = order.displayName,
+        farmId       = farmId,
+    }
+
+    self._siloFillCooldown = SILO_FILL_COOLDOWN
+
+    local text = string.format(
+        tr("fd_silo_fill_confirm", "Collect %.0fL of %s?\n\nYour vehicle will be filled."),
+        order.maxLiters, order.displayName)
+    YesNoDialog.show(DepotManager._onSiloFillConfirm, self, text)
 end
 
 -- ─── Vehicle at Depot Unload Trigger ─────────────────────

@@ -85,6 +85,11 @@ end
 -- Finds a compatible vehicle+fillUnit near a world position (px, pz).
 -- forSell=true  → unit currently HAS the fill type loaded.
 -- forSell=false → unit can ACCEPT the fill type and has free capacity.
+local function vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex)
+    if veh.getFillUnitSupportsFillType == nil then return false end
+    return veh:getFillUnitSupportsFillType(fuIdx, fillTypeIndex)
+end
+
 local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
     if not g_currentMission then return nil, nil end
 
@@ -104,7 +109,7 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
                                     return veh, fuIdx
                                 end
                             else
-                                if veh.fillUnitSupportsFillType and veh:fillUnitSupportsFillType(fuIdx, fillTypeIndex) then
+                                if vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex) then
                                     local free = veh:getFillUnitFreeCapacity(fuIdx) or 0
                                     if free > 0 then return veh, fuIdx end
                                 end
@@ -133,6 +138,14 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
 
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0 end
+
+    -- Resolve fillTypeIndex from name to avoid SoilFertilizer index drift
+    if g_fillTypeManager then
+        local resolvedIdx = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+        if resolvedIdx and resolvedIdx > 0 then
+            fillTypeIndex = resolvedIdx
+        end
+    end
 
     local liters = math.max(DepotConstants.MIN_PURCHASE_LITERS,
                    math.min(DepotConstants.MAX_PURCHASE_LITERS, requestedLiters))
@@ -171,13 +184,44 @@ function DepotSystem:buyFromSilo(depotId, siloNode, fillTypeName, fillTypeIndex,
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0 end
 
-    if not siloNode then return false, "fd_error_depot", 0 end
-
     local liters = math.max(DepotConstants.MIN_PURCHASE_LITERS,
                    math.min(DepotConstants.MAX_PURCHASE_LITERS, requestedLiters))
 
-    local px, _, pz = getWorldTranslation(siloNode)
-    local vehicle, unitIndex = findVehicleNearPosition(px, pz, fillTypeIndex, false)
+    -- Resolve fillTypeIndex from name in case the index drifted (e.g. SoilFertilizer remapping)
+    if g_fillTypeManager then
+        local resolvedIdx = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+        if resolvedIdx and resolvedIdx > 0 then
+            fillTypeIndex = resolvedIdx
+        end
+    end
+
+    local vehicle, unitIndex = nil, nil
+
+    -- 1st: search near the silo (player walked up on foot)
+    if siloNode then
+        local px, _, pz = getWorldTranslation(siloNode)
+        vehicle, unitIndex = findVehicleNearPosition(px, pz, fillTypeIndex, false)
+    end
+
+    -- 2nd fallback: search near the depot node itself (sprayer parked at depot)
+    if not vehicle then
+        local depotPlaceable = g_DepotManager and g_DepotManager.depots[depotId]
+        local depotNode = depotPlaceable and depotPlaceable.rootNode
+        if depotNode then
+            local px, _, pz = getWorldTranslation(depotNode)
+            vehicle, unitIndex = findVehicleNearPosition(px, pz, fillTypeIndex, false)
+        end
+    end
+
+    -- 3rd fallback: search near every registered unload node for this depot
+    if not vehicle then
+        local unloadNode = g_DepotManager and g_DepotManager.depotUnloadNodes[depotId]
+        if unloadNode then
+            local px, _, pz = getWorldTranslation(unloadNode)
+            vehicle, unitIndex = findVehicleNearPosition(px, pz, fillTypeIndex, false)
+        end
+    end
+
     if not vehicle then return false, "fd_depot_no_trailer", 0 end
 
     local freeCapacity = vehicle:getFillUnitFreeCapacity(unitIndex)
@@ -262,7 +306,8 @@ function DepotSystem:loadFromXML(xmlFile, depotId, basePath)
         local name = xmlFile:getString(path .. "#type")
         if not name then break end
         local liters = xmlFile:getFloat(path .. "#liters", 0)
-        depot.storageLevel[name] = math.max(0, math.min(DepotConstants.STORAGE_CAPACITY, liters))
+        local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity) or DepotConstants.STORAGE_CAPACITY
+        depot.storageLevel[name] = math.max(0, math.min(cap, liters))
         i = i + 1
     end
 end
