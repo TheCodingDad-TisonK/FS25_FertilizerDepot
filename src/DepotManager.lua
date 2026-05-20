@@ -9,7 +9,8 @@ local function tr(key, fallback)
     local i18n = (modEnv and modEnv.i18n) or g_i18n
     if i18n then
         local ok, text = pcall(function() return i18n:getText(key) end)
-        if ok and text and text ~= "" and text ~= ("$l10n_" .. key) then
+        if ok and text and text ~= "" and text ~= ("$l10n_" .. key)
+           and not text:find("^Missing '") then
             return text
         end
     end
@@ -267,41 +268,34 @@ function DepotManager:_onInteractAction()
     end
 end
 
--- ─── Silo Proximity (vehicle detection for pre-order fill) ───────────────
+-- ─── Silo Proximity (on-foot player, same pattern as depot) ──────────────
+-- Player parks vehicle near silo, exits, walks to silo, presses E.
+-- buyFromSilo then searches for the parked vehicle within 60m of silo.
 
 function DepotManager:_checkSiloVehicles()
     if not next(self.siloNodes) then return end
 
-    local player = g_localPlayer
-    if not player then return end
-
-    local farmId = player.farmId or 0
-
-    -- Require player to be in a vehicle
-    local vehicle = nil
-    if player.getIsInVehicle and player:getIsInVehicle() then
-        if player.getCurrentVehicle then
-            vehicle = player:getCurrentVehicle()
-        end
+    -- ACTIVATE_HANDTOOL only fires on foot — check player position, not vehicle
+    local px, pz
+    if g_localPlayer and g_localPlayer.rootNode then
+        local ok, x, y, z = pcall(getWorldTranslation, g_localPlayer.rootNode)
+        if ok and x then px, pz = x, z end
     end
-    if not vehicle then
-        vehicle = g_currentMission and g_currentMission.controlledVehicle
+
+    if not px then
+        if self._nearSiloId then self:_leaveSiloProximity() end
+        return
     end
 
     local nearSiloId = nil
-    if vehicle and vehicle.rootNode then
-        local ok, vx, vy, vz = pcall(getWorldTranslation, vehicle.rootNode)
-        if ok and vx then
-            for id, node in pairs(self.siloNodes) do
-                if node then
-                    local ok2, sx, sy, sz = pcall(getWorldTranslation, node)
-                    if ok2 and sx then
-                        local dist = math.sqrt((vx - sx) ^ 2 + (vz - sz) ^ 2)
-                        if dist <= SILO_VEHICLE_RADIUS then
-                            nearSiloId = id
-                            break
-                        end
-                    end
+    for id, node in pairs(self.siloNodes) do
+        if node then
+            local ok, sx, sy, sz = pcall(getWorldTranslation, node)
+            if ok and sx then
+                local dist = math.sqrt((px - sx) ^ 2 + (pz - sz) ^ 2)
+                if dist <= PROXIMITY_THRESHOLD then
+                    nearSiloId = id
+                    break
                 end
             end
         end
@@ -309,7 +303,14 @@ function DepotManager:_checkSiloVehicles()
 
     if nearSiloId ~= self._nearSiloId then
         if self._nearSiloId then self:_leaveSiloProximity() end
-        if nearSiloId then self:_enterSiloProximity(nearSiloId, farmId) end
+        if nearSiloId then
+            local farmId = g_localPlayer and g_localPlayer.farmId or 0
+            self:_enterSiloProximity(nearSiloId, farmId)
+        end
+    elseif nearSiloId and not self._nearSiloActionEventId then
+        -- Order might have been set while already standing near silo
+        local farmId = g_localPlayer and g_localPlayer.farmId or 0
+        self:_enterSiloProximity(nearSiloId, farmId)
     end
 end
 
@@ -348,11 +349,15 @@ function DepotManager:_leaveSiloProximity()
 end
 
 function DepotManager:_onSiloFillAction()
+    DepotLogger.info("_onSiloFillAction fired, nearSiloId=%s", tostring(self._nearSiloId))
     local player = g_localPlayer
     if not player then return end
     local farmId = player.farmId or 0
     local order = self.pendingOrders[farmId]
-    if not order or not self._nearSiloId then return end
+    if not order or not self._nearSiloId then
+        DepotLogger.warning("_onSiloFillAction: no order (farm=%d) or no nearSiloId", farmId)
+        return
+    end
 
     -- Find nearest depot (use order.depotId preferably)
     local depotId = order.depotId

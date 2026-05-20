@@ -24,6 +24,13 @@
     <text name="fd_depot_buy_btn"     text="Buy"/>
     <text name="fd_depot_sell_btn"    text="Sell All"/>
     <text name="fd_depot_deposit_btn" text="Deposit"/>
+    <text name="fd_depot_select_btn"  text="Select"/>
+
+    <!-- Pre-order flow -->
+    <text name="fd_depot_select_first"   text="Select a fill type first."/>
+    <text name="fd_depot_order_set"      text="Order set: %s %.0fL — walk to silo to collect."/>
+    <text name="fd_silo_collect_action"  text="Collect %s (%.0fL)"/>
+    <text name="fd_silo_no_order"        text="No pending order. Confirm a type at the Depot first."/>
 
     <!-- Stock labels -->
     <text name="fd_depot_stock_full"     text="Full"/>

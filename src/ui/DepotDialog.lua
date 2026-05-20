@@ -11,7 +11,9 @@ local function tr(key, fallback)
     local i18n = (modEnv and modEnv.i18n) or g_i18n
     if i18n then
         local ok, text = pcall(function() return i18n:getText(key) end)
-        if ok and text and text ~= "" and text ~= ("$l10n_" .. key) then
+        -- FS25 returns "Missing 'key' in l10n_XX.xml" for unknown keys instead of throwing
+        if ok and text and text ~= "" and text ~= ("$l10n_" .. key)
+           and not text:find("^Missing '") then
             return text
         end
     end

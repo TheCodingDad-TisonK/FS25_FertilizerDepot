@@ -50,12 +50,16 @@ function DepotSiloFillEvent:run(connection)
         self.fillTypeName, self.fillTypeIndex,
         self.requestedLiters, self.farmId)
 
+    DepotLogger.info("DepotSiloFillEvent:run depot=%d silo=%d %s %.0fL farm=%d siloNode=%s",
+        self.depotId, self.siloId, self.fillTypeName, self.requestedLiters, self.farmId,
+        tostring(siloNode))
     if ok and liters > 0 then
         g_DepotManager:broadcastSync(self.depotId)
         g_DepotManager:clearPendingOrder(self.farmId)
-        DepotLogger.info("Silo fill: %.0fL %s for farm %d", liters, self.fillTypeName, self.farmId)
+        DepotLogger.info("Silo fill SUCCESS: %.0fL %s for farm %d", liters, self.fillTypeName, self.farmId)
     else
-        DepotLogger.warning("Silo fill failed: %s", tostring(msgKey))
+        DepotLogger.warning("Silo fill FAILED: %s (depot=%d silo=%d type=%s)",
+            tostring(msgKey), self.depotId, self.siloId, self.fillTypeName)
     end
 end
 
