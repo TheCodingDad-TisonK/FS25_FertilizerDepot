@@ -118,6 +118,5 @@ Features:
         <storeItem xmlFilename="xml/siloPlaceable.xml"/>
     </storeItems>
 
-    <l10n filenamePrefix="translations/translation">
-    </l10n>
+    <l10n filenamePrefix="translations/translation" defaultLanguage="en"/>
 </modDesc>

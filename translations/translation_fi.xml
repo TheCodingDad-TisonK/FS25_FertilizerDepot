@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8" standalone="no"?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <l10n>
+    <texts>
     <!-- Store -->
     <text name="fd_shop_name"     text="Fertilizer Depot"/>
     <text name="fd_shop_desc"     text="A placeable Fertilizer Depot where you can buy, store, and sell all fertilizer types at seasonally-adjusted prices."/>
@@ -65,4 +66,5 @@
     <text name="fd_settings_off"        text="OFF"/>
         <!-- Input action display name -->
     <text name="input_FD_OPEN_SETTINGS" text="Avaa varaston asetukset"/>
+    </texts>
 </l10n>
