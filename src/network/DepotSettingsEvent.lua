@@ -36,13 +36,12 @@ function DepotSettingsEvent:run(connection)
     if not g_server then return end
     if not g_DepotManager then return end
 
-    -- Admin check
-    local farm = g_currentMission:getFarmAtSplitScreen(0)
-    if not connection:getIsServer() and
-       not g_currentMission.isMasterUser and
-       (farm == nil or not farm:getIsAdminFarm()) then
-        DepotLogger.warning("Non-admin setting change blocked")
-        return
+    -- Admin check: SP always passes; MP blocks non-master clients
+    if connection and not connection:getIsServer() then
+        if not g_currentMission.isMasterUser then
+            DepotLogger.warning("Non-admin setting change blocked")
+            return
+        end
     end
 
     local s = g_DepotManager.settings
@@ -98,9 +97,7 @@ function DepotSettingsSyncEvent:readStream(streamId, connection)
         g_DepotManager.settings:readStream(streamId)
     end
     -- Refresh settings dialog if open
-    if DepotSettingsDialog.INSTANCE and DepotSettingsDialog.INSTANCE.isOpen then
-        DepotSettingsDialog.INSTANCE:refresh()
-    end
+    DepotSettingsDialog.refreshIfOpen()
 end
 
 function DepotSettingsSyncEvent:run(connection)

@@ -28,12 +28,20 @@
     </base>
 
     <!-- Hide silo storage, selling station, warehouse and safety tape — keep buying pipe only -->
+    <!-- Node indices verified against multifruitstation.i3d scene tree:                      -->
+    <!--   0>5  = silo (nodeId 105)                                                           -->
+    <!--   0>10 = warningStripes (nodeId 204)                                                 -->
+    <!--   0>11 = sellingStation (nodeId 207)                                                 -->
+    <!--   0>12 = warehouse (nodeId 213)                                                      -->
     <deletedNodes>
-        <deletedNode node="silo"/>
-        <deletedNode node="warningStripes"/>
-        <deletedNode node="sellingStation"/>
-        <deletedNode node="warehouse"/>
+        <deletedNode node="0>5"/>
+        <deletedNode node="0>10"/>
+        <deletedNode node="0>11"/>
+        <deletedNode node="0>12"/>
     </deletedNodes>
+
+    <!-- Required by palletBuyingStation spec; point at the existing loading trigger -->
+    <palletBuyingStation triggerNode="loadingTrigger"/>
 
     <placement useRandomYRotation="false" useManualYRotation="true">
         <testAreas>

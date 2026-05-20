@@ -63,4 +63,6 @@
     <text name="fd_settings_admin_only" text="View only — admin required to change settings"/>
     <text name="fd_settings_on"         text="ON"/>
     <text name="fd_settings_off"        text="OFF"/>
+        <!-- Input action display name -->
+    <text name="input_FD_OPEN_SETTINGS" text="Depo ayarlarını aç"/>
 </l10n>

@@ -94,10 +94,16 @@ end
 
 -- Save settings alongside savegame
 local function onSaveToXML(missionInfo, xmlFile, ...)
-    if g_DepotManager then
-        g_DepotManager.settings:saveToXML(xmlFile, "fertilizerDepot.settings")
-        DepotLogger.debug("Settings saved")
+    if not g_DepotManager then return end
+    if not xmlFile then
+        -- FSCareerMissionInfo.saveToXMLFile can fire before the XML handle is
+        -- created (e.g. during onSaveStartComplete). Skip silently; the next
+        -- real save call will carry a valid handle.
+        DepotLogger.warning("onSaveToXML: xmlFile is nil — skipping settings save")
+        return
     end
+    g_DepotManager.settings:saveToXML(xmlFile, "fertilizerDepot.settings")
+    DepotLogger.debug("Settings saved")
 end
 
 -- PREPEND so g_DepotManager exists before Mission00.load loads savegame placeables.

@@ -81,7 +81,7 @@ function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex)
 
     local px, _, pz = getWorldTranslation(placeable.rootNode)
 
-    for _, vehicle in pairs(g_currentMission.vehicles) do
+    for _, vehicle in pairs(g_currentMission.vehicles or {}) do
         if vehicle and vehicle.getFillUnits and vehicle.rootNode then
             local vx, _, vz = getWorldTranslation(vehicle.rootNode)
             local dx, dz = vx - px, vz - pz
