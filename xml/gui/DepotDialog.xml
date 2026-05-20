@@ -30,9 +30,9 @@
 
             <!-- ── Column Headers ────────────────────────── -->
             <GuiElement profile="depotHeaderRow" id="buyHeaderRow" position="0px -100px">
-                <Text profile="depotColHeader" position="0px 0px"    text="$l10n_fd_col_type"/>
-                <Text profile="depotColHeader" position="210px 0px"  text="$l10n_fd_col_stock"/>
-                <Text profile="depotColHeader" position="340px 0px"  text="$l10n_fd_col_price"/>
+                <Text profile="depotColHeader" id="colTypeHeader"  position="0px 0px"    text="$l10n_fd_col_type"/>
+                <Text profile="depotColHeader" id="colStockHeader" position="210px 0px"  text="$l10n_fd_col_stock"/>
+                <Text profile="depotColHeader" id="colPriceHeader" position="340px 0px"  text="$l10n_fd_col_price"/>
                 <Text profile="depotColHeader" position="500px 0px"  text=""/>
             </GuiElement>
 
@@ -138,7 +138,7 @@
         <!-- ── Footer Buttons ────────────────────────────── -->
         <BoxLayout profile="fs25_dialogButtonBox">
             <Button profile="buttonBack" id="closeButton"
-                    text="$l10n_fd_depot_close" onClick="onClose"/>
+                    text="$l10n_fd_depot_close" onClick="onClickClose"/>
         </BoxLayout>
 
     </GuiElement>
@@ -150,7 +150,7 @@
             <size value="750px 520px"/>
         </Profile>
 
-        <Profile name="depotSeasonLabel" extends="fs25_dialogText">
+        <Profile name="depotSeasonLabel" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="14px"/>
             <textColor value="0.9 0.75 0.2 1"/>
             <textAlignment value="right"/>
@@ -168,7 +168,7 @@
             <textSize value="13px"/>
         </Profile>
 
-        <Profile name="depotHeaderRow" extends="emptyPanel">
+        <Profile name="depotHeaderRow" extends="emptyPanel" with="anchorTopCenter">
             <size value="710px 18px"/>
         </Profile>
 
@@ -178,7 +178,7 @@
             <textColor value="0.7 0.7 0.7 1"/>
         </Profile>
 
-        <Profile name="depotRow" extends="emptyPanel">
+        <Profile name="depotRow" extends="emptyPanel" with="anchorTopCenter">
             <size value="710px 24px"/>
         </Profile>
 
@@ -217,7 +217,7 @@
             <textAlignment value="center"/>
         </Profile>
 
-        <Profile name="depotStatusText" extends="fs25_dialogText">
+        <Profile name="depotStatusText" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textColor value="0.85 0.85 0.85 1"/>
             <size value="700px 20px"/>

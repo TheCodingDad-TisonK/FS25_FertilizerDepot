@@ -66,14 +66,14 @@
             <size value="560px 320px"/>
         </Profile>
 
-        <Profile name="depotAdminBadge" extends="fs25_dialogText">
+        <Profile name="depotAdminBadge" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textColor value="1 0.4 0.4 1"/>
             <textAlignment value="center"/>
             <size value="520px 16px"/>
         </Profile>
 
-        <Profile name="depotSettingsRow" extends="emptyPanel">
+        <Profile name="depotSettingsRow" extends="emptyPanel" with="anchorTopCenter">
             <size value="520px 32px"/>
         </Profile>
 

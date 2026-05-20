@@ -1,53 +1,79 @@
 -- =========================================================
 -- FS25 Fertilizer Depot - Buy/Sell Dialog
 -- =========================================================
--- MessageDialog pattern (validated). Two tabs: BUY and SELL.
+-- ScreenElement pattern. Two tabs: BUY and SELL.
 -- 8 visible rows, paginated through fill type list.
+
+local _depotDialogModDir  = g_currentModDirectory  -- captured at source() time
+local _depotDialogModName = g_currentModName
+local _depotDialogInstance = nil                  -- local so __index chain can't shadow it
+
+local function tr(key, fallback)
+    local modEnv = g_modEnvironments and g_modEnvironments[_depotDialogModName]
+    local i18n = (modEnv and modEnv.i18n) or g_i18n
+    if i18n then
+        local ok, text = pcall(function() return i18n:getText(key) end)
+        if ok and text and text ~= "" and text ~= ("$l10n_" .. key) then
+            return text
+        end
+    end
+    return fallback or key
+end
 
 ---@class DepotDialog
 DepotDialog = {}
-DepotDialog.INSTANCE    = nil
 DepotDialog.ROWS        = 8
 DepotDialog.TAB_BUY     = "buy"
 DepotDialog.TAB_SELL    = "sell"
 
-local DepotDialog_mt = Class(DepotDialog, MessageDialog)
+local DepotDialog_mt = Class(DepotDialog, ScreenElement)
 
 function DepotDialog.new(depotId)
-    local self = MessageDialog.new(nil, DepotDialog_mt)
+    local self = ScreenElement.new(nil, DepotDialog_mt)
     self.depotId   = depotId
     self.tab       = DepotDialog.TAB_BUY
     self.pageIndex = 0     -- 0-based offset into fill type list
     self.fillTypes = {}    -- ordered list from SoilFertilizerBridge
     -- Element caches
-    self.seasonLabel   = nil
-    self.pageLabel     = nil
-    self.statusText    = nil
-    self.prevPageBtn   = nil
-    self.nextPageBtn   = nil
-    self.tabBuyBtn     = nil
-    self.tabSellBtn    = nil
-    self.rows          = {}  -- [1..ROWS] = {nameEl, stockEl, priceEl, buy1, buy2, buy3}
+    self.seasonLabel    = nil
+    self.pageLabel      = nil
+    self.statusText     = nil
+    self.prevPageBtn    = nil
+    self.nextPageBtn    = nil
+    self.tabBuyBtn      = nil
+    self.tabSellBtn     = nil
+    self.colTypeHeader  = nil
+    self.colStockHeader = nil
+    self.colPriceHeader = nil
+    self.closeBtn       = nil
+    self.rows           = {}  -- [1..ROWS] = {nameEl, stockEl, priceEl, buy1, buy2, buy3}
     return self
 end
 
 -- ─── Registration ────────────────────────────────────────
 
+function DepotDialog.getInstance()
+    return _depotDialogInstance
+end
+
 function DepotDialog.register()
-    if DepotDialog.INSTANCE then return end
-    DepotDialog.INSTANCE = DepotDialog.new(nil)
-    g_gui:loadGui(g_currentModDirectory .. "xml/gui/DepotDialog.xml",
-        "DepotDialog", DepotDialog.INSTANCE)
+    if _depotDialogInstance then return end
+    _depotDialogInstance = DepotDialog.new(nil)
+    DepotLogger.info("DepotDialog.register: loading GUI from %s", _depotDialogModDir)
+    g_gui:loadGui(_depotDialogModDir .. "xml/gui/DepotDialog.xml",
+        "DepotDialog", _depotDialogInstance)
 end
 
 function DepotDialog.show(depotId)
-    if not DepotDialog.INSTANCE then
+    DepotLogger.info("DepotDialog.show called for depot #%s", tostring(depotId))
+    if not _depotDialogInstance then
         DepotDialog.register()
     end
-    local dlg = DepotDialog.INSTANCE
+    local dlg = _depotDialogInstance
     dlg.depotId   = depotId
     dlg.tab       = DepotDialog.TAB_BUY
     dlg.pageIndex = 0
+    DepotLogger.info("DepotDialog.show: calling g_gui:showDialog")
     g_gui:showDialog("DepotDialog")
 end
 
@@ -56,13 +82,25 @@ end
 function DepotDialog:onGuiSetupFinished()
     DepotDialog:superClass().onGuiSetupFinished(self)
 
-    self.seasonLabel = self:getDescendantById("seasonLabel")
-    self.pageLabel   = self:getDescendantById("pageLabel")
-    self.statusText  = self:getDescendantById("statusText")
-    self.prevPageBtn = self:getDescendantById("prevPageBtn")
-    self.nextPageBtn = self:getDescendantById("nextPageBtn")
-    self.tabBuyBtn   = self:getDescendantById("tabBuyBtn")
-    self.tabSellBtn  = self:getDescendantById("tabSellBtn")
+    self.seasonLabel    = self:getDescendantById("seasonLabel")
+    self.pageLabel      = self:getDescendantById("pageLabel")
+    self.statusText     = self:getDescendantById("statusText")
+    self.prevPageBtn    = self:getDescendantById("prevPageBtn")
+    self.nextPageBtn    = self:getDescendantById("nextPageBtn")
+    self.tabBuyBtn      = self:getDescendantById("tabBuyBtn")
+    self.tabSellBtn     = self:getDescendantById("tabSellBtn")
+    self.colTypeHeader  = self:getDescendantById("colTypeHeader")
+    self.colStockHeader = self:getDescendantById("colStockHeader")
+    self.colPriceHeader = self:getDescendantById("colPriceHeader")
+    self.closeBtn       = self:getDescendantById("closeButton")
+
+    -- Set static labels via tr() so $l10n_ fallback is overridden correctly
+    if self.tabBuyBtn      then self.tabBuyBtn:setText(tr("fd_depot_buy",   "Buy"))          end
+    if self.tabSellBtn     then self.tabSellBtn:setText(tr("fd_depot_sell",  "Sell"))         end
+    if self.colTypeHeader  then self.colTypeHeader:setText(tr("fd_col_type",  "Fill Type"))   end
+    if self.colStockHeader then self.colStockHeader:setText(tr("fd_col_stock", "Depot Stock")) end
+    if self.colPriceHeader then self.colPriceHeader:setText(tr("fd_col_price", "Price / 1kL")) end
+    if self.closeBtn       then self.closeBtn:setText(tr("fd_depot_close",  "Close"))         end
 
     -- Cache per-row elements
     for i = 0, DepotDialog.ROWS - 1 do
@@ -126,7 +164,7 @@ end
 function DepotDialog:updateSeasonLabel()
     if not self.seasonLabel or not g_DepotManager then return end
     local key = g_DepotManager.pricing:getSeasonKey()
-    local label = g_i18n:getText(key)
+    local label = tr(key, key)
     local mult  = g_DepotManager.pricing:getSeasonMultiplier()
     local sign  = mult >= 1.0 and "+" or ""
     self.seasonLabel:setText(string.format("%s %s%.0f%%",
@@ -149,9 +187,9 @@ function DepotDialog:refreshBuyTab()
             local priceStr = string.format("$%.2f/kL", buyPrice * 1000)
             local stockStr
             if stored >= DepotConstants.STORAGE_CAPACITY then
-                stockStr = g_i18n:getText("fd_depot_stock_full")
+                stockStr = tr("fd_depot_stock_full", "Full")
             elseif stored <= 0 then
-                stockStr = g_i18n:getText("fd_depot_stock_stocking")
+                stockStr = tr("fd_depot_stock_stocking", "Stocking")
             else
                 stockStr = string.format("%dL", math.floor(stored))
             end
@@ -210,7 +248,7 @@ function DepotDialog:refreshSellTab()
             -- Use buy3 slot as "Sell All" button (repurposed text)
             if row.buy3 then
                 row.buy3:setVisible(true)
-                row.buy3:setText(g_i18n:getText("fd_depot_sell_btn"))
+                row.buy3:setText(tr("fd_depot_sell_btn", "Sell All"))
             end
         else
             self:clearRow(slot)
@@ -220,7 +258,7 @@ function DepotDialog:refreshSellTab()
     -- Update status line
     if self.statusText then
         if #sellTypes == 0 then
-            self.statusText:setText(g_i18n:getText("fd_depot_no_trailer"))
+            self.statusText:setText(tr("fd_depot_no_trailer", "No compatible trailer nearby."))
         else
             self.statusText:setText("")
         end
@@ -268,6 +306,12 @@ function DepotDialog:getSellCount()
         end
     end
     return count
+end
+
+-- ─── Close ───────────────────────────────────────────────
+
+function DepotDialog:onClickClose()
+    g_gui:closeDialogByName("DepotDialog")
 end
 
 -- ─── Tab Buttons ─────────────────────────────────────────
