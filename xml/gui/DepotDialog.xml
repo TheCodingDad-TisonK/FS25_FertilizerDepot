@@ -221,15 +221,15 @@
             </GuiElement>
 
             <!-- ── Pagination (3-layer) ───────────────── -->
-            <GuiElement profile="fdPageContainer" id="prevPageBtn" position="-90px -375px">
+            <GuiElement profile="fdPageContainer" id="prevPageBtn" position="-90px -410px">
                 <Bitmap  profile="fdPageBg"  position="0px 0px"/>
                 <Text    profile="fdPageTxt" position="0px 0px" text="&lt;"/>
                 <Button  profile="fdPageHit" position="0px 0px" onClick="onPrevPage"/>
             </GuiElement>
 
-            <Text profile="depotPageLabel" id="pageLabel" position="0px -376px" text="1 / 1"/>
+            <Text profile="depotPageLabel" id="pageLabel" position="0px -411px" text="1 / 1"/>
 
-            <GuiElement profile="fdPageContainer" id="nextPageBtn" position="90px -375px">
+            <GuiElement profile="fdPageContainer" id="nextPageBtn" position="90px -410px">
                 <Bitmap  profile="fdPageBg"  position="0px 0px"/>
                 <Text    profile="fdPageTxt" position="0px 0px" text="&gt;"/>
                 <Button  profile="fdPageHit" position="0px 0px" onClick="onNextPage"/>
@@ -237,7 +237,7 @@
 
             <!-- ── Status line ────────────────────────── -->
             <Text profile="depotStatusText" id="statusText"
-                  position="0px -410px" text=""/>
+                  position="0px -445px" text=""/>
 
         </GuiElement>
 

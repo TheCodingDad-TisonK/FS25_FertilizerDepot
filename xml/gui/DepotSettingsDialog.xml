@@ -24,28 +24,28 @@
             <GuiElement profile="depotSettingsRow" position="0px -90px">
                 <Text profile="depotSettingsLabel" text="$l10n_fd_settings_seasonal"/>
                 <MultiTextOption profile="depotSettingsOption" id="optSeasonalPricing"
-                                 onChanged="onSeasonalPricingChanged"/>
+                                 position="340px 0px" onChanged="onSeasonalPricingChanged"/>
             </GuiElement>
 
             <!-- Storage Capacity -->
             <GuiElement profile="depotSettingsRow" position="0px -130px">
                 <Text profile="depotSettingsLabel" text="$l10n_fd_settings_capacity"/>
                 <MultiTextOption profile="depotSettingsOption" id="optStorageCapacity"
-                                 onChanged="onStorageCapacityChanged"/>
+                                 position="340px 0px" onChanged="onStorageCapacityChanged"/>
             </GuiElement>
 
             <!-- Sell Ratio -->
             <GuiElement profile="depotSettingsRow" position="0px -170px">
                 <Text profile="depotSettingsLabel" text="$l10n_fd_settings_sell_ratio"/>
                 <MultiTextOption profile="depotSettingsOption" id="optSellRatio"
-                                 onChanged="onSellRatioChanged"/>
+                                 position="340px 0px" onChanged="onSellRatioChanged"/>
             </GuiElement>
 
             <!-- Buy Price Multiplier -->
             <GuiElement profile="depotSettingsRow" position="0px -210px">
                 <Text profile="depotSettingsLabel" text="$l10n_fd_settings_buy_mult"/>
                 <MultiTextOption profile="depotSettingsOption" id="optBuyMultiplier"
-                                 onChanged="onBuyMultiplierChanged"/>
+                                 position="340px 0px" onChanged="onBuyMultiplierChanged"/>
             </GuiElement>
 
         </GuiElement>
@@ -85,7 +85,6 @@
 
         <Profile name="depotSettingsOption" extends="multiTextOption">
             <size value="260px 36px"/>
-            <position value="340px 0px"/>
         </Profile>
 
     </GUIProfiles>
