@@ -2,9 +2,9 @@
 <placeable type="fertilizerDepotType">
 
     <storeData>
-        <name>Fertilizer Depot</name>
+        <name>$l10n_fd_shop_name</name>
         <functions>
-            <function>Buy, store, and sell fertilizers</function>
+            <function>$l10n_fd_shop_function</function>
         </functions>
         <image>store/store_depot.dds</image>
         <price>25000</price>
@@ -22,86 +22,261 @@
         </brush>
     </storeData>
 
-    <!--
-        Use the vanilla limeStation building for visual + collision.
-        It already has a vehicle loading trigger and a player refill trigger,
-        plus proper clear/level/test areas and PBR textures.
-        $data = game data root (equivalent of $dataS in Lua).
-    -->
     <base>
-        <filename>$data/placeables/brandless/limeStation/limeStation.i3d</filename>
+        <filename>$data/placeables/mapUS/farmersMarketUS/farmersMarketUS.i3d</filename>
         <canBeDeleted>true</canBeDeleted>
         <canBeRenamed>true</canBeRenamed>
     </base>
 
     <placement useRandomYRotation="false" useManualYRotation="true">
         <testAreas>
-            <testArea startNode="testAreaStart" endNode="testAreaEnd"/>
+            <testArea startNode="testAreaStart01" endNode="testAreaEnd01"/>
         </testAreas>
         <sounds>
-            <place template="smallImp"/>
+            <place template="largeImp"/>
         </sounds>
     </placement>
 
     <clearAreas>
-        <clearArea startNode="clearAreaStart" widthNode="clearAreaWidth"
-                   heightNode="clearAreaHeight"/>
+        <clearArea startNode="clearAreaStart01" widthNode="clearAreaWidth01"
+                   heightNode="clearAreaHeight01"/>
     </clearAreas>
 
-    <leveling requireLeveling="true" maxSmoothDistance="1" maxSlope="75" maxEdgeAngle="30">
+    <leveling requireLeveling="true" maxSmoothDistance="10" maxSlope="75" maxEdgeAngle="30">
         <levelAreas>
-            <levelArea startNode="levelAreaStart" widthNode="levelAreaWidth"
-                       heightNode="levelAreaHeight" groundType="gravel"/>
+            <levelArea startNode="levelAreaStart01" widthNode="levelAreaWidth01"
+                       heightNode="levelAreaHeight01" groundType="asphalt"/>
         </levelAreas>
+        <paintAreas>
+            <paintArea startNode="paintAreaStart01" widthNode="paintAreaWidth01"
+                       heightNode="paintAreaHeight01" groundType="asphalt"/>
+        </paintAreas>
     </leveling>
 
-    <!-- Custom specialization: hook our trigger nodes from the limeStation i3d -->
-    <fertilizerDepot vehicleTrigger="vehicleTrigger" playerTrigger="playerTrigger"/>
+    <indoorAreas>
+        <indoorArea startNode="indoorAreaStart01" widthNode="indoorAreaWidth01" heightNode="indoorAreaHeight01"/>
+        <indoorArea startNode="indoorAreaStart02" widthNode="indoorAreaWidth02" heightNode="indoorAreaHeight02"/>
+        <indoorArea startNode="indoorAreaStart03" widthNode="indoorAreaWidth03" heightNode="indoorAreaHeight03"/>
+    </indoorAreas>
 
-    <!-- Map hotspot -->
+    <ai>
+        <updateAreas>
+            <updateArea startNode="tipOcclusionUpdateAreaStart01" endNode="tipOcclusionUpdateAreaEnd01"/>
+        </updateAreas>
+    </ai>
+
+    <tipOcclusionUpdateAreas>
+        <tipOcclusionUpdateArea startNode="tipOcclusionUpdateAreaStart01"
+                                endNode="tipOcclusionUpdateAreaEnd01"/>
+    </tipOcclusionUpdateAreas>
+
+    <!-- Player dialog trigger: infoTrigger at building center (0,0,0) — truly inside -->
+    <fertilizerDepot playerTrigger="infoTrigger"/>
+
+    <!-- Animated gates and doors (identical to vanilla farmersMarket) -->
+    <animatedObjects>
+        <animatedObject saveId="gate01">
+            <animation duration="3.5">
+                <part node="gate01_doorLeft">
+                    <keyFrame time="0" translation="1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+                <part node="gate01_doorRight">
+                    <keyFrame time="0" translation="-1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerGate01" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="gate01_doorLeft" template="slidingGateWoodLoop"/>
+                <posEnd  linkNode="gate01_doorLeft" template="woodDoorOpen"/>
+                <negEnd  linkNode="gate01_doorLeft" template="woodDoorClose"/>
+            </sounds>
+        </animatedObject>
+
+        <animatedObject saveId="gate02">
+            <animation duration="3.5">
+                <part node="gate02_doorLeft">
+                    <keyFrame time="0" translation="1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+                <part node="gate02_doorRight">
+                    <keyFrame time="0" translation="-1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerGate02" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="gate02_doorLeft" template="slidingGateWoodLoop"/>
+                <posEnd  linkNode="gate02_doorLeft" template="woodDoorOpen"/>
+                <negEnd  linkNode="gate02_doorLeft" template="woodDoorClose"/>
+            </sounds>
+        </animatedObject>
+
+        <animatedObject saveId="gate03">
+            <animation duration="3.5">
+                <part node="gate03_doorLeft">
+                    <keyFrame time="0" translation="-1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+                <part node="gate03_doorRight">
+                    <keyFrame time="0" translation="1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerGate03" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="gate03_doorRight" template="slidingGateWoodLoop"/>
+                <posEnd  linkNode="gate03_doorRight" template="woodDoorOpen"/>
+                <negEnd  linkNode="gate03_doorRight" template="woodDoorClose"/>
+            </sounds>
+        </animatedObject>
+
+        <animatedObject saveId="gate04">
+            <animation duration="3.5">
+                <part node="gate04_doorLeft">
+                    <keyFrame time="0" translation="-1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+                <part node="gate04_doorRight">
+                    <keyFrame time="0" translation="1.186 0 0"/>
+                    <keyFrame time="1" translation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerGate04" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="gate04_doorRight" template="slidingGateWoodLoop"/>
+                <posEnd  linkNode="gate04_doorRight" template="woodDoorOpen"/>
+                <negEnd  linkNode="gate04_doorRight" template="woodDoorClose"/>
+            </sounds>
+        </animatedObject>
+
+        <animatedObject saveId="door01">
+            <animation duration="1.5">
+                <part node="door01">
+                    <keyFrame time="0.25" rotation="0 0 0"/>
+                    <keyFrame time="1.25" rotation="0 95 0"/>
+                </part>
+                <part node="door01Opener">
+                    <keyFrame time="0.00" rotation="0 0 0"/>
+                    <keyFrame time="0.25" rotation="0 0 -25"/>
+                    <keyFrame time="0.75" rotation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerDoor01" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="door01" template="woodDoorSqueaksSmall"/>
+                <posEnd  linkNode="door01" template="woodDoorOpen"/>
+                <negEnd  linkNode="door01" template="woodDoorCloseRandom"/>
+            </sounds>
+        </animatedObject>
+
+        <animatedObject saveId="door02">
+            <animation duration="1.5">
+                <part node="door02">
+                    <keyFrame time="0.25" rotation="0 0 0"/>
+                    <keyFrame time="1.25" rotation="0 95 0"/>
+                </part>
+                <part node="door02Opener">
+                    <keyFrame time="0.00" rotation="0 0 0"/>
+                    <keyFrame time="0.25" rotation="0 0 25"/>
+                    <keyFrame time="0.75" rotation="0 0 0"/>
+                </part>
+            </animation>
+            <controls triggerNode="triggerDoor02" posAction="ACTIVATE_HANDTOOL"
+                      posText="action_openGate" negText="action_closeGate"/>
+            <sounds>
+                <moving  linkNode="door02" template="woodDoorSqueaksSmall"/>
+                <posEnd  linkNode="door02" template="woodDoorOpen"/>
+                <negEnd  linkNode="door02" template="woodDoorCloseRandom"/>
+            </sounds>
+        </animatedObject>
+    </animatedObjects>
+
+    <!-- Map hotspot anchored at the unload marker (front of selling area) -->
     <hotspots>
-        <hotspot type="PRODUCTION_POINT" linkNode="mapHotspot"/>
+        <hotspot type="PRODUCTION_POINT" linkNode="unloadTriggerMarker"/>
     </hotspots>
 
+    <!-- In-world markers -->
+    <triggerMarkers>
+        <!-- Vehicle/trailer zone: park here to buy or sell -->
+        <triggerMarker node="unloadTriggerMarker"
+                       filename="$data/shared/assets/marker/markerIconLoad.i3d"
+                       adjustToGround="true"/>
+        <!-- Dialog zone: center of building interior -->
+        <triggerMarker node="infoTrigger"
+                       filename="$data/shared/assets/marker/markerIconWrench.i3d"
+                       adjustToGround="true"/>
+    </triggerMarkers>
+
     <i3dMappings>
-        <!--
-          limeStation.i3d root children (0-based):
-            [0] clearAreas
-            [1] levelAreas
-            [2] testAreas
-            [3] tipOcclusionUpdateAreas
-            [4] buyingStation
-                  [0] teleportNode
-                  [1] markerLoading
-                  [2] mapPosition          ← map hotspot anchor
-                  [3] loadingStation
-                        [0] loadingTrigger ← vehicle trigger (mask=trailers)
-            [5] silo
-                  [0] unloadingStation
-                  [1] loadingStation
-                  [2] refillPlayerTrigger  ← player trigger (mask=player)
-            [6] visuals                    ← building mesh (PBR, GIANTS textures)
-            [7] collisions                 ← building collision mesh
-        -->
+        <!-- Clear / level / paint areas -->
+        <i3dMapping id="clearAreaStart01"  node="0>0|0"/>
+        <i3dMapping id="clearAreaWidth01"  node="0>0|0|0"/>
+        <i3dMapping id="clearAreaHeight01" node="0>0|0|1"/>
 
-        <!-- Our trigger nodes -->
-        <i3dMapping id="vehicleTrigger" node="0>4|3|0"/>
-        <i3dMapping id="playerTrigger"  node="0>5|2"/>
+        <i3dMapping id="levelAreaStart01"  node="0>1|0"/>
+        <i3dMapping id="levelAreaWidth01"  node="0>1|0|0"/>
+        <i3dMapping id="levelAreaHeight01" node="0>1|0|1"/>
 
-        <!-- Map hotspot -->
-        <i3dMapping id="mapHotspot"     node="0>4|2"/>
+        <i3dMapping id="paintAreaStart01"  node="0>2|0"/>
+        <i3dMapping id="paintAreaWidth01"  node="0>2|0|0"/>
+        <i3dMapping id="paintAreaHeight01" node="0>2|0|1"/>
 
-        <!-- Placement / clear / level areas -->
-        <i3dMapping id="clearAreaStart"  node="0>0|0"/>
-        <i3dMapping id="clearAreaWidth"  node="0>0|0|0"/>
-        <i3dMapping id="clearAreaHeight" node="0>0|0|1"/>
+        <!-- Indoor areas -->
+        <i3dMapping id="indoorAreaStart01"  node="0>3|0"/>
+        <i3dMapping id="indoorAreaWidth01"  node="0>3|0|0"/>
+        <i3dMapping id="indoorAreaHeight01" node="0>3|0|1"/>
+        <i3dMapping id="indoorAreaStart02"  node="0>3|1"/>
+        <i3dMapping id="indoorAreaWidth02"  node="0>3|1|0"/>
+        <i3dMapping id="indoorAreaHeight02" node="0>3|1|1"/>
+        <i3dMapping id="indoorAreaStart03"  node="0>3|2"/>
+        <i3dMapping id="indoorAreaWidth03"  node="0>3|2|0"/>
+        <i3dMapping id="indoorAreaHeight03" node="0>3|2|1"/>
 
-        <i3dMapping id="levelAreaStart"  node="0>1|0"/>
-        <i3dMapping id="levelAreaWidth"  node="0>1|0|0"/>
-        <i3dMapping id="levelAreaHeight" node="0>1|0|1"/>
+        <!-- Test areas -->
+        <i3dMapping id="testAreaStart01" node="0>4|0"/>
+        <i3dMapping id="testAreaEnd01"   node="0>4|0|0"/>
 
-        <i3dMapping id="testAreaStart"   node="0>2|0"/>
-        <i3dMapping id="testAreaEnd"     node="0>2|0|0"/>
+        <!-- Tip occlusion -->
+        <i3dMapping id="tipOcclusionUpdateAreaStart01" node="0>5|0"/>
+        <i3dMapping id="tipOcclusionUpdateAreaEnd01"   node="0>5|0|0"/>
+
+        <!-- Gate door panels -->
+        <i3dMapping id="gate01_doorLeft"  node="0>7|0|0"/>
+        <i3dMapping id="gate01_doorRight" node="0>7|1|0"/>
+        <i3dMapping id="gate02_doorLeft"  node="0>7|2|0"/>
+        <i3dMapping id="gate02_doorRight" node="0>7|3|0"/>
+        <i3dMapping id="gate03_doorLeft"  node="0>7|4|0"/>
+        <i3dMapping id="gate03_doorRight" node="0>7|5|0"/>
+        <i3dMapping id="gate04_doorLeft"  node="0>7|6|0"/>
+        <i3dMapping id="gate04_doorRight" node="0>7|7|0"/>
+
+        <!-- Small door panels -->
+        <i3dMapping id="door01"       node="0>7|8|0"/>
+        <i3dMapping id="door01Opener" node="0>7|8|0|0"/>
+        <i3dMapping id="door02"       node="0>7|9|0"/>
+        <i3dMapping id="door02Opener" node="0>7|9|0|0"/>
+
+        <!-- Interaction triggers for animated objects -->
+        <i3dMapping id="triggerGate01" node="0>7|10"/>
+        <i3dMapping id="triggerGate02" node="0>7|11"/>
+        <i3dMapping id="triggerGate03" node="0>7|12"/>
+        <i3dMapping id="triggerGate04" node="0>7|13"/>
+        <i3dMapping id="triggerDoor01" node="0>7|14"/>
+        <i3dMapping id="triggerDoor02" node="0>7|15"/>
+
+        <!-- Player dialog trigger (building center, collisionFilterMask=0x100000 = player) -->
+        <i3dMapping id="infoTrigger"         node="0>6"/>
+
+        <!-- Selling station area (used for map hotspot and trigger marker) -->
+        <i3dMapping id="unloadTriggerMarker" node="0>8|0|1"/>
     </i3dMappings>
 
 </placeable>

@@ -12,6 +12,13 @@ function PlaceableDepot.prerequisitesPresent(...)
     return true
 end
 
+-- registerFunctions: makes onPlayerTrigger callable as self:onPlayerTrigger()
+-- Required so addTrigger(node, "onPlayerTrigger", self) can resolve the callback.
+function PlaceableDepot.registerFunctions(placeableType)
+    SpecializationUtil.registerFunction(placeableType, "onPlayerTrigger",
+        PlaceableDepot.onPlayerTrigger)
+end
+
 function PlaceableDepot.registerEventListeners(placeableType)
     SpecializationUtil.registerEventListener(placeableType, "onLoad",                  PlaceableDepot)
     SpecializationUtil.registerEventListener(placeableType, "onPostFinalizePlacement",  PlaceableDepot)
@@ -23,38 +30,30 @@ end
 
 function PlaceableDepot.registerXMLPaths(schema, basePath)
     schema:setXMLSpecializationType("FertilizerDepot")
-    schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#vehicleTrigger",
-        "Vehicle proximity trigger node")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#playerTrigger",
-        "Player interaction trigger node")
+        "Player walk-in trigger node (inside building)")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:setXMLSpecializationType()
 end
 
--- ─── onLoad — runs on ALL machines ───────────────────────
+-- ─── onLoad ──────────────────────────────────────────────
 
 function PlaceableDepot:onLoad(savegame)
     local spec = {}
     self[PlaceableDepot.SPEC_TABLE_NAME] = spec
-
-    spec.depotId = nil
-    spec.savegame = savegame
-
-    -- Load trigger nodes here so both server and clients have them
-    spec.vehicleTriggerNode = self.xmlFile:getValue(
-        "placeable.fertilizerDepot#vehicleTrigger", nil,
-        self.components, self.i3dMappings)
+    spec.depotId         = nil
+    spec.savegame        = savegame
+    spec.actionEventId   = nil
 
     spec.playerTriggerNode = self.xmlFile:getValue(
         "placeable.fertilizerDepot#playerTrigger", nil,
         self.components, self.i3dMappings)
 
-    if spec.vehicleTriggerNode == nil then
-        DepotLogger.warning("vehicleTrigger node not found — check i3dMappings")
-    end
     if spec.playerTriggerNode == nil then
         DepotLogger.warning("playerTrigger node not found — check i3dMappings")
+    else
+        DepotLogger.debug("playerTrigger node loaded: %s", tostring(spec.playerTriggerNode))
     end
 end
 
@@ -76,56 +75,62 @@ function PlaceableDepot:onPostFinalizePlacement()
     end
     spec.savegame = nil
 
-    -- Vehicle trigger: server only (drives authoritative buy/sell logic)
-    if g_server and spec.vehicleTriggerNode then
-        addTrigger(spec.vehicleTriggerNode, "onVehicleTrigger", self)
-    end
-
-    -- Player trigger: ALL machines so dialog opens for any local player
+    -- Register player trigger on ALL machines so the local player gets the prompt.
     if spec.playerTriggerNode then
         addTrigger(spec.playerTriggerNode, "onPlayerTrigger", self)
+        DepotLogger.debug("Player trigger registered on node %s", tostring(spec.playerTriggerNode))
     end
 end
 
--- ─── Trigger Callbacks ───────────────────────────────────
+-- ─── Player Trigger ──────────────────────────────────────
 
-function PlaceableDepot:onVehicleTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    -- Server only (vehicle trigger only registered on server)
-    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    if not spec or not spec.depotId then return end
-
-    local vehicle = g_currentMission:getNodeObject(otherId)
-    if not vehicle or not vehicle.getFillUnits then return end
-
-    if onEnter then
-        g_DepotManager.depotSystem:addVehicleNearby(spec.depotId, vehicle)
-        DepotLogger.debug("Vehicle entered depot #%d: %s", spec.depotId,
-            tostring(vehicle.configFileName))
-    elseif onLeave then
-        g_DepotManager.depotSystem:removeVehicleNearby(spec.depotId, vehicle)
+-- Walk up the parent chain to check if otherId belongs to g_localPlayer.
+-- Placeable specialization callbacks receive physics child nodes, not rootNode directly.
+local function isLocalPlayer(otherId)
+    if not g_localPlayer then return false end
+    local target = g_localPlayer.rootNode
+    if not target then return false end
+    local node = otherId
+    for _ = 1, 8 do
+        if node == nil or node == 0 then break end
+        if node == target then return true end
+        node = getParent(node)
     end
+    return false
 end
 
 function PlaceableDepot:onPlayerTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    -- Fires locally on each machine. Only respond to the local player.
-    if not g_localPlayer then return end
-    if otherId ~= g_localPlayer.rootNode then return end
+    if onStay then return end
+    if not isLocalPlayer(otherId) then return end
 
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
 
-    -- depotId may be nil on client — use the stored network id instead
     local depotId = spec.depotId or spec.netDepotId
-    if not depotId then return end
+    if not depotId then
+        DepotLogger.warning("onPlayerTrigger: depotId is nil")
+        return
+    end
 
     if onEnter then
-        if g_DepotManager then
-            g_DepotManager:openDialog(depotId)
+        DepotLogger.debug("Player entered depot #%d", depotId)
+        local function onActivate()
+            if g_DepotManager then g_DepotManager:openDialog(depotId) end
+        end
+        local ok, evId = g_inputBinding:registerActionEvent(
+            InputAction.ACTIVATE_HANDTOOL, self, onActivate, false, true, false, true)
+        if ok then
+            spec.actionEventId = evId
+            g_inputBinding:setActionEventText(evId, g_i18n:getText("fd_depot_open_action"))
+            g_inputBinding:setActionEventActive(evId, true)
         end
     elseif onLeave then
-        if g_DepotManager then
-            g_DepotManager:closeDialog()
+        DepotLogger.debug("Player left depot #%d", depotId)
+        if spec.actionEventId then
+            g_inputBinding:removeActionEvent(spec.actionEventId)
+            spec.actionEventId = nil
         end
+        if g_DepotManager then g_DepotManager:closeDialog() end
     end
 end
 
@@ -135,12 +140,11 @@ function PlaceableDepot:onDelete()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
 
-    -- Vehicle trigger: only server registered it
-    if g_server and spec.vehicleTriggerNode then
-        removeTrigger(spec.vehicleTriggerNode)
+    if spec.actionEventId then
+        g_inputBinding:removeActionEvent(spec.actionEventId)
+        spec.actionEventId = nil
     end
 
-    -- Player trigger: all machines registered it
     if spec.playerTriggerNode then
         removeTrigger(spec.playerTriggerNode)
     end
@@ -155,7 +159,6 @@ end
 -- ─── Network Sync ────────────────────────────────────────
 
 function PlaceableDepot:onWriteStream(streamId, connection)
-    -- Server → joining client: send depotId and initial storage state
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     streamWriteInt32(streamId, spec.depotId or 0)
 
@@ -174,19 +177,16 @@ function PlaceableDepot:onWriteStream(streamId, connection)
 end
 
 function PlaceableDepot:onReadStream(streamId, connection)
-    -- Client receives depotId and initial storage state from server
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
 
     local netId = streamReadInt32(streamId)
-    spec.netDepotId = netId  -- used by onPlayerTrigger on clients
+    spec.netDepotId = netId
 
-    -- Ensure a local depot state table exists for display purposes
     if g_DepotManager then
         if not g_DepotManager.depotSystem:getDepot(netId) then
             g_DepotManager.depotSystem._depots[netId] = {
-                id             = netId,
-                storageLevel   = {},
-                vehiclesNearby = {},
+                id           = netId,
+                storageLevel = {},
             }
         end
         g_DepotManager.depots[netId] = self

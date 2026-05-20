@@ -20,9 +20,8 @@ function DepotSystem:registerDepot()
     local id = self._nextId
     self._nextId = self._nextId + 1
     self._depots[id] = {
-        id            = id,
-        storageLevel  = {},  -- [fillTypeName] = liters
-        vehiclesNearby = {},
+        id           = id,
+        storageLevel = {},  -- [fillTypeName] = liters
     }
     return id
 end
@@ -46,7 +45,9 @@ end
 function DepotSystem:setStorageLevel(depotId, fillTypeName, liters)
     local depot = self._depots[depotId]
     if not depot then return end
-    local clamped = math.max(0, math.min(DepotConstants.STORAGE_CAPACITY, liters))
+    local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity)
+                or DepotConstants.STORAGE_CAPACITY
+    local clamped = math.max(0, math.min(cap, liters))
     depot.storageLevel[fillTypeName] = clamped
 end
 
@@ -65,31 +66,32 @@ function DepotSystem:getStorageInfo(depotId)
     return info
 end
 
--- ─── Vehicle Tracking ────────────────────────────────────
+-- ─── Vehicle Search ──────────────────────────────────────
 
-function DepotSystem:addVehicleNearby(depotId, vehicle)
-    local depot = self._depots[depotId]
-    if not depot then return end
-    depot.vehiclesNearby[vehicle] = true
-end
+local VEHICLE_SEARCH_RADIUS_SQ = 25 * 25  -- 25-metre radius around depot root
 
-function DepotSystem:removeVehicleNearby(depotId, vehicle)
-    local depot = self._depots[depotId]
-    if not depot then return end
-    depot.vehiclesNearby[vehicle] = nil
-end
-
--- Returns the first vehicle in range with a compatible fill unit, or nil.
+-- Returns the first vehicle within range that has a compatible fill unit, or nil.
+-- Searches g_currentMission.vehicles by world-position proximity rather than
+-- relying on a dedicated vehicle trigger, since farmersMarketUS.i3d has none.
 function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex)
-    local depot = self._depots[depotId]
-    if not depot then return nil, nil end
-    for vehicle, _ in pairs(depot.vehiclesNearby) do
-        if vehicle and vehicle.getFillUnits then
-            local units = vehicle:getFillUnits()
-            if units then
-                for unitIndex, unit in ipairs(units) do
-                    if vehicle:fillUnitSupportsFillType(unitIndex, fillTypeIndex) then
-                        return vehicle, unitIndex
+    if not g_currentMission then return nil, nil end
+
+    local placeable = g_DepotManager and g_DepotManager.depots[depotId]
+    if not placeable or not placeable.rootNode then return nil, nil end
+
+    local px, _, pz = getWorldTranslation(placeable.rootNode)
+
+    for _, vehicle in pairs(g_currentMission.vehicles) do
+        if vehicle and vehicle.getFillUnits and vehicle.rootNode then
+            local vx, _, vz = getWorldTranslation(vehicle.rootNode)
+            local dx, dz = vx - px, vz - pz
+            if dx * dx + dz * dz <= VEHICLE_SEARCH_RADIUS_SQ then
+                local units = vehicle:getFillUnits()
+                if units then
+                    for unitIndex, _ in ipairs(units) do
+                        if vehicle:fillUnitSupportsFillType(unitIndex, fillTypeIndex) then
+                            return vehicle, unitIndex
+                        end
                     end
                 end
             end
@@ -161,8 +163,10 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
     local liters = math.min(requestedLiters or available, available)
 
     -- Check depot storage space
+    local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity)
+                or DepotConstants.STORAGE_CAPACITY
     local currentStored = depot.storageLevel[fillTypeName] or 0
-    local space = DepotConstants.STORAGE_CAPACITY - currentStored
+    local space = cap - currentStored
     liters = math.min(liters, math.max(0, space))
     if liters <= 0 then return false, "fd_depot_storage_full", 0, 0 end
 

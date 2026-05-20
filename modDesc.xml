@@ -78,6 +78,16 @@ Features:
 
     <multiplayer supported="true"/>
 
+    <actions>
+        <action name="FD_OPEN_SETTINGS" category="ONFOOT VEHICLE"/>
+    </actions>
+
+    <inputBinding>
+        <actionBinding action="FD_OPEN_SETTINGS">
+            <binding device="KB_MOUSE_DEFAULT" input="KEY_lshift KEY_d"/>
+        </actionBinding>
+    </inputBinding>
+
     <extraSourceFiles>
         <sourceFile filename="src/main.lua"/>
     </extraSourceFiles>

@@ -10,6 +10,7 @@ local DepotManager_mt = Class(DepotManager)
 
 function DepotManager.new()
     local self = setmetatable({}, DepotManager_mt)
+    self.settings     = DepotSettings.new()
     self.sfBridge     = SoilFertilizerBridge.new()
     self.pricing      = DepotPricing.new(self.sfBridge)
     self.depotSystem  = DepotSystem.new(self.pricing)
@@ -27,12 +28,10 @@ function DepotManager:initialize()
 end
 
 function DepotManager:delete()
-    -- Close any open dialog
     if self.activeDialog then
         self.activeDialog:close()
         self.activeDialog = nil
     end
-    -- Invalidate bridge cache
     self.sfBridge:invalidateCache()
     DepotLogger.info("DepotManager deleted")
 end
@@ -78,6 +77,12 @@ function DepotManager:closeDialog()
         self.activeDialog:close()
         self.activeDialog = nil
     end
+end
+
+-- ─── Settings Dialog ─────────────────────────────────────
+
+function DepotManager:openSettingsDialog()
+    DepotSettingsDialog.show()
 end
 
 -- ─── Per-Frame Update ────────────────────────────────────

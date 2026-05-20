@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<GUI onOpen="onOpen" onClose="onClose">
+
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+
+    <GuiElement profile="depotSettingsBg" id="dialogElement">
+
+        <ThreePartBitmap profile="fs25_dialogBgMiddle"/>
+        <ThreePartBitmap profile="fs25_dialogBgTop"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+
+        <GuiElement profile="fs25_dialogContentContainer">
+
+            <!-- Title -->
+            <Text profile="fs25_dialogTitle" id="settingsTitleText"
+                  position="0px -28px" text="$l10n_fd_settings_title"/>
+
+            <!-- Admin-only notice (hidden for admin/server) -->
+            <Text profile="depotAdminBadge" id="adminBadge"
+                  position="0px -52px" text="$l10n_fd_settings_admin_only"/>
+
+            <!-- Seasonal Pricing -->
+            <GuiElement profile="depotSettingsRow" position="0px -90px">
+                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_seasonal"/>
+                <MultiTextOption profile="depotSettingsOption" id="optSeasonalPricing"
+                                 onChanged="onSeasonalPricingChanged"/>
+            </GuiElement>
+
+            <!-- Storage Capacity -->
+            <GuiElement profile="depotSettingsRow" position="0px -130px">
+                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_capacity"/>
+                <MultiTextOption profile="depotSettingsOption" id="optStorageCapacity"
+                                 onChanged="onStorageCapacityChanged"/>
+            </GuiElement>
+
+            <!-- Sell Ratio -->
+            <GuiElement profile="depotSettingsRow" position="0px -170px">
+                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_sell_ratio"/>
+                <MultiTextOption profile="depotSettingsOption" id="optSellRatio"
+                                 onChanged="onSellRatioChanged"/>
+            </GuiElement>
+
+            <!-- Buy Price Multiplier -->
+            <GuiElement profile="depotSettingsRow" position="0px -210px">
+                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_buy_mult"/>
+                <MultiTextOption profile="depotSettingsOption" id="optBuyMultiplier"
+                                 onChanged="onBuyMultiplierChanged"/>
+            </GuiElement>
+
+        </GuiElement>
+
+        <!-- Footer buttons -->
+        <BoxLayout profile="fs25_dialogButtonBox">
+            <Button profile="buttonBack"     text="$l10n_fd_settings_reset"
+                    onClick="onResetDefaults"/>
+            <Button profile="buttonActivate" text="$l10n_fd_depot_close"
+                    onClick="onCloseSettings"/>
+        </BoxLayout>
+
+    </GuiElement>
+
+    <GUIProfiles>
+
+        <Profile name="depotSettingsBg" extends="fs25_dialogBg">
+            <size value="560px 320px"/>
+        </Profile>
+
+        <Profile name="depotAdminBadge" extends="fs25_dialogText">
+            <textSize value="12px"/>
+            <textColor value="1 0.4 0.4 1"/>
+            <textAlignment value="center"/>
+            <size value="520px 16px"/>
+        </Profile>
+
+        <Profile name="depotSettingsRow" extends="emptyPanel">
+            <size value="520px 32px"/>
+        </Profile>
+
+        <Profile name="depotSettingsLabel" extends="fs25_dialogText">
+            <textSize value="14px"/>
+            <textAlignment value="left"/>
+            <size value="280px 32px"/>
+        </Profile>
+
+        <Profile name="depotSettingsOption" extends="multiTextOption">
+            <size value="220px 32px"/>
+            <position value="280px 0px"/>
+        </Profile>
+
+    </GUIProfiles>
+
+</GUI>

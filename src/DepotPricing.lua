@@ -13,7 +13,12 @@ function DepotPricing.new(sfBridge)
 end
 
 -- Returns the current season multiplier based on game period (1-12).
+-- Returns 1.0 when seasonal pricing is disabled in settings.
 function DepotPricing:getSeasonMultiplier()
+    local settings = g_DepotManager and g_DepotManager.settings
+    if settings and not settings.seasonalPricing then
+        return 1.0
+    end
     local env = g_currentMission and g_currentMission.environment
     local period = env and env.currentPeriod
     if period and DepotConstants.SEASON_MULTIPLIERS[period] then
@@ -33,15 +38,19 @@ function DepotPricing:getSeasonKey()
     return "fd_season_summer"
 end
 
--- Returns buy price per liter for fillTypeName (base × season multiplier).
+-- Returns buy price per liter for fillTypeName (base × season × buy multiplier).
 function DepotPricing:getBuyPrice(fillTypeName)
     local base = self._sfBridge:getBasePrice(fillTypeName)
-    return base * self:getSeasonMultiplier()
+    local settings = g_DepotManager and g_DepotManager.settings
+    local mult = settings and settings.buyMultiplier or 1.0
+    return base * self:getSeasonMultiplier() * mult
 end
 
--- Returns sell price per liter (buy price × sell ratio).
+-- Returns sell price per liter (buy price × sell ratio from settings).
 function DepotPricing:getSellPrice(fillTypeName)
-    return self:getBuyPrice(fillTypeName) * DepotConstants.SELL_RATIO
+    local settings = g_DepotManager and g_DepotManager.settings
+    local ratio = settings and settings.sellRatio or DepotConstants.SELL_RATIO
+    return self:getBuyPrice(fillTypeName) * ratio
 end
 
 -- Returns total cost for purchasing a quantity at buy price.
