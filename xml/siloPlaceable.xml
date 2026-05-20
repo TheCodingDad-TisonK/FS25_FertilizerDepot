@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<placeable type="fertilizerSiloType">
+
+    <storeData>
+        <name>$l10n_fd_silo_name</name>
+        <functions>
+            <function>$l10n_fd_silo_function</function>
+        </functions>
+        <image>store/store_depot.dds</image>
+        <price>15000</price>
+        <dailyUpkeep>25</dailyUpkeep>
+        <lifetime>1000</lifetime>
+        <brand>NONE</brand>
+        <species>placeable</species>
+        <category>productionPoints</category>
+        <canBeSold>true</canBeSold>
+        <showInStore>true</showInStore>
+        <brush>
+            <type>placeable</type>
+            <category>production</category>
+            <tab>factories</tab>
+        </brush>
+    </storeData>
+
+    <base>
+        <filename>i3d/multifruitstation.i3d</filename>
+        <canBeRenamed>true</canBeRenamed>
+    </base>
+
+    <!-- Hide silo storage, selling station, warehouse and safety tape — keep buying pipe only -->
+    <deletedNodes>
+        <deletedNode node="silo"/>
+        <deletedNode node="warningStripes"/>
+        <deletedNode node="sellingStation"/>
+        <deletedNode node="warehouse"/>
+    </deletedNodes>
+
+    <placement useRandomYRotation="false" useManualYRotation="true">
+        <testAreas>
+            <testArea startNode="testAreaStart01" endNode="testAreaEnd01"/>
+        </testAreas>
+        <sounds>
+            <place template="smallImp"/>
+        </sounds>
+    </placement>
+
+    <clearAreas>
+        <clearArea startNode="clearAreaStart01" widthNode="clearAreaWidth01" heightNode="clearAreaHeight01"/>
+    </clearAreas>
+
+    <leveling requireLeveling="true" maxSmoothDistance="1" maxSlope="75" maxEdgeAngle="30">
+        <levelAreas>
+            <levelArea startNode="levelAreaStart01" widthNode="levelAreaWidth01"
+                       heightNode="levelAreaHeight01" groundType="asphalt"/>
+        </levelAreas>
+    </leveling>
+
+    <indoorAreas/>
+
+    <lights>
+        <group weatherRequiredFlags="NIGHT"/>
+        <sharedLight filename="$data/shared/assets/lights/rudolfHormann/light150.xml"
+                     linkNode="light150_0" groupIndex="1">
+            <rotationNode name="rotationNode01" rotation="0 0 55"/>
+        </sharedLight>
+        <sharedLight filename="$data/shared/assets/lights/rudolfHormann/light150.xml"
+                     linkNode="light150_1" groupIndex="1">
+            <rotationNode name="rotationNode01" rotation="0 0 55"/>
+        </sharedLight>
+        <realLights>
+            <low>
+                <light node="realLightsLow" groupIndex="1"/>
+            </low>
+            <high>
+                <light node="realLightsHigh" groupIndex="1"/>
+            </high>
+        </realLights>
+    </lights>
+
+    <ai>
+        <updateAreas>
+            <updateArea startNode="tipOcclusionUpdateAreaStart01" endNode="tipOcclusionUpdateAreaEnd01"/>
+        </updateAreas>
+    </ai>
+
+    <tipOcclusionUpdateAreas>
+        <tipOcclusionUpdateArea startNode="tipOcclusionUpdateAreaStart01"
+                                endNode="tipOcclusionUpdateAreaEnd01"/>
+    </tipOcclusionUpdateAreas>
+
+    <!-- Buying station: infinite supply, vehicle drives in and fills at market price -->
+    <buyingStation node="buyingStation" supportsExtension="false">
+        <loadTrigger triggerNode="loadingTrigger"
+                     fillTypes="FERTILIZER LIQUIDFERTILIZER LIME LIQUIDMANURE DIGESTATE MANURE UAN32 UAN28 ANHYDROUS STARTER UREA AN AMS MAP DAP POTASH POLIFOSKA LIQUID_UREA LIQUID_AMS LIQUID_MAP LIQUID_DAP LIQUID_POTASH INSECTICIDE FUNGICIDE GYPSUM COMPOST BIOSOLIDS CHICKEN_MANURE PELLETIZED_MANURE LIQUIDLIME"
+                     fillLitersPerSecond="500"
+                     infiniteCapacity="true"
+                     aiNode="aiNodeLoading">
+            <effectNode effectClass="PipeEffect" effectNode="pipeEffect"
+                        materialType="pipe" fadeTime="0.5"
+                        maxBending="0" shapeScaleSpread="0.8 0.8 1 0" controlPoint="3 0 0 0"/>
+            <effectNode effectNode="pipeEffectSmoke" materialType="unloadingSmoke" fadeTime="0.5"/>
+        </loadTrigger>
+
+        <!-- Vanilla fertilizer types -->
+        <fillType name="FERTILIZER"       priceScale="1.0"/>
+        <fillType name="LIQUIDFERTILIZER" priceScale="1.0"/>
+        <fillType name="LIME"             priceScale="1.0"/>
+        <fillType name="LIQUIDMANURE"     priceScale="1.0"/>
+        <fillType name="DIGESTATE"        priceScale="1.0"/>
+        <fillType name="MANURE"           priceScale="1.0"/>
+
+        <!-- FS25_SoilFertilizer custom types (gracefully ignored if SF not installed) -->
+        <!-- Liquid nitrogen sources -->
+        <fillType name="UAN32"            priceScale="1.0"/>
+        <fillType name="UAN28"            priceScale="1.0"/>
+        <fillType name="ANHYDROUS"        priceScale="1.0"/>
+        <fillType name="STARTER"          priceScale="1.0"/>
+        <!-- Solid granular -->
+        <fillType name="UREA"             priceScale="1.0"/>
+        <fillType name="AN"               priceScale="1.0"/>
+        <fillType name="AMS"              priceScale="1.0"/>
+        <fillType name="MAP"              priceScale="1.0"/>
+        <fillType name="DAP"              priceScale="1.0"/>
+        <fillType name="POTASH"           priceScale="1.0"/>
+        <fillType name="POLIFOSKA"        priceScale="1.0"/>
+        <!-- Liquid equivalents -->
+        <fillType name="LIQUID_UREA"      priceScale="1.0"/>
+        <fillType name="LIQUID_AMS"       priceScale="1.0"/>
+        <fillType name="LIQUID_MAP"       priceScale="1.0"/>
+        <fillType name="LIQUID_DAP"       priceScale="1.0"/>
+        <fillType name="LIQUID_POTASH"    priceScale="1.0"/>
+        <!-- Crop protection -->
+        <fillType name="INSECTICIDE"      priceScale="1.0"/>
+        <fillType name="FUNGICIDE"        priceScale="1.0"/>
+        <!-- Organics and amendments -->
+        <fillType name="GYPSUM"           priceScale="1.0"/>
+        <fillType name="COMPOST"          priceScale="1.0"/>
+        <fillType name="BIOSOLIDS"        priceScale="1.0"/>
+        <fillType name="CHICKEN_MANURE"   priceScale="1.0"/>
+        <fillType name="PELLETIZED_MANURE" priceScale="1.0"/>
+        <!-- Liquid lime -->
+        <fillType name="LIQUIDLIME"       priceScale="1.0"/>
+    </buyingStation>
+
+    <hotspots>
+        <hotspot type="LOADING" linkNode="mapPosition" teleportNode="teleportNode"/>
+    </hotspots>
+
+    <triggerMarkers>
+        <triggerMarker node="markerLoading"
+                       filename="$data/shared/assets/marker/markerIconLoad.i3d"/>
+    </triggerMarkers>
+
+    <i3dMappings>
+        <!-- Clear / level areas -->
+        <i3dMapping id="clearAreaStart01"  node="0>0|0"/>
+        <i3dMapping id="clearAreaWidth01"  node="0>0|0|0"/>
+        <i3dMapping id="clearAreaHeight01" node="0>0|0|1"/>
+
+        <i3dMapping id="levelAreaStart01"  node="0>1|0"/>
+        <i3dMapping id="levelAreaWidth01"  node="0>1|0|0"/>
+        <i3dMapping id="levelAreaHeight01" node="0>1|0|1"/>
+
+        <!-- Test areas -->
+        <i3dMapping id="testAreaStart01" node="0>2|0"/>
+        <i3dMapping id="testAreaEnd01"   node="0>2|0|0"/>
+
+        <!-- Tip occlusion -->
+        <i3dMapping id="tipOcclusionUpdateAreaStart01" node="0>3|0"/>
+        <i3dMapping id="tipOcclusionUpdateAreaEnd01"   node="0>3|0|0"/>
+
+        <!-- Buying station nodes -->
+        <i3dMapping id="buyingStation"    node="0>4"/>
+        <i3dMapping id="teleportNode"     node="0>4|0"/>
+        <i3dMapping id="markerLoading"    node="0>4|1"/>
+        <i3dMapping id="mapPosition"      node="0>4|2"/>
+        <i3dMapping id="loadingStation_0" node="0>4|3"/>
+        <i3dMapping id="loadingTrigger"   node="0>4|3|0"/>
+        <i3dMapping id="dischargeNode"    node="0>4|3|1"/>
+        <i3dMapping id="aiNodeLoading"    node="0>4|3|2"/>
+        <i3dMapping id="pipeEffect"       node="0>4|3|3|0"/>
+        <i3dMapping id="pipeEffectSmoke"  node="0>4|3|3|1"/>
+
+        <!-- Lights -->
+        <i3dMapping id="light150_0"    node="0>9|0|0"/>
+        <i3dMapping id="light150_1"    node="0>9|0|1"/>
+        <i3dMapping id="realLightsLow"  node="0>9|0|4|0"/>
+        <i3dMapping id="realLightsHigh" node="0>9|0|4|1"/>
+    </i3dMappings>
+
+</placeable>

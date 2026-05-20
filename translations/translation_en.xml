@@ -48,6 +48,11 @@
     <text name="fd_error_depot"  text="Depot not found."/>
     <text name="fd_error_farm"   text="Farm not found."/>
 
+    <!-- Filling Silo (second building — vehicle drive-up) -->
+    <text name="fd_silo_name"     text="Fertilizer Filling Silo"/>
+    <text name="fd_silo_function" text="Drive up with trailer to fill any fertilizer. Requires Fertilizer Depot."/>
+    <text name="fd_silo_desc"     text="The Fertilizer Filling Silo is the second half of the Fertilizer Depot system. Place it near your fields — drive up with any trailer or tank and fill directly. Works with all FS25_SoilFertilizer custom types. Requires the Fertilizer Depot building to manage pricing and settings."/>
+
     <!-- Settings dialog (Shift+D) -->
     <text name="fd_settings_title"      text="Fertilizer Depot Settings"/>
     <text name="fd_settings_seasonal"   text="Seasonal Pricing"/>

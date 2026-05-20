@@ -99,16 +99,54 @@ Features:
     </placeableSpecializations>
 
     <placeableTypes>
+        <!-- Depot: walk-in building with settings dialog and storage management -->
         <type name="fertilizerDepotType"
               parent="simplePlaceable"
               filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="fertilizerDepot"/>
         </type>
+        <!-- Silo: vehicle drive-up filling station using vanilla buyingStation -->
+        <type name="fertilizerSiloType"
+              parent="warehouse"
+              filename="$dataS/scripts/vehicles/Vehicle.lua">
+            <specialization name="buyingStation"/>
+        </type>
     </placeableTypes>
 
     <storeItems>
         <storeItem xmlFilename="xml/depotPlaceable.xml"/>
+        <storeItem xmlFilename="xml/siloPlaceable.xml"/>
     </storeItems>
 
-    <l10n filenamePrefix="translations/translation"/>
+    <l10n filenamePrefix="translations/translation">
+        <!-- Input action display name (required for key bindings screen) -->
+        <text name="input_FD_OPEN_SETTINGS">
+            <en>Open Depot Settings</en>
+            <de>Depot-Einstellungen öffnen</de>
+            <fr>Ouvrir les paramètres du dépôt</fr>
+            <nl>Depot-instellingen openen</nl>
+            <it>Apri impostazioni deposito</it>
+            <pl>Otwórz ustawienia składu</pl>
+            <es>Abrir ajustes del depósito</es>
+            <ea>Abrir ajustes del depósito</ea>
+            <pt>Abrir configurações do depósito</pt>
+            <br>Abrir configurações do depósito</br>
+            <ru>Открыть настройки депо</ru>
+            <uk>Відкрити налаштування депо</uk>
+            <cz>Otevřít nastavení skladu</cz>
+            <hu>Raktár beállítások megnyitása</hu>
+            <ro>Deschide setările depozitului</ro>
+            <tr>Depo ayarlarını aç</tr>
+            <fi>Avaa varaston asetukset</fi>
+            <no>Åpne lagerinnstillinger</no>
+            <sv>Öppna förrådinställningar</sv>
+            <da>Åbn depotindstillinger</da>
+            <kr>창고 설정 열기</kr>
+            <jp>倉庫設定を開く</jp>
+            <ct>開啟倉庫設定</ct>
+            <fc>打开仓库设置</fc>
+            <id>Buka pengaturan depot</id>
+            <vi>Mở cài đặt kho</vi>
+        </text>
+    </l10n>
 </modDesc>
