@@ -71,7 +71,7 @@
     </tipOcclusionUpdateAreas>
 
     <!-- Player dialog trigger: infoTrigger at building center (0,0,0) — truly inside -->
-    <fertilizerDepot playerTrigger="infoTrigger"/>
+    <fertilizerDepot playerTrigger="infoTrigger" unloadTrigger="unloadTriggerMarker"/>
 
     <!-- Animated gates and doors (identical to vanilla farmersMarket) -->
     <animatedObjects>

@@ -25,6 +25,8 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
     schema:setXMLSpecializationType("FertilizerDepot")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#playerTrigger",
         "Player walk-in trigger node (inside building)")
+    schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#unloadTrigger",
+        "Vehicle unload marker node (front of selling area)")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:setXMLSpecializationType()
@@ -38,15 +40,33 @@ function PlaceableDepot:onLoad(savegame)
     spec.depotId         = nil
     spec.savegame        = savegame
 
-    -- Load the entrance trigger node — used by DepotManager as proximity target.
     spec.playerTriggerNode = self.xmlFile:getValue(
         "placeable.fertilizerDepot#playerTrigger", nil,
         self.components, self.i3dMappings)
 
-    if spec.playerTriggerNode == nil then
-        DepotLogger.warning("playerTrigger node not found — check i3dMappings")
+    spec.unloadTriggerNode = self.xmlFile:getValue(
+        "placeable.fertilizerDepot#unloadTrigger", nil,
+        self.components, self.i3dMappings)
+
+    if spec.playerTriggerNode then
+        addTrigger(spec.playerTriggerNode, "onPlayerTrigger", self)
+        DepotLogger.debug("playerTrigger registered: %s", tostring(spec.playerTriggerNode))
     else
-        DepotLogger.debug("playerTrigger node loaded: %s", tostring(spec.playerTriggerNode))
+        DepotLogger.warning("playerTrigger node not found — doors may conflict with depot dialog")
+    end
+end
+
+function PlaceableDepot:onPlayerTrigger(triggerId, otherId, onEnter, onLeave, onStay)
+    if not (onEnter or onLeave) then return end
+    if not g_localPlayer or otherId ~= g_localPlayer.rootNode then return end
+    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+    if not spec then return end
+    local depotId = spec.depotId or spec.netDepotId
+    if not depotId or not g_DepotManager then return end
+    if onEnter then
+        g_DepotManager:onPlayerEnterDepot(depotId)
+    else
+        g_DepotManager:onPlayerLeaveDepot(depotId)
     end
 end
 
@@ -55,19 +75,19 @@ end
 function PlaceableDepot:onPostFinalizePlacement()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
 
-    -- Register with DepotManager (server only — authoritative state)
     if g_server and g_DepotManager then
         spec.depotId = g_DepotManager:registerDepot(self)
+        if spec.unloadTriggerNode then
+            g_DepotManager:registerDepotUnloadNode(spec.depotId, spec.unloadTriggerNode)
+        end
     end
 
-    -- Load saved storage state
     if g_server and spec.depotId and spec.savegame then
         local sg = spec.savegame
         g_DepotManager.depotSystem:loadFromXML(
             sg.xmlFile, spec.depotId, sg.key .. ".storage")
     end
     spec.savegame = nil
-
 end
 
 -- ─── onDelete ────────────────────────────────────────────
@@ -75,6 +95,10 @@ end
 function PlaceableDepot:onDelete()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
+
+    if spec.playerTriggerNode then
+        removeTrigger(spec.playerTriggerNode)
+    end
 
     if g_DepotManager and spec.depotId then
         g_DepotManager:unregisterDepot(spec.depotId)
@@ -117,10 +141,12 @@ function PlaceableDepot:onReadStream(streamId, connection)
             }
         end
         g_DepotManager.depots[netId] = self
-        -- Populate depotNodes so client-side proximity detection works.
-        -- onLoad runs before onReadStream, so spec.playerTriggerNode is already set.
         local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+        spec.netDepotId = netId
         g_DepotManager.depotNodes[netId] = (spec and spec.playerTriggerNode) or self.rootNode
+        if spec and spec.unloadTriggerNode then
+            g_DepotManager:registerDepotUnloadNode(netId, spec.unloadTriggerNode)
+        end
     end
 
     local count = streamReadUInt16(streamId)

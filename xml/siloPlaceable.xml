@@ -34,6 +34,7 @@
     <!--   0>11 = sellingStation (nodeId 207)                                                 -->
     <!--   0>12 = warehouse (nodeId 213)                                                      -->
     <deletedNodes>
+        <deletedNode node="0>4|3"/>
         <deletedNode node="0>5"/>
         <deletedNode node="0>10"/>
         <deletedNode node="0>11"/>

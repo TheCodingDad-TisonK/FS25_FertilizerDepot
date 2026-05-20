@@ -31,6 +31,8 @@
     <text name="fd_depot_order_set"      text="Order set: %s %.0fL — walk to silo to collect."/>
     <text name="fd_silo_collect_action"  text="Collect %s (%.0fL)"/>
     <text name="fd_silo_no_order"        text="No pending order. Confirm a type at the Depot first."/>
+    <text name="fd_silo_fill_confirm"   text="Collect %.0fL of %s?&#10;&#10;Your vehicle will be filled."/>
+    <text name="fd_depot_sell_confirm"  text="Sell %.0fL of %s to depot for %s?"/>
 
     <!-- Stock labels -->
     <text name="fd_depot_stock_full"     text="Full"/>
