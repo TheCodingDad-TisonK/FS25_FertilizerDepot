@@ -63,29 +63,29 @@
     <GUIProfiles>
 
         <Profile name="depotSettingsBg" extends="fs25_dialogBg">
-            <size value="560px 320px"/>
+            <size value="660px 380px"/>
         </Profile>
 
         <Profile name="depotAdminBadge" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textColor value="1 0.4 0.4 1"/>
             <textAlignment value="center"/>
-            <size value="520px 16px"/>
+            <size value="620px 16px"/>
         </Profile>
 
         <Profile name="depotSettingsRow" extends="emptyPanel" with="anchorTopCenter">
-            <size value="520px 32px"/>
+            <size value="620px 36px"/>
         </Profile>
 
         <Profile name="depotSettingsLabel" extends="fs25_dialogText">
             <textSize value="14px"/>
             <textAlignment value="left"/>
-            <size value="280px 32px"/>
+            <size value="340px 36px"/>
         </Profile>
 
         <Profile name="depotSettingsOption" extends="multiTextOption">
-            <size value="220px 32px"/>
-            <position value="280px 0px"/>
+            <size value="260px 36px"/>
+            <position value="340px 0px"/>
         </Profile>
 
     </GUIProfiles>
