@@ -290,34 +290,31 @@
             <isFocusable value="true"/>
         </Profile>
 
-        <!-- Column header base — MUST extend fs25_textDefault (not fs25_dialogText) -->
-        <Profile name="depotColHeaderBase" extends="fs25_textDefault" with="anchorTopCenter">
+        <!-- Column headers and cells: each directly extends fs25_textDefault (WTListDialog pattern).
+             Do NOT use intermediate base profiles — anchorTopCenter must be on each leaf. -->
+        <Profile name="depotColHeader" extends="fs25_textDefault" with="anchorTopCenter">
+            <size value="200px 14px"/>
             <textSize value="11px"/>
             <textBold value="true"/>
             <textColor value="0.55 0.7 0.9 1"/>
-        </Profile>
-        <Profile name="depotColHeader" extends="depotColHeaderBase">
-            <size value="200px 14px"/>
             <textAlignment value="left"/>
         </Profile>
-
-        <!-- Cell text — MUST extend fs25_textDefault (not fs25_dialogText) -->
-        <Profile name="depotCellBase" extends="fs25_textDefault" with="anchorTopCenter">
-            <textSize value="13px"/>
-        </Profile>
-        <Profile name="depotCellName" extends="depotCellBase">
+        <Profile name="depotCellName" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="200px 18px"/>
+            <textSize value="13px"/>
             <textAlignment value="left"/>
             <textColor value="1 1 1 1"/>
         </Profile>
-        <Profile name="depotCellStock" extends="depotCellBase">
+        <Profile name="depotCellStock" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="110px 18px"/>
-            <textAlignment value="right"/>
+            <textSize value="13px"/>
+            <textAlignment value="left"/>
             <textColor value="0.82 0.82 0.82 1"/>
         </Profile>
-        <Profile name="depotCellPrice" extends="depotCellBase">
+        <Profile name="depotCellPrice" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="120px 18px"/>
-            <textAlignment value="right"/>
+            <textSize value="13px"/>
+            <textAlignment value="left"/>
             <textColor value="0.35 0.88 0.42 1"/>
         </Profile>
 
