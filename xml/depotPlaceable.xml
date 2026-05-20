@@ -209,6 +209,9 @@
         <triggerMarker node="unloadTriggerMarker"
                        filename="$data/shared/assets/marker/markerIconLoad.i3d"
                        adjustToGround="true"/>
+        <triggerMarker node="infoTrigger"
+                       filename="$data/shared/assets/marker/markerIconWrench.i3d"
+                       adjustToGround="true"/>
     </triggerMarkers>
 
     <i3dMappings>
