@@ -5,15 +5,16 @@
 -- Server executes buyFromSilo (vehicle search at silo position).
 
 DepotSiloFillEvent = {}
-DepotSiloFillEvent.typeName = "DepotSiloFillEvent"
-local DepotSiloFillEvent_mt = Class(DepotSiloFillEvent, Event)
+DepotSiloFillEvent_mt = Class(DepotSiloFillEvent, Event)
+
+InitEventClass(DepotSiloFillEvent, "DepotSiloFillEvent")
 
 function DepotSiloFillEvent.emptyNew()
-    return Event.new(setmetatable({}, DepotSiloFillEvent_mt))
+    return Event.new(DepotSiloFillEvent_mt)
 end
 
 function DepotSiloFillEvent.new(depotId, siloId, fillTypeName, fillTypeIndex, requestedLiters, farmId)
-    local self = Event.new(setmetatable({}, DepotSiloFillEvent_mt))
+    local self = DepotSiloFillEvent.emptyNew()
     self.depotId        = depotId
     self.siloId         = siloId
     self.fillTypeName   = fillTypeName
@@ -30,15 +31,16 @@ function DepotSiloFillEvent:readStream(streamId, connection)
     self.fillTypeIndex   = streamReadInt32(streamId)
     self.requestedLiters = streamReadFloat32(streamId)
     self.farmId          = streamReadUInt8(streamId)
+    self:run(connection)
 end
 
 function DepotSiloFillEvent:writeStream(streamId, connection)
-    streamWriteInt32(streamId, self.depotId or 0)
-    streamWriteInt32(streamId, self.siloId or 0)
-    streamWriteString(streamId, self.fillTypeName or "")
-    streamWriteInt32(streamId, self.fillTypeIndex or 0)
+    streamWriteInt32(streamId,   self.depotId or 0)
+    streamWriteInt32(streamId,   self.siloId or 0)
+    streamWriteString(streamId,  self.fillTypeName or "")
+    streamWriteInt32(streamId,   self.fillTypeIndex or 0)
     streamWriteFloat32(streamId, self.requestedLiters or 0)
-    streamWriteUInt8(streamId, self.farmId or 1)
+    streamWriteUInt8(streamId,   self.farmId or 1)
 end
 
 function DepotSiloFillEvent:run(connection)
@@ -64,8 +66,10 @@ function DepotSiloFillEvent:run(connection)
 end
 
 function DepotSiloFillEvent.sendToServer(depotId, siloId, fillTypeName, fillTypeIndex, requestedLiters, farmId)
-    if g_client then
-        g_client:getServerConnection():sendEvent(
-            DepotSiloFillEvent.new(depotId, siloId, fillTypeName, fillTypeIndex, requestedLiters, farmId))
+    local evt = DepotSiloFillEvent.new(depotId, siloId, fillTypeName, fillTypeIndex, requestedLiters, farmId)
+    if g_server then
+        evt:run(nil)
+    else
+        g_client:getServerConnection():sendEvent(evt)
     end
 end
