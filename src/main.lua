@@ -45,26 +45,36 @@ local function onMissionLoadFinished(mission, ...)
     DepotLogger.info("Post-load: SF installed: %s",
         tostring(g_DepotManager.sfBridge:isInstalled()))
 
-    -- Register Shift+D settings hotkey in both PLAYER and VEHICLE contexts.
-    -- Follows the same PlayerInputComponent hook pattern as FS25_SoilFertilizer.
+    -- Register Shift+D settings hotkey in PLAYER context.
+    -- Pattern mirrors FS25_SoilFertilizer:SoilFertilityManager.lua exactly.
     if PlayerInputComponent and PlayerInputComponent.registerActionEvents then
         local origRegister = PlayerInputComponent.registerActionEvents
         PlayerInputComponent.registerActionEvents = function(inputComp, ...)
             origRegister(inputComp, ...)
-            if g_inputBinding then
-                g_inputBinding:beginActionEventsModification(
-                    PlayerInputComponent.INPUT_CONTEXT_NAME)
-                local ok, id = g_inputBinding:registerActionEvent(
-                    InputAction.FD_OPEN_SETTINGS, g_DepotManager,
-                    g_DepotManager.openSettingsDialog, false, true, false, true)
-                if ok then
-                    g_inputBinding:setActionEventText(id,
-                        g_i18n:getText("fd_settings_title"))
-                    g_inputBinding:setActionEventTextVisibility(id, false)
-                end
-                g_inputBinding:endActionEventsModification()
-                DepotLogger.debug("Shift+D registered in PLAYER context")
+
+            -- Only register for the local (owning) player, not networked players
+            if not (inputComp.player and inputComp.player.isOwner) then return end
+            -- Guard against double-registration across level reloads
+            if g_DepotManager and g_DepotManager._settingsEventId then return end
+            if not g_DepotManager then return end
+
+            if not InputAction.FD_OPEN_SETTINGS then
+                DepotLogger.warning("InputAction.FD_OPEN_SETTINGS is nil — check modDesc <actions>")
+                return
             end
+
+            g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
+            local ok, id = g_inputBinding:registerActionEvent(
+                InputAction.FD_OPEN_SETTINGS, g_DepotManager,
+                g_DepotManager.openSettingsDialog, false, true, false, true)
+            if ok and id then
+                g_DepotManager._settingsEventId = id
+                g_inputBinding:setActionEventTextVisibility(id, false)
+                DepotLogger.info("Shift+D (FD_OPEN_SETTINGS) registered in PLAYER context")
+            else
+                DepotLogger.warning("Shift+D registration failed — registerActionEvent returned false")
+            end
+            g_inputBinding:endActionEventsModification()
         end
     end
 end
