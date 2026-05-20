@@ -1,222 +1,356 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<GUI onOpen="onOpen" onClose="onClose">
-
+<!--
+    DepotDialog — FS25_FertilizerDepot
+    Pattern: WTListDialog (FS25_WorkplaceTriggers) — proven working.
+    Rules:
+      - onClose NEVER named "onClose" (reserved lifecycle — causes double-call)
+      - onCreate callback required for MessageDialog init
+      - Content-area buttons MUST use 3-layer: Bitmap + Text + Button(emptyPanel+isFocusable)
+      - buttonBack/buttonActivate ONLY in fs25_dialogButtonBox footer
+      - No $l10n_ in text attrs (hardcode English; tr() sets correct lang in Lua)
+-->
+<GUI onOpen="onOpen" onClose="fdOnClose" onCreate="onCreate">
     <GuiElement profile="newLayer"/>
     <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
 
-    <GuiElement profile="depotDialogBg" id="dialogElement">
-
-        <!-- Required frame panels -->
+    <GuiElement profile="dialogBg" id="dialogElement" size="750px 520px">
         <ThreePartBitmap profile="fs25_dialogBgMiddle"/>
         <ThreePartBitmap profile="fs25_dialogBgTop"/>
         <ThreePartBitmap profile="fs25_dialogBgBottom"/>
 
         <GuiElement profile="fs25_dialogContentContainer">
 
-            <!-- ── Title Row ─────────────────────────────── -->
+            <!-- ── Title ─────────────────────────────── -->
             <Text profile="fs25_dialogTitle" id="depotTitleText"
                   position="0px -28px" text="Fertilizer Depot"/>
 
             <Text profile="depotSeasonLabel" id="seasonLabel"
-                  position="320px -34px" text="Summer"/>
+                  position="320px -34px" text=""/>
 
-            <!-- ── Tab Buttons ───────────────────────────── -->
-            <BoxLayout profile="depotTabBox" position="0px -70px">
-                <Button profile="depotTabBtn" id="tabBuyBtn"
-                        text="$l10n_fd_depot_buy" onClick="onTabBuy"/>
-                <Button profile="depotTabBtn" id="tabSellBtn"
-                        text="$l10n_fd_depot_sell" onClick="onTabSell"/>
-            </BoxLayout>
-
-            <!-- ── Column Headers ────────────────────────── -->
-            <GuiElement profile="depotHeaderRow" id="buyHeaderRow" position="0px -100px">
-                <Text profile="depotColHeader" id="colTypeHeader"  position="0px 0px"    text="$l10n_fd_col_type"/>
-                <Text profile="depotColHeader" id="colStockHeader" position="210px 0px"  text="$l10n_fd_col_stock"/>
-                <Text profile="depotColHeader" id="colPriceHeader" position="340px 0px"  text="$l10n_fd_col_price"/>
-                <Text profile="depotColHeader" position="500px 0px"  text=""/>
+            <!-- ── Tab Buttons (3-layer) ──────────────── -->
+            <GuiElement profile="fdTabContainer" id="tabBuyBtn" position="-74px -70px">
+                <Bitmap  profile="fdTabBg"   position="0px 0px"/>
+                <Text    profile="fdTabText" id="tabBuyText" position="0px 0px" text="Buy"/>
+                <Button  profile="fdTabHit"  position="0px 0px" onClick="onTabBuy"/>
+            </GuiElement>
+            <GuiElement profile="fdTabContainer" id="tabSellBtn" position="74px -70px">
+                <Bitmap  profile="fdTabBg"   position="0px 0px"/>
+                <Text    profile="fdTabText" id="tabSellText" position="0px 0px" text="Sell"/>
+                <Button  profile="fdTabHit"  position="0px 0px" onClick="onTabSell"/>
             </GuiElement>
 
-            <!-- ── Fill Type Rows (8 slots) ──────────────── -->
+            <!-- ── Column Headers ────────────────────── -->
+            <Text profile="depotColHeader" id="colTypeHeader"  position="-250px -100px" text="Fill Type"/>
+            <Text profile="depotColHeader" id="colStockHeader" position="-40px  -100px" text="Depot Stock"/>
+            <Text profile="depotColHeader" id="colPriceHeader" position="110px  -100px" text="Price / 1kL"/>
 
-            <!-- Row 0 -->
+            <!-- ── Row 0 ──────────────────────────────── -->
             <GuiElement profile="depotRow" id="row0" position="0px -120px">
-                <Text  profile="depotCellName"  id="row0name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row0stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row0price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row0buy1"  position="490px 0px" text="100L" onClick="onBuy0_100"/>
-                <Button profile="depotBtnSmall" id="row0buy2"  position="560px 0px" text="500L" onClick="onBuy0_500"/>
-                <Button profile="depotBtnSmall" id="row0buy3"  position="630px 0px" text="1kL"  onClick="onBuy0_1000"/>
+                <Text    profile="depotCellName"  id="row0name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row0stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row0price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row0buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy0_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row0buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy0_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row0buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row0buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy0_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 1 -->
-            <GuiElement profile="depotRow" id="row1" position="0px -150px">
-                <Text  profile="depotCellName"  id="row1name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row1stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row1price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row1buy1"  position="490px 0px" text="100L" onClick="onBuy1_100"/>
-                <Button profile="depotBtnSmall" id="row1buy2"  position="560px 0px" text="500L" onClick="onBuy1_500"/>
-                <Button profile="depotBtnSmall" id="row1buy3"  position="630px 0px" text="1kL"  onClick="onBuy1_1000"/>
+            <!-- ── Row 1 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row1" position="0px -148px">
+                <Text    profile="depotCellName"  id="row1name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row1stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row1price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row1buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy1_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row1buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy1_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row1buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row1buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy1_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 2 -->
-            <GuiElement profile="depotRow" id="row2" position="0px -180px">
-                <Text  profile="depotCellName"  id="row2name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row2stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row2price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row2buy1"  position="490px 0px" text="100L" onClick="onBuy2_100"/>
-                <Button profile="depotBtnSmall" id="row2buy2"  position="560px 0px" text="500L" onClick="onBuy2_500"/>
-                <Button profile="depotBtnSmall" id="row2buy3"  position="630px 0px" text="1kL"  onClick="onBuy2_1000"/>
+            <!-- ── Row 2 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row2" position="0px -176px">
+                <Text    profile="depotCellName"  id="row2name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row2stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row2price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row2buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy2_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row2buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy2_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row2buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row2buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy2_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 3 -->
-            <GuiElement profile="depotRow" id="row3" position="0px -210px">
-                <Text  profile="depotCellName"  id="row3name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row3stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row3price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row3buy1"  position="490px 0px" text="100L" onClick="onBuy3_100"/>
-                <Button profile="depotBtnSmall" id="row3buy2"  position="560px 0px" text="500L" onClick="onBuy3_500"/>
-                <Button profile="depotBtnSmall" id="row3buy3"  position="630px 0px" text="1kL"  onClick="onBuy3_1000"/>
+            <!-- ── Row 3 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row3" position="0px -204px">
+                <Text    profile="depotCellName"  id="row3name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row3stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row3price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row3buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy3_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row3buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy3_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row3buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row3buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy3_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 4 -->
-            <GuiElement profile="depotRow" id="row4" position="0px -240px">
-                <Text  profile="depotCellName"  id="row4name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row4stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row4price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row4buy1"  position="490px 0px" text="100L" onClick="onBuy4_100"/>
-                <Button profile="depotBtnSmall" id="row4buy2"  position="560px 0px" text="500L" onClick="onBuy4_500"/>
-                <Button profile="depotBtnSmall" id="row4buy3"  position="630px 0px" text="1kL"  onClick="onBuy4_1000"/>
+            <!-- ── Row 4 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row4" position="0px -232px">
+                <Text    profile="depotCellName"  id="row4name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row4stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row4price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row4buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy4_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row4buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy4_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row4buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row4buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy4_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 5 -->
-            <GuiElement profile="depotRow" id="row5" position="0px -270px">
-                <Text  profile="depotCellName"  id="row5name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row5stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row5price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row5buy1"  position="490px 0px" text="100L" onClick="onBuy5_100"/>
-                <Button profile="depotBtnSmall" id="row5buy2"  position="560px 0px" text="500L" onClick="onBuy5_500"/>
-                <Button profile="depotBtnSmall" id="row5buy3"  position="630px 0px" text="1kL"  onClick="onBuy5_1000"/>
+            <!-- ── Row 5 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row5" position="0px -260px">
+                <Text    profile="depotCellName"  id="row5name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row5stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row5price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row5buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy5_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row5buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy5_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row5buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row5buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy5_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 6 -->
-            <GuiElement profile="depotRow" id="row6" position="0px -300px">
-                <Text  profile="depotCellName"  id="row6name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row6stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row6price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row6buy1"  position="490px 0px" text="100L" onClick="onBuy6_100"/>
-                <Button profile="depotBtnSmall" id="row6buy2"  position="560px 0px" text="500L" onClick="onBuy6_500"/>
-                <Button profile="depotBtnSmall" id="row6buy3"  position="630px 0px" text="1kL"  onClick="onBuy6_1000"/>
+            <!-- ── Row 6 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row6" position="0px -288px">
+                <Text    profile="depotCellName"  id="row6name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row6stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row6price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row6buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy6_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row6buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy6_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row6buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row6buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy6_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- Row 7 -->
-            <GuiElement profile="depotRow" id="row7" position="0px -330px">
-                <Text  profile="depotCellName"  id="row7name"  position="0px 0px"   text=""/>
-                <Text  profile="depotCellValue" id="row7stock" position="210px 0px" text=""/>
-                <Text  profile="depotCellValue" id="row7price" position="340px 0px" text=""/>
-                <Button profile="depotBtnSmall" id="row7buy1"  position="490px 0px" text="100L" onClick="onBuy7_100"/>
-                <Button profile="depotBtnSmall" id="row7buy2"  position="560px 0px" text="500L" onClick="onBuy7_500"/>
-                <Button profile="depotBtnSmall" id="row7buy3"  position="630px 0px" text="1kL"  onClick="onBuy7_1000"/>
+            <!-- ── Row 7 ──────────────────────────────── -->
+            <GuiElement profile="depotRow" id="row7" position="0px -316px">
+                <Text    profile="depotCellName"  id="row7name"    position="-250px 0px" text=""/>
+                <Text    profile="depotCellValue" id="row7stock"   position="-40px  0px" text=""/>
+                <Text    profile="depotCellValue" id="row7price"   position="110px  0px" text=""/>
+                <GuiElement profile="depotBtnContainer" id="row7buy1" position="250px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="100L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy7_100"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row7buy2" position="315px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" position="0px 0px" text="500L"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy7_500"/>
+                </GuiElement>
+                <GuiElement profile="depotBtnContainer" id="row7buy3" position="380px 0px">
+                    <Bitmap  profile="depotBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotBtnTxt" id="row7buy3txt" position="0px 0px" text="1kL"/>
+                    <Button  profile="depotBtnHit" position="0px 0px" onClick="onBuy7_1000"/>
+                </GuiElement>
             </GuiElement>
 
-            <!-- ── Sell Tab Row (reuses same row slots, different action) ── -->
+            <!-- ── Pagination (3-layer) ───────────────── -->
+            <GuiElement profile="fdPageContainer" id="prevPageBtn" position="-90px -355px">
+                <Bitmap  profile="fdPageBg"  position="0px 0px"/>
+                <Text    profile="fdPageTxt" position="0px 0px" text="&lt;"/>
+                <Button  profile="fdPageHit" position="0px 0px" onClick="onPrevPage"/>
+            </GuiElement>
 
-            <!-- ── Pagination ─────────────────────────────── -->
-            <BoxLayout profile="depotPageBox" position="0px -380px">
-                <Button profile="depotBtnPage" id="prevPageBtn"
-                        text="◀" onClick="onPrevPage"/>
-                <Text profile="depotPageLabel" id="pageLabel" text="1 / 1"/>
-                <Button profile="depotBtnPage" id="nextPageBtn"
-                        text="▶" onClick="onNextPage"/>
-            </BoxLayout>
+            <Text profile="depotPageLabel" id="pageLabel" position="0px -356px" text="1 / 1"/>
 
-            <!-- ── Status / Info line ──────────────────────── -->
+            <GuiElement profile="fdPageContainer" id="nextPageBtn" position="90px -355px">
+                <Bitmap  profile="fdPageBg"  position="0px 0px"/>
+                <Text    profile="fdPageTxt" position="0px 0px" text="&gt;"/>
+                <Button  profile="fdPageHit" position="0px 0px" onClick="onNextPage"/>
+            </GuiElement>
+
+            <!-- ── Status line ────────────────────────── -->
             <Text profile="depotStatusText" id="statusText"
-                  position="0px -415px" text=""/>
+                  position="0px -385px" text=""/>
 
         </GuiElement>
 
-        <!-- ── Footer Buttons ────────────────────────────── -->
+        <!-- ── Footer ────────────────────────────────── -->
         <BoxLayout profile="fs25_dialogButtonBox">
             <Button profile="buttonBack" id="closeButton"
-                    text="$l10n_fd_depot_close" onClick="onClickClose"/>
+                    text="Close" onClick="onClickClose"/>
         </BoxLayout>
 
     </GuiElement>
 
-    <!-- ── Custom Profiles ──────────────────────────────── -->
+    <!-- ── Custom Profiles ──────────────────────────── -->
     <GUIProfiles>
 
-        <Profile name="depotDialogBg" extends="fs25_dialogBg">
-            <size value="750px 520px"/>
-        </Profile>
-
+        <!-- Season label -->
         <Profile name="depotSeasonLabel" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="14px"/>
             <textColor value="0.9 0.75 0.2 1"/>
             <textAlignment value="right"/>
         </Profile>
 
-        <Profile name="depotTabBox" extends="emptyPanel" with="anchorTopCenter">
-            <size value="300px 32px"/>
-            <flowDirection value="horizontal"/>
-            <alignmentX value="center"/>
-            <elementSpacing value="8px"/>
+        <!-- Tab button container + layers -->
+        <Profile name="fdTabContainer" extends="emptyPanel" with="anchorTopCenter">
+            <size value="140px 28px"/>
         </Profile>
-
-        <Profile name="depotTabBtn" extends="buttonOK">
+        <Profile name="fdTabBg" extends="baseReference" with="anchorTopCenter">
+            <size value="140px 28px"/>
+            <imageColor value="0.10 0.16 0.32 0.95"/>
+        </Profile>
+        <Profile name="fdTabText" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="140px 28px"/>
             <textSize value="13px"/>
+            <textBold value="true"/>
+            <textColor value="0.6 0.8 1 1"/>
+            <textAlignment value="center"/>
+        </Profile>
+        <Profile name="fdTabHit" extends="emptyPanel" with="anchorTopCenter">
+            <size value="140px 28px"/>
+            <isFocusable value="true"/>
         </Profile>
 
-        <Profile name="depotHeaderRow" extends="emptyPanel" with="anchorTopCenter">
-            <size value="710px 18px"/>
-        </Profile>
-
-        <Profile name="depotColHeader" extends="fs25_dialogText">
+        <!-- Column headers -->
+        <Profile name="depotColHeader" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textBold value="true"/>
             <textColor value="0.7 0.7 0.7 1"/>
+            <textAlignment value="left"/>
+            <size value="200px 16px"/>
         </Profile>
 
+        <!-- Data rows -->
         <Profile name="depotRow" extends="emptyPanel" with="anchorTopCenter">
             <size value="710px 24px"/>
         </Profile>
-
-        <Profile name="depotCellName" extends="fs25_dialogText">
+        <Profile name="depotCellName" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="13px"/>
             <size value="200px 24px"/>
             <textAlignment value="left"/>
         </Profile>
-
-        <Profile name="depotCellValue" extends="fs25_dialogText">
+        <Profile name="depotCellValue" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="13px"/>
             <size value="120px 24px"/>
             <textAlignment value="right"/>
         </Profile>
 
-        <Profile name="depotBtnSmall" extends="buttonActivate">
+        <!-- Action button container + layers -->
+        <Profile name="depotBtnContainer" extends="emptyPanel" with="anchorTopCenter">
+            <size value="60px 22px"/>
+        </Profile>
+        <Profile name="depotBtnBg" extends="baseReference" with="anchorTopCenter">
+            <size value="60px 22px"/>
+            <imageColor value="0.10 0.16 0.32 0.95"/>
+        </Profile>
+        <Profile name="depotBtnTxt" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="60px 22px"/>
             <textSize value="11px"/>
+            <textBold value="true"/>
+            <textColor value="0.6 0.8 1 1"/>
+            <textAlignment value="center"/>
+        </Profile>
+        <Profile name="depotBtnHit" extends="emptyPanel" with="anchorTopCenter">
+            <size value="60px 22px"/>
+            <isFocusable value="true"/>
         </Profile>
 
-        <Profile name="depotPageBox" extends="emptyPanel" with="anchorTopCenter">
-            <size value="200px 28px"/>
-            <flowDirection value="horizontal"/>
-            <alignmentX value="center"/>
-            <elementSpacing value="10px"/>
+        <!-- Pagination container + layers -->
+        <Profile name="fdPageContainer" extends="emptyPanel" with="anchorTopCenter">
+            <size value="40px 26px"/>
         </Profile>
-
-        <Profile name="depotBtnPage" extends="buttonBack">
+        <Profile name="fdPageBg" extends="baseReference" with="anchorTopCenter">
+            <size value="40px 26px"/>
+            <imageColor value="0.10 0.12 0.20 0.90"/>
+        </Profile>
+        <Profile name="fdPageTxt" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="40px 26px"/>
             <textSize value="13px"/>
+            <textBold value="true"/>
+            <textColor value="0.6 0.7 0.9 1"/>
+            <textAlignment value="center"/>
+        </Profile>
+        <Profile name="fdPageHit" extends="emptyPanel" with="anchorTopCenter">
+            <size value="40px 26px"/>
+            <isFocusable value="true"/>
         </Profile>
 
-        <Profile name="depotPageLabel" extends="fs25_dialogText">
+        <!-- Page label -->
+        <Profile name="depotPageLabel" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="13px"/>
             <size value="80px 26px"/>
             <textAlignment value="center"/>
         </Profile>
 
+        <!-- Status text -->
         <Profile name="depotStatusText" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textColor value="0.85 0.85 0.85 1"/>

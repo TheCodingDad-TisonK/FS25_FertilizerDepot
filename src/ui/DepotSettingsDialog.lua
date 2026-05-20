@@ -23,10 +23,10 @@ end
 ---@class DepotSettingsDialog
 DepotSettingsDialog = {}
 
-local DepotSettingsDialog_mt = Class(DepotSettingsDialog, ScreenElement)
+local DepotSettingsDialog_mt = Class(DepotSettingsDialog, MessageDialog)
 
 function DepotSettingsDialog.new()
-    local self = ScreenElement.new(nil, DepotSettingsDialog_mt)
+    local self = MessageDialog.new(nil, DepotSettingsDialog_mt)
     -- Element caches
     self.optSeasonalPricing  = nil
     self.optStorageCapacity  = nil
@@ -62,6 +62,15 @@ function DepotSettingsDialog.refreshIfOpen()
 end
 
 -- ─── Lifecycle ───────────────────────────────────────────
+
+function DepotSettingsDialog:onCreate()
+    local ok, err = pcall(function()
+        DepotSettingsDialog:superClass().onCreate(self)
+    end)
+    if not ok then
+        DepotLogger.error("DepotSettingsDialog:onCreate error: %s", tostring(err))
+    end
+end
 
 function DepotSettingsDialog:onGuiSetupFinished()
     DepotSettingsDialog:superClass().onGuiSetupFinished(self)
@@ -107,7 +116,7 @@ function DepotSettingsDialog:onOpen()
     self:refresh()
 end
 
-function DepotSettingsDialog:onClose()
+function DepotSettingsDialog:fdSettingsOnClose()
     DepotSettingsDialog:superClass().onClose(self)
     self.isOpen = false
 end
@@ -178,5 +187,5 @@ function DepotSettingsDialog:onResetDefaults()
 end
 
 function DepotSettingsDialog:onCloseSettings()
-    g_gui:closeDialogByName("DepotSettingsDialog")
+    self:close()
 end
