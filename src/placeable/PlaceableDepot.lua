@@ -48,25 +48,10 @@ function PlaceableDepot:onLoad(savegame)
         "placeable.fertilizerDepot#unloadTrigger", nil,
         self.components, self.i3dMappings)
 
-    if spec.playerTriggerNode then
-        addTrigger(spec.playerTriggerNode, "onPlayerTrigger", self)
-        DepotLogger.debug("playerTrigger registered: %s", tostring(spec.playerTriggerNode))
+    if spec.playerTriggerNode == nil then
+        DepotLogger.warning("playerTrigger node not found — check i3dMappings")
     else
-        DepotLogger.warning("playerTrigger node not found — doors may conflict with depot dialog")
-    end
-end
-
-function PlaceableDepot:onPlayerTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    if not (onEnter or onLeave) then return end
-    if not g_localPlayer or otherId ~= g_localPlayer.rootNode then return end
-    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    if not spec then return end
-    local depotId = spec.depotId or spec.netDepotId
-    if not depotId or not g_DepotManager then return end
-    if onEnter then
-        g_DepotManager:onPlayerEnterDepot(depotId)
-    else
-        g_DepotManager:onPlayerLeaveDepot(depotId)
+        DepotLogger.debug("playerTrigger node loaded: %s", tostring(spec.playerTriggerNode))
     end
 end
 
@@ -95,10 +80,6 @@ end
 function PlaceableDepot:onDelete()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
-
-    if spec.playerTriggerNode then
-        removeTrigger(spec.playerTriggerNode)
-    end
 
     if g_DepotManager and spec.depotId then
         g_DepotManager:unregisterDepot(spec.depotId)

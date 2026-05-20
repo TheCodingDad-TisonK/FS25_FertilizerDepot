@@ -61,7 +61,7 @@ end
 DepotManager = {}
 local DepotManager_mt = Class(DepotManager)
 
-local PROXIMITY_THRESHOLD     = 8.0    -- metres, silo on-foot radius
+local PROXIMITY_THRESHOLD     = 5.0    -- metres, depot & silo on-foot radius (keep < gate distance)
 local VEHICLE_UNLOAD_PROXIMITY= 15.0   -- metres, vehicle near depot unload marker
 local SILO_FILL_COOLDOWN      = 2000   -- ms between silo fill triggers
 local DEPOT_SELL_COOLDOWN     = 5000   -- ms cooldown after sell dialog closes
@@ -154,23 +154,6 @@ function DepotManager:registerDepotUnloadNode(depotId, node)
     DepotLogger.info("Depot #%d unload node registered: %s", depotId, tostring(node))
 end
 
--- ─── Player Trigger Callbacks (from PlaceableDepot) ──────
-
-function DepotManager:onPlayerEnterDepot(depotId)
-    if self._nearDepotId == depotId then return end
-    self._nearDepotId = depotId
-    DepotLogger.info("Player entered depot #%d", depotId)
-    self:_updateInteractPrompt()
-end
-
-function DepotManager:onPlayerLeaveDepot(depotId)
-    if self._nearDepotId ~= depotId then return end
-    self._nearDepotId = nil
-    DepotLogger.info("Player left depot #%d", depotId)
-    self:_updateInteractPrompt()
-    self:closeDialog()
-end
-
 -- ─── Silo Registration ───────────────────────────────────
 
 function DepotManager:registerSilo(placeableSilo)
@@ -258,6 +241,7 @@ function DepotManager:update(dt)
     if self._proximityTimer < 500 then return end
     self._proximityTimer = 0
 
+    self:_checkDepotProximity()
     self:_checkSiloProximity()
     self:_checkDepotVehicles()
 end
@@ -379,6 +363,59 @@ function DepotManager:_onSiloFillConfirm(result)
 
     self.pendingOrders[ctx.farmId] = nil
     self:_updateInteractPrompt()
+end
+
+-- ─── Depot Proximity (on-foot player) ───────────────────
+
+function DepotManager:_checkDepotProximity()
+    if not next(self.depotNodes) then return end
+
+    local px, pz
+    if g_localPlayer and g_localPlayer.rootNode then
+        local ok, x, y, z = pcall(getWorldTranslation, g_localPlayer.rootNode)
+        if ok and x then px, pz = x, z end
+    end
+    if not px then
+        local cv = g_currentMission and g_currentMission.controlledVehicle
+        if cv and cv.rootNode then
+            local ok, x, y, z = pcall(getWorldTranslation, cv.rootNode)
+            if ok and x then px, pz = x, z end
+        end
+    end
+
+    if not px then
+        if self._nearDepotId then
+            self._nearDepotId = nil
+            self:_updateInteractPrompt()
+            self:closeDialog()
+        end
+        return
+    end
+
+    local nearId, nearDist = nil, PROXIMITY_THRESHOLD + 1
+    for id, node in pairs(self.depotNodes) do
+        if node then
+            local ok, dx, dy, dz = pcall(getWorldTranslation, node)
+            if ok and dx then
+                local dist = math.sqrt((px - dx) ^ 2 + (pz - dz) ^ 2)
+                if dist < PROXIMITY_THRESHOLD and dist < nearDist then
+                    nearId, nearDist = id, dist
+                end
+            end
+        end
+    end
+
+    if nearId ~= self._nearDepotId then
+        local prev = self._nearDepotId
+        self._nearDepotId = nearId
+        if not nearId and prev then
+            DepotLogger.info("Proximity: left depot #%d", prev)
+            self:closeDialog()
+        elseif nearId then
+            DepotLogger.info("Proximity: entered depot #%d", nearId)
+        end
+        self:_updateInteractPrompt()
+    end
 end
 
 -- ─── Silo Proximity (on-foot player, not in vehicle) ─────
