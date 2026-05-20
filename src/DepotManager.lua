@@ -253,7 +253,7 @@ function DepotManager:_getOrRegisterInteractEvent()
     if not g_inputBinding then return nil end
 
     local ok, evId = g_inputBinding:registerActionEvent(
-        InputAction.ACTIVATE_HANDTOOL, self,
+        InputAction.FD_INTERACT, self,
         DepotManager._onInteractAction, false, true, false, true)
     if ok and evId then
         self._interactEventId = evId

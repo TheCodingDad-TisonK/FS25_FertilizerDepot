@@ -75,5 +75,6 @@
     <text name="fd_settings_off"        text="OFF"/>
         <!-- Input action display name -->
     <text name="input_FD_OPEN_SETTINGS" text="Open Depot Settings"/>
+    <text name="input_FD_INTERACT"      text="Interact with Fertilizer Depot"/>
     </texts>
 </l10n>
