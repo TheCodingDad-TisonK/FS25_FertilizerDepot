@@ -151,41 +151,57 @@ function DepotSettingsDialog:refresh()
 end
 
 -- ─── Option Callbacks ────────────────────────────────────
+-- Changes are buffered in the UI elements — nothing is sent until Apply is clicked.
 
-function DepotSettingsDialog:onSeasonalPricingChanged(state)
-    local value = (state == 2)  -- 1=OFF, 2=ON
-    DepotSettingsEvent.sendToServer("seasonalPricing", tostring(value))
-end
+function DepotSettingsDialog:onSeasonalPricingChanged(state)  end
+function DepotSettingsDialog:onStorageCapacityChanged(state)  end
+function DepotSettingsDialog:onSellRatioChanged(state)        end
+function DepotSettingsDialog:onBuyMultiplierChanged(state)    end
 
-function DepotSettingsDialog:onStorageCapacityChanged(state)
-    local value = DepotSettings.CAPACITY_OPTIONS[state]
-    if value then
-        DepotSettingsEvent.sendToServer("storageCapacity", tostring(value))
-    end
-end
-
-function DepotSettingsDialog:onSellRatioChanged(state)
-    local value = DepotSettings.SELL_RATIO_OPTIONS[state]
-    if value then
-        DepotSettingsEvent.sendToServer("sellRatio", tostring(value))
-    end
-end
-
-function DepotSettingsDialog:onBuyMultiplierChanged(state)
-    local value = DepotSettings.BUY_MULT_OPTIONS[state]
-    if value then
-        DepotSettingsEvent.sendToServer("buyMultiplier", tostring(value))
-    end
-end
-
+-- Reset: update UI to defaults without sending to server — Apply still required.
 function DepotSettingsDialog:onResetDefaults()
     if not (g_currentMission.isMasterUser or g_server ~= nil) then return end
-    DepotSettingsEvent.sendToServer("seasonalPricing", tostring(DepotSettings.DEFAULTS.seasonalPricing))
-    DepotSettingsEvent.sendToServer("storageCapacity", tostring(DepotSettings.DEFAULTS.storageCapacity))
-    DepotSettingsEvent.sendToServer("sellRatio",       tostring(DepotSettings.DEFAULTS.sellRatio))
-    DepotSettingsEvent.sendToServer("buyMultiplier",   tostring(DepotSettings.DEFAULTS.buyMultiplier))
+    local d = DepotSettings.DEFAULTS
+    if self.optSeasonalPricing then
+        self.optSeasonalPricing:setState(d.seasonalPricing and 2 or 1)
+    end
+    if self.optStorageCapacity then
+        self.optStorageCapacity:setState(
+            DepotSettings.indexInOptions(DepotSettings.CAPACITY_OPTIONS, d.storageCapacity))
+    end
+    if self.optSellRatio then
+        self.optSellRatio:setState(
+            DepotSettings.indexInOptions(DepotSettings.SELL_RATIO_OPTIONS, d.sellRatio))
+    end
+    if self.optBuyMultiplier then
+        self.optBuyMultiplier:setState(
+            DepotSettings.indexInOptions(DepotSettings.BUY_MULT_OPTIONS, d.buyMultiplier))
+    end
 end
 
+-- Apply: read current UI states and send all settings to server, then close.
+function DepotSettingsDialog:onApplySettings()
+    if not (g_currentMission.isMasterUser or g_server ~= nil) then return end
+    if self.optSeasonalPricing then
+        DepotSettingsEvent.sendToServer("seasonalPricing",
+            tostring(self.optSeasonalPricing:getState() == 2))
+    end
+    if self.optStorageCapacity then
+        local v = DepotSettings.CAPACITY_OPTIONS[self.optStorageCapacity:getState()]
+        if v then DepotSettingsEvent.sendToServer("storageCapacity", tostring(v)) end
+    end
+    if self.optSellRatio then
+        local v = DepotSettings.SELL_RATIO_OPTIONS[self.optSellRatio:getState()]
+        if v then DepotSettingsEvent.sendToServer("sellRatio", tostring(v)) end
+    end
+    if self.optBuyMultiplier then
+        local v = DepotSettings.BUY_MULT_OPTIONS[self.optBuyMultiplier:getState()]
+        if v then DepotSettingsEvent.sendToServer("buyMultiplier", tostring(v)) end
+    end
+    self:close()
+end
+
+-- Close: discard any pending UI changes (nothing was sent yet).
 function DepotSettingsDialog:onCloseSettings()
     self:close()
 end

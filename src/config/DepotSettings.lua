@@ -42,6 +42,11 @@ local function findIndex(tbl, value)
     return 1
 end
 
+-- Public static — used by DepotSettingsDialog to find default option indices.
+function DepotSettings.indexInOptions(tbl, value)
+    return findIndex(tbl, value)
+end
+
 function DepotSettings:getCapacityIndex()
     return findIndex(DepotSettings.CAPACITY_OPTIONS, self.storageCapacity)
 end

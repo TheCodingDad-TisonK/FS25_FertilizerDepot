@@ -46,7 +46,9 @@
         <BoxLayout profile="fs25_dialogButtonBox">
             <Button profile="buttonBack"     text="$l10n_fd_settings_reset"
                     onClick="onResetDefaults"/>
-            <Button profile="buttonActivate" text="$l10n_fd_depot_close"
+            <Button profile="buttonActivate" text="$l10n_fd_settings_apply"
+                    onClick="onApplySettings"/>
+            <Button profile="buttonBack"     text="$l10n_fd_depot_close"
                     onClick="onCloseSettings"/>
         </BoxLayout>
 
@@ -55,7 +57,7 @@
     <GUIProfiles>
 
         <Profile name="depotSettingsBg" extends="fs25_dialogBg">
-            <size value="660px 340px"/>
+            <size value="720px 340px"/>
         </Profile>
 
         <Profile name="depotAdminBadge" extends="fs25_dialogText" with="anchorTopCenter">
