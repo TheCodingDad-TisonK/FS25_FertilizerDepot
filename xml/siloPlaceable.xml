@@ -6,7 +6,7 @@
         <functions>
             <function>$l10n_fd_silo_function</function>
         </functions>
-        <image>store/store_depot.dds</image>
+        <image>icon.dds</image>
         <price>15000</price>
         <dailyUpkeep>25</dailyUpkeep>
         <lifetime>1000</lifetime>

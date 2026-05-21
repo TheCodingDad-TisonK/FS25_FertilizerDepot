@@ -6,7 +6,7 @@
         <functions>
             <function>$l10n_fd_shop_function</function>
         </functions>
-        <image>store/store_depot.dds</image>
+        <image>icon.dds</image>
         <price>25000</price>
         <dailyUpkeep>50</dailyUpkeep>
         <lifetime>1000</lifetime>
