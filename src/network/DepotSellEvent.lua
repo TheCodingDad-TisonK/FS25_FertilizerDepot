@@ -47,8 +47,10 @@ function DepotSellEvent:run(connection)
     local success, msgKey, liters, revenue = g_DepotManager.depotSystem:sellFillType(
         self.depotId, self.fillTypeName, self.fillTypeIndex, self.liters, self.farmId)
 
-    if success then
-        g_DepotManager:broadcastSync(self.depotId)
+    g_DepotManager:broadcastSync(self.depotId)
+
+    if not success then
+        DepotLogger.info("SellEvent failed: %s", tostring(msgKey))
     end
 end
 

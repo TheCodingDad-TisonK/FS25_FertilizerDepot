@@ -187,13 +187,13 @@
                 <Text profile="depotSelectedName"   id="prodSelectedName" position="-200px -5px" text="—"/>
                 <GuiElement profile="depotStepContainer" id="prodQtyMinus" position="-55px 0px">
                     <Bitmap  profile="depotStepBg"  position="0px 0px"/>
-                    <Text    profile="depotStepTxt" position="0px 0px" text="−"/>
+                    <Text    profile="depotStepTxt" position="0px 0px" text="&lt;"/>
                     <Button  profile="depotStepHit" position="0px 0px" onClick="onProductQtyMinus"/>
                 </GuiElement>
                 <Text profile="depotAmountDisplay" id="prodQtyDisplay" position="35px -5px" text="×1"/>
                 <GuiElement profile="depotStepContainer" id="prodQtyPlus" position="130px 0px">
                     <Bitmap  profile="depotStepBg"  position="0px 0px"/>
-                    <Text    profile="depotStepTxt" position="0px 0px" text="+"/>
+                    <Text    profile="depotStepTxt" position="0px 0px" text="&gt;"/>
                     <Button  profile="depotStepHit" position="0px 0px" onClick="onProductQtyPlus"/>
                 </GuiElement>
                 <Text profile="depotProductPrice" id="prodTotalPrice" position="215px -5px" text=""/>

@@ -79,5 +79,17 @@
         <!-- Input action display name -->
     <text name="input_FD_OPEN_SETTINGS" text="Open Depot Settings"/>
     <text name="input_FD_INTERACT"      text="Interact with Fertilizer Depot"/>
+
+    <!-- Products tab -->
+    <text name="fd_products_tab"         text="Products"/>
+    <text name="fd_products_order_bag"   text="Order Bag"/>
+    <text name="fd_products_order_tank"  text="Order Tank"/>
+    <text name="fd_products_label_bag"   text="Bag(s)"/>
+    <text name="fd_products_label_tank"  text="Tank(s)"/>
+    <text name="fd_products_none"        text="No physical products available."/>
+    <text name="fd_products_no_stock"    text="Insufficient depot stock for this order."/>
+    <text name="fd_products_no_object"   text="No physical object registered for this type."/>
+    <text name="fd_products_ordered"     text="%d× %s %s ordered — delivering to depot."/>
+    <text name="fd_depot_selected"       text="Selected"/>
     </texts>
 </l10n>

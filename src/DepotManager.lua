@@ -63,7 +63,7 @@ local DepotManager_mt = Class(DepotManager)
 
 local PROXIMITY_THRESHOLD     = 5.0    -- metres, depot & silo on-foot radius (keep < gate distance)
 local SILO_VEHICLE_PROXIMITY  = 10.0   -- metres, vehicle near silo (larger — harder to park precisely)
-local VEHICLE_UNLOAD_PROXIMITY= 15.0   -- metres, vehicle near depot unload marker
+local VEHICLE_UNLOAD_PROXIMITY= 8.0    -- metres, vehicle near depot unload marker
 local SILO_FILL_COOLDOWN      = 2000   -- ms between silo fill triggers
 local DEPOT_SELL_COOLDOWN     = 5000   -- ms cooldown after sell dialog closes
 
@@ -109,6 +109,9 @@ function DepotManager:initialize()
     self._initialized = true
     DepotLogger.info("DepotManager initialized (SF installed: %s)",
         tostring(self.sfBridge:isInstalled()))
+    addConsoleCommand("SoilDebugDepot", "Toggle FertDepot debug logging",          "cmdDebugDepot",  self)
+    addConsoleCommand("FDFillStock",    "Fill all depot storage to max [depotId]",  "cmdFDFillStock", self)
+    addConsoleCommand("FDEmptyStock",   "Empty all depot storage [depotId]",        "cmdFDEmptyStock",self)
 end
 
 function DepotManager:delete()
@@ -618,4 +621,57 @@ function DepotManager:_onDepotSellConfirm(result)
 
     DepotSellEvent.sendToServer(
         ctx.depotId, ctx.fillTypeName, ctx.fillTypeIndex, ctx.amount, ctx.farmId)
+end
+
+-- ─── Console Commands ────────────────────────────────────
+
+function DepotManager:cmdDebugDepot()
+    DepotLogger._debug = not DepotLogger._debug
+    return DepotConstants.LOG_PREFIX .. " Debug: " .. tostring(DepotLogger._debug)
+end
+
+local function _iterateDepots(manager, targetId, fn)
+    local count = 0
+    for id, placeable in pairs(manager.depots) do
+        if targetId == nil or id == targetId then
+            fn(id, placeable)
+            count = count + 1
+        end
+    end
+    return count
+end
+
+function DepotManager:cmdFDFillStock(depotIdArg)
+    if not g_server then
+        return DepotConstants.LOG_PREFIX .. " FDFillStock: server only"
+    end
+    local targetId = depotIdArg and tonumber(depotIdArg) or nil
+    local fillTypes = self.sfBridge:getFillTypeList()
+    local cap = self.settings.storageCapacity or DepotConstants.STORAGE_CAPACITY
+    local depotCount = _iterateDepots(self, targetId, function(id, _)
+        for _, ft in ipairs(fillTypes) do
+            self.depotSystem:setStorageLevel(id, ft.name, cap)
+        end
+        self:broadcastSync(id)
+        DepotLogger.info("FDFillStock: depot #%d filled (%d types, %.0fL each)", id, #fillTypes, cap)
+    end)
+    return string.format("%s FDFillStock: filled %d depot(s) to %.0fL each type",
+        DepotConstants.LOG_PREFIX, depotCount, cap)
+end
+
+function DepotManager:cmdFDEmptyStock(depotIdArg)
+    if not g_server then
+        return DepotConstants.LOG_PREFIX .. " FDEmptyStock: server only"
+    end
+    local targetId = depotIdArg and tonumber(depotIdArg) or nil
+    local fillTypes = self.sfBridge:getFillTypeList()
+    local depotCount = _iterateDepots(self, targetId, function(id, _)
+        for _, ft in ipairs(fillTypes) do
+            self.depotSystem:setStorageLevel(id, ft.name, 0)
+        end
+        self:broadcastSync(id)
+        DepotLogger.info("FDEmptyStock: depot #%d emptied", id)
+    end)
+    return string.format("%s FDEmptyStock: emptied %d depot(s)",
+        DepotConstants.LOG_PREFIX, depotCount)
 end
