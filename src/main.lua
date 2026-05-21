@@ -150,8 +150,66 @@ FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionIn
 
 addConsoleCommand("SoilDebugDepot", "Toggle FertDepot debug logging",
     "cmdDebugDepot", g_currentModName)
+addConsoleCommand("FDFillStock",  "Fill all depot storage to max capacity [depotId optional]",
+    "cmdFDFillStock", g_currentModName)
+addConsoleCommand("FDEmptyStock", "Empty all depot storage [depotId optional]",
+    "cmdFDEmptyStock", g_currentModName)
 
 function cmdDebugDepot()
     DepotLogger._debug = not DepotLogger._debug
     print(DepotConstants.LOG_PREFIX .. " Debug: " .. tostring(DepotLogger._debug))
+end
+
+-- Helper: iterate depots, optionally filtered to a single depotId
+local function _iterateDepots(targetId, fn)
+    if not g_DepotManager then
+        print(DepotConstants.LOG_PREFIX .. " DepotManager not ready")
+        return 0
+    end
+    local count = 0
+    for id, placeable in pairs(g_DepotManager.depots) do
+        if targetId == nil or id == targetId then
+            fn(id, placeable)
+            count = count + 1
+        end
+    end
+    return count
+end
+
+function cmdFDFillStock(depotIdArg)
+    if not g_server then
+        print(DepotConstants.LOG_PREFIX .. " FDFillStock: server only")
+        return
+    end
+    local targetId = depotIdArg and tonumber(depotIdArg) or nil
+    local fillTypes = g_DepotManager and g_DepotManager.sfBridge:getFillTypeList() or {}
+    local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity)
+                or DepotConstants.STORAGE_CAPACITY
+    local depotCount = _iterateDepots(targetId, function(id, _)
+        for _, ft in ipairs(fillTypes) do
+            g_DepotManager.depotSystem:setStorageLevel(id, ft.name, cap)
+        end
+        g_DepotManager:broadcastSync(id)
+        DepotLogger.info("FDFillStock: depot #%d filled (%.0f types × %.0fL)", id, #fillTypes, cap)
+    end)
+    print(string.format("%s FDFillStock: filled %d depot(s) to %.0fL each type",
+        DepotConstants.LOG_PREFIX, depotCount, cap))
+end
+
+function cmdFDEmptyStock(depotIdArg)
+    if not g_server then
+        print(DepotConstants.LOG_PREFIX .. " FDEmptyStock: server only")
+        return
+    end
+    local targetId = depotIdArg and tonumber(depotIdArg) or nil
+    local fillTypes = g_DepotManager and g_DepotManager.sfBridge:getFillTypeList() or {}
+    local depotCount = _iterateDepots(targetId, function(id, _)
+        for _, ft in ipairs(fillTypes) do
+            g_DepotManager.depotSystem:setStorageLevel(id, ft.name, 0)
+        end
+        g_DepotManager:broadcastSync(id)
+        DepotLogger.info("FDEmptyStock: depot #%d emptied", id)
+    end)
+    print(string.format("%s FDEmptyStock: emptied %d depot(s)",
+        DepotConstants.LOG_PREFIX, depotCount))
 end
