@@ -74,7 +74,7 @@ Features:
         <vi>Kho phân bón có thể đặt để mua, lưu trữ và bán tất cả các loại phân bón.</vi>
     </description>
 
-    <iconFilename>icon.dds</iconFilename>
+    <iconFilename>icon.png</iconFilename>
 
     <multiplayer supported="true"/>
 
