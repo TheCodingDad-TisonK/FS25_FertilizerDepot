@@ -68,7 +68,8 @@ end
 
 -- ─── Vehicle Search ──────────────────────────────────────
 
-local VEHICLE_SEARCH_RADIUS_SQ = 60 * 60  -- 60-metre radius
+local VEHICLE_SEARCH_RADIUS_SQ       = 8  * 8   -- 8m: parked trailers/sprayers at depot building
+local VEHICLE_UNLOAD_SEARCH_RADIUS_SQ = 15 * 15  -- 15m: spawned pallets near unload zone (may drift after physics)
 
 local function collectVehiclesRecursive(v, list)
     table.insert(list, v)
@@ -90,9 +91,10 @@ local function vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex)
     return veh:getFillUnitSupportsFillType(fuIdx, fillTypeIndex)
 end
 
-local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
+local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell, radiusSq)
     if not g_currentMission then return nil, nil end
 
+    local rSq = radiusSq or VEHICLE_SEARCH_RADIUS_SQ
     local vehicleList = g_currentMission.vehicleSystem and g_currentMission.vehicleSystem.vehicles or {}
     local totalVehicles, inRange, rejectType, rejectFull = 0, 0, 0, 0
 
@@ -102,9 +104,9 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
             local vx, _, vz = getWorldTranslation(vehicle.rootNode)
             local dx, dz = vx - px, vz - pz
             local distSq = dx * dx + dz * dz
-            DepotLogger.debug("  vehicle '%s' dist=%.1fm (limit=60m) inRange=%s",
-                tostring(vehicle.typeName or "?"), math.sqrt(distSq), tostring(distSq <= VEHICLE_SEARCH_RADIUS_SQ))
-            if distSq <= VEHICLE_SEARCH_RADIUS_SQ then
+            DepotLogger.debug("  vehicle '%s' dist=%.1fm inRange=%s",
+                tostring(vehicle.typeName or "?"), math.sqrt(distSq), tostring(distSq <= rSq))
+            if distSq <= rSq then
                 inRange = inRange + 1
                 local targets = {}
                 collectVehiclesRecursive(vehicle, targets)
@@ -145,8 +147,20 @@ end
 function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
     local placeable = g_DepotManager and g_DepotManager.depots[depotId]
     if not placeable or not placeable.rootNode then return nil, nil end
+
     local px, _, pz = getWorldTranslation(placeable.rootNode)
-    return findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
+    local v, u = findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
+    if v then return v, u end
+
+    -- Also search from the unload node — where physical products (bigBag/liquidTank) are placed.
+    -- Use a larger radius since spawned pallets may drift slightly after FS25 physics settles.
+    local unloadNode = g_DepotManager.depotUnloadNodes[depotId]
+    if unloadNode then
+        local ux, _, uz = getWorldTranslation(unloadNode)
+        return findVehicleNearPosition(ux, uz, fillTypeIndex, forSell, VEHICLE_UNLOAD_SEARCH_RADIUS_SQ)
+    end
+
+    return nil, nil
 end
 
 -- ─── Buy Transaction (from Depot dialog, vehicle must be near DEPOT) ─────
@@ -266,6 +280,96 @@ function DepotSystem:buyFromSilo(depotId, siloNode, fillTypeName, fillTypeIndex,
         tostring(vehicle.typeName or "?"), unitIndex, liters, actualFilled or 0, fillTypeName)
 
     return true, "fd_depot_buy_success", actualFilled or liters
+end
+
+-- ─── Product Order (bigBag / liquidTank spawn) ───────────
+-- Deducts storage, charges farm, spawns one or more physical pallet objects near the depot.
+-- Returns: success (bool), message key (string)
+function DepotSystem:orderProduct(depotId, fillTypeName, fillTypeIndex, quantity, spawnX, spawnZ, farmId)
+    if not g_server then return false, "fd_error_server" end
+
+    local depot = self._depots[depotId]
+    if not depot then return false, "fd_error_depot" end
+
+    -- Resolve index from name (guard against SF drift)
+    if g_fillTypeManager then
+        local resolvedIdx = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+        if resolvedIdx and resolvedIdx > 0 then
+            fillTypeIndex = resolvedIdx
+        end
+    end
+
+    local fillType = g_fillTypeManager and g_fillTypeManager:getFillTypeByIndex(fillTypeIndex)
+    if not fillType or not fillType.palletFilename or fillType.palletFilename == "" then
+        return false, "fd_products_no_object"
+    end
+
+    quantity = math.max(1, math.min(DepotConstants.MAX_PRODUCT_QUANTITY, quantity or 1))
+    local litresNeeded = quantity * DepotConstants.PRODUCT_LITRES_PER_UNIT
+
+    local stored = depot.storageLevel[fillTypeName] or 0
+    if stored < litresNeeded then return false, "fd_products_no_stock" end
+
+    local cost = self._pricing:calculateBuyCost(fillTypeName, litresNeeded)
+    local farm = g_farmManager and g_farmManager:getFarmById(farmId)
+    if not farm then return false, "fd_error_farm" end
+    if farm:getBalance() < cost then return false, "fd_depot_no_money" end
+
+    depot.storageLevel[fillTypeName] = stored - litresNeeded
+    g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
+
+    -- Spawn objects side by side (1.5m apart along world X)
+    local palletFile = fillType.palletFilename
+    for i = 1, quantity do
+        local offsetX = (i - 1) * 1.5
+        local data = VehicleLoadingData.new()
+        data:setFilename(palletFile)
+        data:setPosition(spawnX + offsetX, nil, spawnZ)  -- nil Y = terrain height auto-resolve
+        data:setPropertyState(VehiclePropertyState.OWNED)
+        data:setOwnerFarmId(farmId)
+        data:load(function(_, vehicles, state, _)
+            if state ~= VehicleLoadingState.OK then
+                DepotLogger.warning("Product spawn failed for %s unit %d/%d",
+                    fillTypeName, i, quantity)
+                return
+            end
+            -- Fill the spawned vehicle to its full capacity.
+            -- BigBags pre-fill via XML so addFillUnitFillLevel just tops them off (no-op if already full).
+            -- Liquid IBC pallets spawn empty and need an explicit fill.
+            -- We pre-deducted PRODUCT_LITRES_PER_UNIT from depot; deduct any extra here so stock
+            -- accounting matches the actual fill amount.
+            for _, veh in ipairs(vehicles or {}) do
+                local spec = veh.spec_fillUnit
+                if spec and spec.fillUnits then
+                    for fuIdx = 1, #spec.fillUnits do
+                        if veh:getFillUnitSupportsFillType(fuIdx, fillTypeIndex) then
+                            local cap = veh:getFillUnitCapacity(fuIdx) or 0
+                            if cap > 0 then
+                                -- Deduct additional stock if the container holds more than the pre-deducted amount
+                                local extra = math.max(0, cap - DepotConstants.PRODUCT_LITRES_PER_UNIT)
+                                if extra > 0 then
+                                    local remaining = math.max(0, depot.storageLevel[fillTypeName] or 0)
+                                    local taken = math.min(extra, remaining)
+                                    depot.storageLevel[fillTypeName] = remaining - taken
+                                    cap = DepotConstants.PRODUCT_LITRES_PER_UNIT + taken
+                                end
+                                veh:addFillUnitFillLevel(farmId, fuIdx, cap,
+                                    fillTypeIndex, ToolType.UNDEFINED, nil)
+                                DepotLogger.info("Filled spawned %s: %.0fL %s",
+                                    tostring(veh.typeName or "?"), cap, fillTypeName)
+                            end
+                            break
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    DepotLogger.info("Product order: %s ×%d (%.0fL) cost=$%.2f farm=%d",
+        fillTypeName, quantity, litresNeeded, cost, farmId)
+
+    return true, "fd_products_ordered"
 end
 
 -- ─── Sell Transaction ────────────────────────────────────

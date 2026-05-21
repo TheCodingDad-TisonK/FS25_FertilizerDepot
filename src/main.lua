@@ -23,6 +23,7 @@ source(modDir .. "src/network/DepotSellEvent.lua")
 source(modDir .. "src/network/DepotSiloFillEvent.lua")
 source(modDir .. "src/network/DepotSyncEvent.lua")
 source(modDir .. "src/network/DepotSettingsEvent.lua")
+source(modDir .. "src/network/DepotProductOrderEvent.lua")
 
 -- Phase 4: Placeables
 source(modDir .. "src/placeable/PlaceableDepot.lua")
@@ -145,12 +146,5 @@ FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.del
 FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
 
--- ─── Console Commands ────────────────────────────────────
-
-addConsoleCommand("SoilDebugDepot", "Toggle FertDepot debug logging",
-    "cmdDebugDepot", g_currentModName)
-
-function cmdDebugDepot()
-    DepotLogger._debug = not DepotLogger._debug
-    print(DepotConstants.LOG_PREFIX .. " Debug: " .. tostring(DepotLogger._debug))
-end
+-- Console commands are registered as methods on DepotManager in DepotManager.lua
+-- using `self` as the target, following the FS25 addConsoleCommand pattern.
