@@ -40,6 +40,7 @@ if command -v zip &>/dev/null; then
         --exclude "./__MACOSX/*" \
         --exclude "./*.DS_Store" \
         --exclude "./*.zip" \
+        --exclude "./tools/*" \
         --exclude "./icon_source.png"
     echo "  Built via zip"
 else
@@ -54,7 +55,7 @@ import zipfile, os, sys
 MOD_DIR = os.getcwd()
 ZIP_PATH = os.path.join(os.path.dirname(MOD_DIR), os.path.basename(MOD_DIR) + ".zip")
 
-EXCLUDE_DIRS  = {".git", ".claude", ".github", "__MACOSX"}
+EXCLUDE_DIRS  = {".git", ".claude", ".github", "__MACOSX", "tools"}
 EXCLUDE_EXTS  = {".sh", ".py", ".md", ".DS_Store", ".zip"}
 EXCLUDE_FILES = {".gitignore", "icon_source.png"}
 
