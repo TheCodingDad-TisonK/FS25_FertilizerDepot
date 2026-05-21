@@ -78,7 +78,7 @@
             <size value="280px 32px"/>
         </Profile>
 
-        <Profile name="depotSettingsOption" extends="multiTextOption" with="anchorTopCenter">
+        <Profile name="depotSettingsOption" extends="fs25_subCategorySelector" with="anchorTopCenter">
             <size value="240px 32px"/>
         </Profile>
 
