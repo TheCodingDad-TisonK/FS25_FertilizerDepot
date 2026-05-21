@@ -50,18 +50,37 @@ function getModRoot() {
 }
 
 /**
- * Parse modDesc.xml and get registered source files
+ * Parse modDesc.xml and get registered source files, then follow source() chains
  */
 function parseModDescSources(modRoot) {
+    const registered = new Set();
+
+    // Seed with files directly listed in modDesc.xml
     const modDescPath = path.join(modRoot, 'modDesc.xml');
     const content = fs.readFileSync(modDescPath, 'utf8');
-
-    const registered = new Set();
     const regex = /sourceFile\s+filename="([^"]+)"/g;
     let match;
-
     while ((match = regex.exec(content)) !== null) {
         registered.add(match[1].replace(/\//g, path.sep));
+    }
+
+    // Follow source() calls transitively
+    const queue = [...registered];
+    while (queue.length > 0) {
+        const relPath = queue.shift();
+        const absPath = path.join(modRoot, relPath);
+        if (!fs.existsSync(absPath)) continue;
+        const lua = fs.readFileSync(absPath, 'utf8');
+        // Matches both: source("path.lua") and source(var .. "path.lua")
+        const srcRegex = /\bsource\s*\([^"']*["']([^"']+\.lua)["']/g;
+        let srcMatch;
+        while ((srcMatch = srcRegex.exec(lua)) !== null) {
+            const sourced = srcMatch[1].replace(/\//g, path.sep);
+            if (!registered.has(sourced)) {
+                registered.add(sourced);
+                queue.push(sourced);
+            }
+        }
     }
 
     return registered;
@@ -104,8 +123,8 @@ function findAllLuaFiles(modRoot) {
 function findAllDialogs(modRoot) {
     const dialogs = {};
 
-    // Find Lua dialog files in src/gui
-    const guiDir = path.join(modRoot, 'src', 'gui');
+    // Find Lua dialog files in src/ui
+    const guiDir = path.join(modRoot, 'src', 'ui');
     if (fs.existsSync(guiDir)) {
         const luaFiles = findFiles(guiDir, /Dialog\.lua$/);
         for (const file of luaFiles) {
@@ -114,8 +133,8 @@ function findAllDialogs(modRoot) {
         }
     }
 
-    // Find XML dialog files in gui/
-    const xmlDir = path.join(modRoot, 'gui');
+    // Find XML dialog files in xml/gui/
+    const xmlDir = path.join(modRoot, 'xml', 'gui');
     if (fs.existsSync(xmlDir)) {
         const xmlFiles = findFiles(xmlDir, /Dialog\.xml$/);
         for (const file of xmlFiles) {
@@ -274,20 +293,11 @@ function gatherStatistics(modRoot) {
 
     // Categories to track
     const categories = {
-        'src/gui': 'GUI Screens',
-        'src/gui/financepanels': 'Finance Panels',
-        'src/events': 'Network Events',
-        'src/managers': 'Managers',
-        'src/managers/usedvehicle': 'Used Vehicle Modules',
-        'src/extensions': 'Extensions',
-        'src/specializations': 'Specializations',
-        'src/specializations/maintenance': 'Maintenance Modules',
-        'src/utils': 'Utilities',
-        'src/data': 'Data Classes',
-        'src/settings': 'Settings',
-        'src/core': 'Core',
-        'vehicles': 'Vehicles',
-        'placeables': 'Placeables'
+        'src/ui': 'UI Dialogs',
+        'src/network': 'Network Events',
+        'src/placeable': 'Placeables',
+        'src/integrations': 'Integrations',
+        'src/config': 'Config/Settings',
     };
 
     // Initialize categories
@@ -369,18 +379,24 @@ function gatherStatistics(modRoot) {
     stats.lua.largestFiles = stats.lua.largestFiles.slice(0, 10);
 
     // Count XML files
-    const xmlDirs = ['gui', 'translations'];
-    for (const dir of xmlDirs) {
+    const xmlDirMap = [
+        { dir: path.join('xml', 'gui'), type: 'gui' },
+        { dir: 'xml', type: 'other' },
+        { dir: 'translations', type: 'translations' },
+    ];
+    const countedXml = new Set();
+    for (const { dir, type } of xmlDirMap) {
         const dirPath = path.join(modRoot, dir);
         if (fs.existsSync(dirPath)) {
             const files = findFiles(dirPath, /\.xml$/);
             for (const file of files) {
+                if (countedXml.has(file)) continue;
+                countedXml.add(file);
                 const fileStat = fs.statSync(file);
                 stats.xml.total++;
                 stats.xml.totalSize += fileStat.size;
-
-                if (dir === 'gui') stats.xml.gui++;
-                else if (dir === 'translations') stats.xml.translations++;
+                if (type === 'gui') stats.xml.gui++;
+                else if (type === 'translations') stats.xml.translations++;
                 else stats.xml.other++;
             }
         }
@@ -568,8 +584,8 @@ function gatherModInfo(modRoot) {
 
     // Detect cross-mod compatibility
     const crossModPatterns = [
-        { pattern: /RVB|RealisticVehicleBreakdown/gi, mod: 'FS25_RealisticVehicleBreakdown (RVB)', icon: '🔗' },
-        { pattern: /UYT|UsedYourTool/gi, mod: 'FS25_UsedYourTool (UYT)', icon: '🔗' },
+        { pattern: /\bRVB\b|RealisticVehicleBreakdown/g, mod: 'FS25_RealisticVehicleBreakdown (RVB)', icon: '🔗' },
+        { pattern: /\bUYT\b|UsedYourTool/g, mod: 'FS25_UsedYourTool (UYT)', icon: '🔗' },
         { pattern: /ModCompatibility/g, mod: 'Generic Mod Compatibility Layer', icon: '🔌' }
     ];
 
@@ -971,7 +987,7 @@ function main() {
     const verbose = args.includes('--verbose') || args.includes('-v');
     const checkFunctions = args.includes('--check-functions') || args.includes('-f');
 
-    console.log(`\n${colors.bold}${colors.cyan}=== FS25_UsedPlus Unused Code Scanner ===${colors.reset}\n`);
+    console.log(`\n${colors.bold}${colors.cyan}=== FS25_FertilizerDepot Unused Code Scanner ===${colors.reset}\n`);
 
     const modRoot = getModRoot();
     console.log(`Mod root: ${modRoot}\n`);

@@ -73,7 +73,7 @@ if ($LastNLines -gt 0 -and $lines.Count -gt $LastNLines) {
 # Initialize counters and collections
 $stats = @{
     TotalLines = $lines.Count
-    Fertilizer DepotLines = 0
+    FertDepotLines = 0
     Errors = @()
     Warnings = @()
     LuaErrors = @()
@@ -86,7 +86,7 @@ $stats = @{
 # Patterns to match
 $patterns = @{
     # Fertilizer Depot specific patterns
-    Fertilizer DepotLine = 'FertDepot|FS25_FertilizerDepot'
+    FertDepotLine = 'FertDepot|FS25_FertilizerDepot'
     ModLoaded = 'v(\d+\.\d+\.\d+)'
 
     # Error patterns
@@ -97,7 +97,7 @@ $patterns = @{
     Warning = 'Warning:'
 
     # Specific Fertilizer Depot patterns
-    ManagerInit = '(FinanceManager|UsedVehicleManager|VehicleSaleManager)\s+(initialized|loaded)'
+    ManagerInit = '(DepotManager|DepotSystem)\s+(initialized|loaded)'
     DialogError = 'Dialog.*(?:nil|error|failed)'
     EventError = 'Event.*(?:nil|error|failed)'
 }
@@ -110,8 +110,8 @@ foreach ($i in 0..($lines.Count - 1)) {
     $line = $lines[$i]
 
     # Check if line is Fertilizer Depot related
-    if ($line -match $patterns.Fertilizer DepotLine) {
-        $stats.Fertilizer DepotLines++
+    if ($line -match $patterns.FertDepotLine) {
+        $stats.FertDepotLines++
 
         # Check for mod version
         if ($line -match $patterns.ModLoaded) {
@@ -161,7 +161,7 @@ foreach ($i in 0..($lines.Count - 1)) {
     }
 
     # Also check for XML errors that might reference our mod
-    if ($line -match $patterns.XmlParse -and $line -match 'Fertilizer Depot') {
+    if ($line -match $patterns.XmlParse -and $line -match $patterns.FertDepotLine) {
         $stats.XmlErrors += @{
             Line = $i + 1
             Text = $line.Trim()
@@ -183,7 +183,7 @@ $report += "-" * 40
 $report += "Mod Version: $($stats.ModVersion)"
 $report += "Mod Loaded Successfully: $($stats.LoadSuccess)"
 $report += "Total Log Lines: $($stats.TotalLines)"
-$report += "Fertilizer Depot-Related Lines: $($stats.Fertilizer DepotLines)"
+$report += "FertilizerDepot-Related Lines: $($stats.FertDepotLines)"
 $report += "Errors Found: $($stats.Errors.Count)"
 $report += "Warnings Found: $($stats.Warnings.Count)"
 

@@ -124,8 +124,8 @@ foreach ($file in $LuaFiles) {
             }
         }
 
-        # Check for debug code (skip comments and the core logging file itself)
-        if (-not $isComment -and $line -match '\bprint\s*\(' -and $line -notmatch 'Fertilizer Depot\.log' -and $RelPath -notmatch 'Fertilizer DepotCore\.lua') {
+        # Check for debug code (skip comments, the logger itself, and dev tools)
+        if (-not $isComment -and $line -match '\bprint\s*\(' -and $RelPath -notmatch 'DepotLogger\.lua' -and $RelPath -notmatch '^tools\\') {
             Add-Warning -File $RelPath -Category "DEBUG_CODE" -Line $lineNum -Message "Raw print() - use FertDepot.log* instead"
         }
     }
