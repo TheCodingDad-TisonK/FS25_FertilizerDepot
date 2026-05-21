@@ -50,6 +50,10 @@ DepotConstants.SF_FILL_TYPE_NAMES = {
     "LIQUIDLIME",
 }
 
+-- Physical product ordering (bigBag / liquidTank)
+DepotConstants.MAX_PRODUCT_QUANTITY = 5          -- max units per order
+DepotConstants.PRODUCT_LITRES_PER_UNIT = 1000    -- standard bigBag/liquidTank capacity in liters
+
 -- Minimum purchase amount (liters)
 DepotConstants.MIN_PURCHASE_LITERS = 100
 

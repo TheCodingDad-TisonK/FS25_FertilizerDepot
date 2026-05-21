@@ -11,7 +11,8 @@ local SoilFertilizerBridge_mt = Class(SoilFertilizerBridge)
 
 function SoilFertilizerBridge.new()
     local self = setmetatable({}, SoilFertilizerBridge_mt)
-    self._fillTypeList = nil  -- cached on first call
+    self._fillTypeList = nil         -- cached on first call
+    self._productFillTypeList = nil  -- cached subset: types with pallet objects
     return self
 end
 
@@ -75,6 +76,40 @@ function SoilFertilizerBridge:getFillTypeList()
     return list
 end
 
+-- Returns ordered list of fill types that have physical pallet objects (bigBag / liquidTank).
+-- Each entry adds: palletFilename (string), productLabel ("bag" or "tank"), litresPerUnit (number).
+-- Result is cached after first call.
+function SoilFertilizerBridge:getProductFillTypeList()
+    if self._productFillTypeList then
+        return self._productFillTypeList
+    end
+
+    local list = {}
+    local baseFillTypes = self:getFillTypeList()
+    for _, ft in ipairs(baseFillTypes) do
+        if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
+            local fillType = g_fillTypeManager and
+                g_fillTypeManager:getFillTypeByIndex(ft.fillTypeIndex)
+            local palletFile = fillType and fillType.palletFilename
+            if palletFile and palletFile ~= "" then
+                local isBigBag = palletFile:find("bigBag") ~= nil
+                table.insert(list, {
+                    name          = ft.name,
+                    fillTypeIndex = ft.fillTypeIndex,
+                    pricePerLiter = ft.pricePerLiter,
+                    displayName   = ft.displayName,
+                    palletFilename = palletFile,
+                    productLabel  = isBigBag and "bag" or "tank",
+                    litresPerUnit = DepotConstants.PRODUCT_LITRES_PER_UNIT,
+                })
+            end
+        end
+    end
+
+    self._productFillTypeList = list
+    return list
+end
+
 -- Returns the base price per liter for a fill type by name.
 -- Uses game's registered price; falls back to DepotConstants.VANILLA_FILL_TYPES table.
 function SoilFertilizerBridge:getBasePrice(fillTypeName)
@@ -104,4 +139,5 @@ end
 -- Invalidate cache (call if fill types change at runtime)
 function SoilFertilizerBridge:invalidateCache()
     self._fillTypeList = nil
+    self._productFillTypeList = nil
 end

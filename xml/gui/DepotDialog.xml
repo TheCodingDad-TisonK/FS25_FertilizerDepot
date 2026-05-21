@@ -181,16 +181,40 @@
                 </GuiElement>
             </GuiElement>
 
+            <!-- Products order row (visible on Products tab only) -->
+            <GuiElement profile="depotProductsOrderRow" id="productsOrderRow" position="0px -288px">
+                <Text profile="depotPreOrderLabel"  position="-360px -5px" text="Order:"/>
+                <Text profile="depotSelectedName"   id="prodSelectedName" position="-200px -5px" text="—"/>
+                <GuiElement profile="depotStepContainer" id="prodQtyMinus" position="-55px 0px">
+                    <Bitmap  profile="depotStepBg"  position="0px 0px"/>
+                    <Text    profile="depotStepTxt" position="0px 0px" text="−"/>
+                    <Button  profile="depotStepHit" position="0px 0px" onClick="onProductQtyMinus"/>
+                </GuiElement>
+                <Text profile="depotAmountDisplay" id="prodQtyDisplay" position="35px -5px" text="×1"/>
+                <GuiElement profile="depotStepContainer" id="prodQtyPlus" position="130px 0px">
+                    <Bitmap  profile="depotStepBg"  position="0px 0px"/>
+                    <Text    profile="depotStepTxt" position="0px 0px" text="+"/>
+                    <Button  profile="depotStepHit" position="0px 0px" onClick="onProductQtyPlus"/>
+                </GuiElement>
+                <Text profile="depotProductPrice" id="prodTotalPrice" position="215px -5px" text=""/>
+                <GuiElement profile="depotConfirmContainer" id="prodConfirm" position="320px 0px">
+                    <Bitmap  profile="depotConfirmBg"  position="0px 0px"/>
+                    <Text    profile="depotConfirmTxt" position="0px 0px" text="Order"/>
+                    <Button  profile="depotConfirmHit" position="0px 0px" onClick="onProductConfirm"/>
+                </GuiElement>
+            </GuiElement>
+
             <!-- Status line -->
             <Text profile="depotStatusText" id="statusText" position="0px -332px" text=""/>
 
         </GuiElement>
 
-        <!-- Footer: Close | Sell tab | Buy tab -->
+        <!-- Footer: Close | Sell tab | Products tab | Buy tab -->
         <BoxLayout profile="fs25_dialogButtonBox">
-            <Button profile="buttonBack"     id="closeButton"   text="Close"   onClick="onClickClose"/>
-            <Button profile="buttonBack"     id="tabSellFooter" text="Sell"    onClick="onTabSell"/>
-            <Button profile="buttonActivate" id="tabBuyFooter"  text="Buy"     onClick="onTabBuy"/>
+            <Button profile="buttonBack"     id="closeButton"       text="Close"    onClick="onClickClose"/>
+            <Button profile="buttonBack"     id="tabSellFooter"     text="Sell"     onClick="onTabSell"/>
+            <Button profile="buttonBack"     id="tabProductsFooter" text="Products" onClick="onTabProducts"/>
+            <Button profile="buttonActivate" id="tabBuyFooter"      text="Buy"      onClick="onTabBuy"/>
         </BoxLayout>
 
     </GuiElement>
@@ -307,6 +331,20 @@
         <!-- Pre-order row -->
         <Profile name="depotPreOrderRow" extends="emptyPanel" with="anchorTopCenter">
             <size value="860px 36px"/>
+        </Profile>
+
+        <!-- Products order row (same dimensions as preOrderRow, mutual-exclusion visibility) -->
+        <Profile name="depotProductsOrderRow" extends="emptyPanel" with="anchorTopCenter">
+            <size value="860px 36px"/>
+        </Profile>
+
+        <!-- Total price display in products row -->
+        <Profile name="depotProductPrice" extends="fs25_textDefault" with="anchorTopCenter">
+            <size value="90px 24px"/>
+            <textSize value="12px"/>
+            <textBold value="true"/>
+            <textColor value="0.35 0.88 0.42 1"/>
+            <textAlignment value="right"/>
         </Profile>
         <Profile name="depotPreOrderLabel" extends="fs25_textDefault" with="anchorTopCenter">
             <size value="60px 24px"/>

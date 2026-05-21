@@ -23,6 +23,7 @@ source(modDir .. "src/network/DepotSellEvent.lua")
 source(modDir .. "src/network/DepotSiloFillEvent.lua")
 source(modDir .. "src/network/DepotSyncEvent.lua")
 source(modDir .. "src/network/DepotSettingsEvent.lua")
+source(modDir .. "src/network/DepotProductOrderEvent.lua")
 
 -- Phase 4: Placeables
 source(modDir .. "src/placeable/PlaceableDepot.lua")
