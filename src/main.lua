@@ -20,11 +20,13 @@ source(modDir .. "src/DepotManager.lua")
 -- Phase 3: Network
 source(modDir .. "src/network/DepotPurchaseEvent.lua")
 source(modDir .. "src/network/DepotSellEvent.lua")
+source(modDir .. "src/network/DepotSiloFillEvent.lua")
 source(modDir .. "src/network/DepotSyncEvent.lua")
 source(modDir .. "src/network/DepotSettingsEvent.lua")
 
--- Phase 4: Placeable
+-- Phase 4: Placeables
 source(modDir .. "src/placeable/PlaceableDepot.lua")
+source(modDir .. "src/placeable/PlaceableSilo.lua")
 
 -- Phase 5: UI (lazy-loaded on first open, but class must be defined)
 source(modDir .. "src/ui/DepotDialog.lua")
@@ -45,26 +47,36 @@ local function onMissionLoadFinished(mission, ...)
     DepotLogger.info("Post-load: SF installed: %s",
         tostring(g_DepotManager.sfBridge:isInstalled()))
 
-    -- Register Shift+D settings hotkey in both PLAYER and VEHICLE contexts.
-    -- Follows the same PlayerInputComponent hook pattern as FS25_SoilFertilizer.
+    -- Register Shift+D settings hotkey in PLAYER context.
+    -- Pattern mirrors FS25_SoilFertilizer:SoilFertilityManager.lua exactly.
     if PlayerInputComponent and PlayerInputComponent.registerActionEvents then
         local origRegister = PlayerInputComponent.registerActionEvents
         PlayerInputComponent.registerActionEvents = function(inputComp, ...)
             origRegister(inputComp, ...)
-            if g_inputBinding then
-                g_inputBinding:beginActionEventsModification(
-                    PlayerInputComponent.INPUT_CONTEXT_NAME)
-                local ok, id = g_inputBinding:registerActionEvent(
-                    InputAction.FD_OPEN_SETTINGS, g_DepotManager,
-                    g_DepotManager.openSettingsDialog, false, true, false, true)
-                if ok then
-                    g_inputBinding:setActionEventText(id,
-                        g_i18n:getText("fd_settings_title"))
-                    g_inputBinding:setActionEventTextVisibility(id, false)
-                end
-                g_inputBinding:endActionEventsModification()
-                DepotLogger.debug("Shift+D registered in PLAYER context")
+
+            -- Only register for the local (owning) player, not networked players
+            if not (inputComp.player and inputComp.player.isOwner) then return end
+            -- Guard against double-registration across level reloads
+            if g_DepotManager and g_DepotManager._settingsEventId then return end
+            if not g_DepotManager then return end
+
+            if not InputAction.FD_OPEN_SETTINGS then
+                DepotLogger.warning("InputAction.FD_OPEN_SETTINGS is nil — check modDesc <actions>")
+                return
             end
+
+            g_inputBinding:beginActionEventsModification(PlayerInputComponent.INPUT_CONTEXT_NAME)
+            local ok, id = g_inputBinding:registerActionEvent(
+                InputAction.FD_OPEN_SETTINGS, g_DepotManager,
+                g_DepotManager.openSettingsDialog, false, true, false, true)
+            if ok and id then
+                g_DepotManager._settingsEventId = id
+                g_inputBinding:setActionEventTextVisibility(id, false)
+                DepotLogger.info("Shift+D (FD_OPEN_SETTINGS) registered in PLAYER context")
+            else
+                DepotLogger.warning("Shift+D registration failed — registerActionEvent returned false")
+            end
+            g_inputBinding:endActionEventsModification()
         end
     end
 end
@@ -84,10 +96,30 @@ end
 
 -- Save settings alongside savegame
 local function onSaveToXML(missionInfo, xmlFile, ...)
-    if g_DepotManager then
-        g_DepotManager.settings:saveToXML(xmlFile, "fertilizerDepot.settings")
-        DepotLogger.debug("Settings saved")
+    if not g_DepotManager then return end
+    if not xmlFile then
+        -- FSCareerMissionInfo.saveToXMLFile can fire before the XML handle is
+        -- created (e.g. during onSaveStartComplete). Skip silently; the next
+        -- real save call will carry a valid handle.
+        DepotLogger.warning("onSaveToXML: xmlFile is nil — skipping settings save")
+        return
     end
+    g_DepotManager.settings:saveToXML(xmlFile, "fertilizerDepot.settings")
+    DepotLogger.debug("Settings saved")
+end
+
+-- Load settings from savegame (mirrors saveToXML hook)
+local function onLoadFromXML(missionInfo, xmlFile, ...)
+    if not g_DepotManager then return end
+    if not xmlFile then return end
+    g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
+    DepotLogger.info("Settings loaded from savegame")
+end
+
+-- Send settings to a joining client so they start with the correct server values
+local function onSendInitialClientState(mission, connection, ...)
+    if not g_DepotManager then return end
+    DepotSettingsSyncEvent.sendToClient(connection)
 end
 
 -- PREPEND so g_DepotManager exists before Mission00.load loads savegame placeables.
@@ -96,7 +128,9 @@ Mission00.load                        = Utils.prependedFunction(Mission00.load, 
 Mission00.loadMission00Finished       = Utils.appendedFunction(Mission00.loadMission00Finished,       onMissionLoadFinished)
 FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.update,                  onMissionUpdate)
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
+FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
+FSCareerMissionInfo.loadFromXMLFile   = Utils.appendedFunction(FSCareerMissionInfo.loadFromXMLFile,   onLoadFromXML)
 
 -- ─── Console Commands ────────────────────────────────────
 

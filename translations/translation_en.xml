@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <l10n>
+    <texts>
     <!-- Store -->
     <text name="fd_shop_name"     text="Fertilizer Depot"/>
     <text name="fd_shop_desc"     text="A placeable Fertilizer Depot where you can buy, store, and sell all fertilizer types at seasonally-adjusted prices."/>
@@ -23,6 +24,15 @@
     <text name="fd_depot_buy_btn"     text="Buy"/>
     <text name="fd_depot_sell_btn"    text="Sell All"/>
     <text name="fd_depot_deposit_btn" text="Deposit"/>
+    <text name="fd_depot_select_btn"  text="Select"/>
+
+    <!-- Pre-order flow -->
+    <text name="fd_depot_select_first"   text="Select a fill type first."/>
+    <text name="fd_depot_order_set"      text="Order set: %s %.0fL — walk to silo to collect."/>
+    <text name="fd_silo_collect_action"  text="Collect %s (%.0fL)"/>
+    <text name="fd_silo_no_order"        text="No pending order. Confirm a type at the Depot first."/>
+    <text name="fd_silo_fill_confirm"   text="Collect %.0fL of %s?&#10;&#10;Your vehicle will be filled."/>
+    <text name="fd_depot_sell_confirm"  text="Sell %.0fL of %s to depot for %s?"/>
 
     <!-- Stock labels -->
     <text name="fd_depot_stock_full"     text="Full"/>
@@ -40,6 +50,7 @@
     <text name="fd_depot_tank_full"     text="Trailer tank is full."/>
     <text name="fd_depot_tank_empty"    text="Trailer tank is empty."/>
     <text name="fd_depot_storage_full"  text="Depot storage is full."/>
+    <text name="fd_depot_filling"       text="Filling %.0fL of %s into your vehicle..."/>
     <text name="fd_depot_buy_success"   text="Purchase complete."/>
     <text name="fd_depot_sell_success"  text="Sale complete."/>
 
@@ -63,4 +74,8 @@
     <text name="fd_settings_admin_only" text="View only — admin required to change settings"/>
     <text name="fd_settings_on"         text="ON"/>
     <text name="fd_settings_off"        text="OFF"/>
+        <!-- Input action display name -->
+    <text name="input_FD_OPEN_SETTINGS" text="Open Depot Settings"/>
+    <text name="input_FD_INTERACT"      text="Interact with Fertilizer Depot"/>
+    </texts>
 </l10n>

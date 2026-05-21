@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
-<GUI onOpen="onOpen" onClose="onClose">
+<GUI onOpen="onOpen" onClose="fdSettingsOnClose" onCreate="onCreate">
 
     <GuiElement profile="newLayer"/>
     <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
@@ -21,32 +21,24 @@
                   position="0px -52px" text="$l10n_fd_settings_admin_only"/>
 
             <!-- Seasonal Pricing -->
-            <GuiElement profile="depotSettingsRow" position="0px -90px">
-                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_seasonal"/>
-                <MultiTextOption profile="depotSettingsOption" id="optSeasonalPricing"
-                                 onChanged="onSeasonalPricingChanged"/>
-            </GuiElement>
+            <Text    profile="depotSettingsLabel"  position="-150px -90px"  text="$l10n_fd_settings_seasonal"/>
+            <MultiTextOption profile="depotSettingsOption" id="optSeasonalPricing"
+                             position="150px -90px" onChanged="onSeasonalPricingChanged"/>
 
             <!-- Storage Capacity -->
-            <GuiElement profile="depotSettingsRow" position="0px -130px">
-                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_capacity"/>
-                <MultiTextOption profile="depotSettingsOption" id="optStorageCapacity"
-                                 onChanged="onStorageCapacityChanged"/>
-            </GuiElement>
+            <Text    profile="depotSettingsLabel"  position="-150px -130px" text="$l10n_fd_settings_capacity"/>
+            <MultiTextOption profile="depotSettingsOption" id="optStorageCapacity"
+                             position="150px -130px" onChanged="onStorageCapacityChanged"/>
 
             <!-- Sell Ratio -->
-            <GuiElement profile="depotSettingsRow" position="0px -170px">
-                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_sell_ratio"/>
-                <MultiTextOption profile="depotSettingsOption" id="optSellRatio"
-                                 onChanged="onSellRatioChanged"/>
-            </GuiElement>
+            <Text    profile="depotSettingsLabel"  position="-150px -170px" text="$l10n_fd_settings_sell_ratio"/>
+            <MultiTextOption profile="depotSettingsOption" id="optSellRatio"
+                             position="150px -170px" onChanged="onSellRatioChanged"/>
 
             <!-- Buy Price Multiplier -->
-            <GuiElement profile="depotSettingsRow" position="0px -210px">
-                <Text profile="depotSettingsLabel" text="$l10n_fd_settings_buy_mult"/>
-                <MultiTextOption profile="depotSettingsOption" id="optBuyMultiplier"
-                                 onChanged="onBuyMultiplierChanged"/>
-            </GuiElement>
+            <Text    profile="depotSettingsLabel"  position="-150px -210px" text="$l10n_fd_settings_buy_mult"/>
+            <MultiTextOption profile="depotSettingsOption" id="optBuyMultiplier"
+                             position="150px -210px" onChanged="onBuyMultiplierChanged"/>
 
         </GuiElement>
 
@@ -63,29 +55,24 @@
     <GUIProfiles>
 
         <Profile name="depotSettingsBg" extends="fs25_dialogBg">
-            <size value="560px 320px"/>
+            <size value="660px 340px"/>
         </Profile>
 
-        <Profile name="depotAdminBadge" extends="fs25_dialogText">
+        <Profile name="depotAdminBadge" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="12px"/>
             <textColor value="1 0.4 0.4 1"/>
             <textAlignment value="center"/>
-            <size value="520px 16px"/>
+            <size value="600px 16px"/>
         </Profile>
 
-        <Profile name="depotSettingsRow" extends="emptyPanel">
-            <size value="520px 32px"/>
-        </Profile>
-
-        <Profile name="depotSettingsLabel" extends="fs25_dialogText">
+        <Profile name="depotSettingsLabel" extends="fs25_dialogText" with="anchorTopCenter">
             <textSize value="14px"/>
             <textAlignment value="left"/>
             <size value="280px 32px"/>
         </Profile>
 
-        <Profile name="depotSettingsOption" extends="multiTextOption">
-            <size value="220px 32px"/>
-            <position value="280px 0px"/>
+        <Profile name="depotSettingsOption" extends="multiTextOption" with="anchorTopCenter">
+            <size value="240px 32px"/>
         </Profile>
 
     </GUIProfiles>

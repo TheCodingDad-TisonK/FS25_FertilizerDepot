@@ -33,11 +33,11 @@ function DepotPurchaseEvent:readStream(streamId, connection)
 end
 
 function DepotPurchaseEvent:writeStream(streamId, connection)
-    streamWriteInt32(streamId,  self.depotId)
-    streamWriteString(streamId, self.fillTypeName)
-    streamWriteInt32(streamId,  self.fillTypeIndex)
-    streamWriteFloat32(streamId, self.liters)
-    streamWriteUInt8(streamId,  self.farmId)
+    streamWriteInt32(streamId,   self.depotId       or 0)
+    streamWriteString(streamId,  self.fillTypeName  or "")
+    streamWriteInt32(streamId,   self.fillTypeIndex  or 0)
+    streamWriteFloat32(streamId, self.liters         or 0)
+    streamWriteUInt8(streamId,   self.farmId         or 1)
 end
 
 function DepotPurchaseEvent:run(connection)

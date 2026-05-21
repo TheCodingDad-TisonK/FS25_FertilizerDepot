@@ -12,13 +12,6 @@ function PlaceableDepot.prerequisitesPresent(...)
     return true
 end
 
--- registerFunctions: makes onPlayerTrigger callable as self:onPlayerTrigger()
--- Required so addTrigger(node, "onPlayerTrigger", self) can resolve the callback.
-function PlaceableDepot.registerFunctions(placeableType)
-    SpecializationUtil.registerFunction(placeableType, "onPlayerTrigger",
-        PlaceableDepot.onPlayerTrigger)
-end
-
 function PlaceableDepot.registerEventListeners(placeableType)
     SpecializationUtil.registerEventListener(placeableType, "onLoad",                  PlaceableDepot)
     SpecializationUtil.registerEventListener(placeableType, "onPostFinalizePlacement",  PlaceableDepot)
@@ -32,6 +25,8 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
     schema:setXMLSpecializationType("FertilizerDepot")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#playerTrigger",
         "Player walk-in trigger node (inside building)")
+    schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#unloadTrigger",
+        "Vehicle unload marker node (front of selling area)")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:setXMLSpecializationType()
@@ -44,10 +39,13 @@ function PlaceableDepot:onLoad(savegame)
     self[PlaceableDepot.SPEC_TABLE_NAME] = spec
     spec.depotId         = nil
     spec.savegame        = savegame
-    spec.actionEventId   = nil
 
     spec.playerTriggerNode = self.xmlFile:getValue(
         "placeable.fertilizerDepot#playerTrigger", nil,
+        self.components, self.i3dMappings)
+
+    spec.unloadTriggerNode = self.xmlFile:getValue(
+        "placeable.fertilizerDepot#unloadTrigger", nil,
         self.components, self.i3dMappings)
 
     if spec.playerTriggerNode == nil then
@@ -62,76 +60,19 @@ end
 function PlaceableDepot:onPostFinalizePlacement()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
 
-    -- Register with DepotManager (server only — authoritative state)
     if g_server and g_DepotManager then
         spec.depotId = g_DepotManager:registerDepot(self)
+        if spec.unloadTriggerNode then
+            g_DepotManager:registerDepotUnloadNode(spec.depotId, spec.unloadTriggerNode)
+        end
     end
 
-    -- Load saved storage state
     if g_server and spec.depotId and spec.savegame then
         local sg = spec.savegame
         g_DepotManager.depotSystem:loadFromXML(
             sg.xmlFile, spec.depotId, sg.key .. ".storage")
     end
     spec.savegame = nil
-
-    -- Register player trigger on ALL machines so the local player gets the prompt.
-    if spec.playerTriggerNode then
-        addTrigger(spec.playerTriggerNode, "onPlayerTrigger", self)
-        DepotLogger.debug("Player trigger registered on node %s", tostring(spec.playerTriggerNode))
-    end
-end
-
--- ─── Player Trigger ──────────────────────────────────────
-
--- Walk up the parent chain to check if otherId belongs to g_localPlayer.
--- Placeable specialization callbacks receive physics child nodes, not rootNode directly.
-local function isLocalPlayer(otherId)
-    if not g_localPlayer then return false end
-    local target = g_localPlayer.rootNode
-    if not target then return false end
-    local node = otherId
-    for _ = 1, 8 do
-        if node == nil or node == 0 then break end
-        if node == target then return true end
-        node = getParent(node)
-    end
-    return false
-end
-
-function PlaceableDepot:onPlayerTrigger(triggerId, otherId, onEnter, onLeave, onStay)
-    if onStay then return end
-    if not isLocalPlayer(otherId) then return end
-
-    local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
-    if not spec then return end
-
-    local depotId = spec.depotId or spec.netDepotId
-    if not depotId then
-        DepotLogger.warning("onPlayerTrigger: depotId is nil")
-        return
-    end
-
-    if onEnter then
-        DepotLogger.debug("Player entered depot #%d", depotId)
-        local function onActivate()
-            if g_DepotManager then g_DepotManager:openDialog(depotId) end
-        end
-        local ok, evId = g_inputBinding:registerActionEvent(
-            InputAction.ACTIVATE_HANDTOOL, self, onActivate, false, true, false, true)
-        if ok then
-            spec.actionEventId = evId
-            g_inputBinding:setActionEventText(evId, g_i18n:getText("fd_depot_open_action"))
-            g_inputBinding:setActionEventActive(evId, true)
-        end
-    elseif onLeave then
-        DepotLogger.debug("Player left depot #%d", depotId)
-        if spec.actionEventId then
-            g_inputBinding:removeActionEvent(spec.actionEventId)
-            spec.actionEventId = nil
-        end
-        if g_DepotManager then g_DepotManager:closeDialog() end
-    end
 end
 
 -- ─── onDelete ────────────────────────────────────────────
@@ -139,15 +80,6 @@ end
 function PlaceableDepot:onDelete()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
     if not spec then return end
-
-    if spec.actionEventId then
-        g_inputBinding:removeActionEvent(spec.actionEventId)
-        spec.actionEventId = nil
-    end
-
-    if spec.playerTriggerNode then
-        removeTrigger(spec.playerTriggerNode)
-    end
 
     if g_DepotManager and spec.depotId then
         g_DepotManager:unregisterDepot(spec.depotId)
@@ -190,6 +122,11 @@ function PlaceableDepot:onReadStream(streamId, connection)
             }
         end
         g_DepotManager.depots[netId] = self
+        spec.netDepotId = netId
+        g_DepotManager.depotNodes[netId] = spec.playerTriggerNode or self.rootNode
+        if spec.unloadTriggerNode then
+            g_DepotManager:registerDepotUnloadNode(netId, spec.unloadTriggerNode)
+        end
     end
 
     local count = streamReadUInt16(streamId)

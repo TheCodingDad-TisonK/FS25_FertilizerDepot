@@ -4,9 +4,24 @@
 -- Opened via Shift+D hotkey. Admin-only in multiplayer.
 -- Uses MultiTextOptionElement for each setting (cycle presets).
 
+local _depotSettingsModDir  = g_currentModDirectory  -- captured at source() time
+local _depotSettingsModName = g_currentModName
+local _depotSettingsInstance = nil                  -- local so __index chain can't shadow it
+
+local function tr(key, fallback)
+    local modEnv = g_modEnvironments and g_modEnvironments[_depotSettingsModName]
+    local i18n = (modEnv and modEnv.i18n) or g_i18n
+    if i18n then
+        local ok, text = pcall(function() return i18n:getText(key) end)
+        if ok and text and text ~= "" and text ~= ("$l10n_" .. key) then
+            return text
+        end
+    end
+    return fallback or key
+end
+
 ---@class DepotSettingsDialog
 DepotSettingsDialog = {}
-DepotSettingsDialog.INSTANCE = nil
 
 local DepotSettingsDialog_mt = Class(DepotSettingsDialog, MessageDialog)
 
@@ -25,20 +40,37 @@ end
 -- ─── Registration ────────────────────────────────────────
 
 function DepotSettingsDialog.register()
-    if DepotSettingsDialog.INSTANCE then return end
-    DepotSettingsDialog.INSTANCE = DepotSettingsDialog.new()
-    g_gui:loadGui(g_currentModDirectory .. "xml/gui/DepotSettingsDialog.xml",
-        "DepotSettingsDialog", DepotSettingsDialog.INSTANCE)
+    if _depotSettingsInstance then return end
+    _depotSettingsInstance = DepotSettingsDialog.new()
+    DepotLogger.info("DepotSettingsDialog.register: loading GUI from %s", _depotSettingsModDir)
+    g_gui:loadGui(_depotSettingsModDir .. "xml/gui/DepotSettingsDialog.xml",
+        "DepotSettingsDialog", _depotSettingsInstance)
 end
 
 function DepotSettingsDialog.show()
-    if not DepotSettingsDialog.INSTANCE then
+    DepotLogger.info("DepotSettingsDialog.show called")
+    if not _depotSettingsInstance then
         DepotSettingsDialog.register()
     end
     g_gui:showDialog("DepotSettingsDialog")
 end
 
+function DepotSettingsDialog.refreshIfOpen()
+    if _depotSettingsInstance and _depotSettingsInstance.isOpen then
+        _depotSettingsInstance:refresh()
+    end
+end
+
 -- ─── Lifecycle ───────────────────────────────────────────
+
+function DepotSettingsDialog:onCreate()
+    local ok, err = pcall(function()
+        DepotSettingsDialog:superClass().onCreate(self)
+    end)
+    if not ok then
+        DepotLogger.error("DepotSettingsDialog:onCreate error: %s", tostring(err))
+    end
+end
 
 function DepotSettingsDialog:onGuiSetupFinished()
     DepotSettingsDialog:superClass().onGuiSetupFinished(self)
@@ -51,8 +83,8 @@ function DepotSettingsDialog:onGuiSetupFinished()
     -- Populate option lists
     if self.optSeasonalPricing then
         self.optSeasonalPricing:setTexts({
-            g_i18n:getText("fd_settings_off"),
-            g_i18n:getText("fd_settings_on"),
+            tr("fd_settings_off", "OFF"),
+            tr("fd_settings_on",  "ON"),
         })
     end
     if self.optStorageCapacity then
@@ -84,7 +116,7 @@ function DepotSettingsDialog:onOpen()
     self:refresh()
 end
 
-function DepotSettingsDialog:onClose()
+function DepotSettingsDialog:fdSettingsOnClose()
     DepotSettingsDialog:superClass().onClose(self)
     self.isOpen = false
 end

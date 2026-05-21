@@ -36,13 +36,24 @@ function DepotSettingsEvent:run(connection)
     if not g_server then return end
     if not g_DepotManager then return end
 
-    -- Admin check
-    local farm = g_currentMission:getFarmAtSplitScreen(0)
-    if not connection:getIsServer() and
-       not g_currentMission.isMasterUser and
-       (farm == nil or not farm:getIsAdminFarm()) then
-        DepotLogger.warning("Non-admin setting change blocked")
-        return
+    -- Admin check: connection is nil when executed locally (SP / direct server call).
+    -- g_currentMission.isMasterUser is always true on a dedicated server process, so
+    -- it cannot be used to validate the connecting CLIENT's admin status.
+    -- On a listen-server (host+client same process, g_client ~= nil), isMasterUser
+    -- reflects the host player correctly and is safe to check.
+    -- On a dedicated server (g_client == nil), block client-initiated changes until
+    -- a per-connection admin API is verified via LUADOC.
+    if connection and not connection:getIsServer() then
+        local listenServer = (g_client ~= nil)
+        if listenServer then
+            if not g_currentMission.isMasterUser then
+                DepotLogger.warning("Non-admin setting change blocked (listen server)")
+                return
+            end
+        else
+            DepotLogger.warning("Non-admin setting change blocked (dedicated server)")
+            return
+        end
     end
 
     local s = g_DepotManager.settings
@@ -98,9 +109,7 @@ function DepotSettingsSyncEvent:readStream(streamId, connection)
         g_DepotManager.settings:readStream(streamId)
     end
     -- Refresh settings dialog if open
-    if DepotSettingsDialog.INSTANCE and DepotSettingsDialog.INSTANCE.isOpen then
-        DepotSettingsDialog.INSTANCE:refresh()
-    end
+    DepotSettingsDialog.refreshIfOpen()
 end
 
 function DepotSettingsSyncEvent:run(connection)

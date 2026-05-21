@@ -71,7 +71,7 @@
     </tipOcclusionUpdateAreas>
 
     <!-- Player dialog trigger: infoTrigger at building center (0,0,0) — truly inside -->
-    <fertilizerDepot playerTrigger="infoTrigger"/>
+    <fertilizerDepot playerTrigger="infoTrigger" unloadTrigger="unloadTriggerMarker"/>
 
     <!-- Animated gates and doors (identical to vanilla farmersMarket) -->
     <animatedObjects>
@@ -209,7 +209,6 @@
         <triggerMarker node="unloadTriggerMarker"
                        filename="$data/shared/assets/marker/markerIconLoad.i3d"
                        adjustToGround="true"/>
-        <!-- Dialog zone: center of building interior -->
         <triggerMarker node="infoTrigger"
                        filename="$data/shared/assets/marker/markerIconWrench.i3d"
                        adjustToGround="true"/>

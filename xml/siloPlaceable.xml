@@ -28,12 +28,20 @@
     </base>
 
     <!-- Hide silo storage, selling station, warehouse and safety tape — keep buying pipe only -->
+    <!-- Node indices verified against multifruitstation.i3d scene tree:                      -->
+    <!--   0>5  = silo (nodeId 105)                                                           -->
+    <!--   0>10 = warningStripes (nodeId 204)                                                 -->
+    <!--   0>11 = sellingStation (nodeId 207)                                                 -->
+    <!--   0>12 = warehouse (nodeId 213)                                                      -->
     <deletedNodes>
-        <deletedNode node="silo"/>
-        <deletedNode node="warningStripes"/>
-        <deletedNode node="sellingStation"/>
-        <deletedNode node="warehouse"/>
+        <deletedNode node="0>5"/>
+        <deletedNode node="0>10"/>
+        <deletedNode node="0>11"/>
+        <deletedNode node="0>12"/>
     </deletedNodes>
+
+    <!-- Custom silo specialization: registers with DepotManager for pre-order fill flow -->
+    <fertilizerSilo loadingStation="loadingStation_0"/>
 
     <placement useRandomYRotation="false" useManualYRotation="true">
         <testAreas>
@@ -87,60 +95,6 @@
         <tipOcclusionUpdateArea startNode="tipOcclusionUpdateAreaStart01"
                                 endNode="tipOcclusionUpdateAreaEnd01"/>
     </tipOcclusionUpdateAreas>
-
-    <!-- Buying station: infinite supply, vehicle drives in and fills at market price -->
-    <buyingStation node="buyingStation" supportsExtension="false">
-        <loadTrigger triggerNode="loadingTrigger"
-                     fillTypes="FERTILIZER LIQUIDFERTILIZER LIME LIQUIDMANURE DIGESTATE MANURE UAN32 UAN28 ANHYDROUS STARTER UREA AN AMS MAP DAP POTASH POLIFOSKA LIQUID_UREA LIQUID_AMS LIQUID_MAP LIQUID_DAP LIQUID_POTASH INSECTICIDE FUNGICIDE GYPSUM COMPOST BIOSOLIDS CHICKEN_MANURE PELLETIZED_MANURE LIQUIDLIME"
-                     fillLitersPerSecond="500"
-                     infiniteCapacity="true"
-                     aiNode="aiNodeLoading">
-            <effectNode effectClass="PipeEffect" effectNode="pipeEffect"
-                        materialType="pipe" fadeTime="0.5"
-                        maxBending="0" shapeScaleSpread="0.8 0.8 1 0" controlPoint="3 0 0 0"/>
-            <effectNode effectNode="pipeEffectSmoke" materialType="unloadingSmoke" fadeTime="0.5"/>
-        </loadTrigger>
-
-        <!-- Vanilla fertilizer types -->
-        <fillType name="FERTILIZER"       priceScale="1.0"/>
-        <fillType name="LIQUIDFERTILIZER" priceScale="1.0"/>
-        <fillType name="LIME"             priceScale="1.0"/>
-        <fillType name="LIQUIDMANURE"     priceScale="1.0"/>
-        <fillType name="DIGESTATE"        priceScale="1.0"/>
-        <fillType name="MANURE"           priceScale="1.0"/>
-
-        <!-- FS25_SoilFertilizer custom types (gracefully ignored if SF not installed) -->
-        <!-- Liquid nitrogen sources -->
-        <fillType name="UAN32"            priceScale="1.0"/>
-        <fillType name="UAN28"            priceScale="1.0"/>
-        <fillType name="ANHYDROUS"        priceScale="1.0"/>
-        <fillType name="STARTER"          priceScale="1.0"/>
-        <!-- Solid granular -->
-        <fillType name="UREA"             priceScale="1.0"/>
-        <fillType name="AN"               priceScale="1.0"/>
-        <fillType name="AMS"              priceScale="1.0"/>
-        <fillType name="MAP"              priceScale="1.0"/>
-        <fillType name="DAP"              priceScale="1.0"/>
-        <fillType name="POTASH"           priceScale="1.0"/>
-        <fillType name="POLIFOSKA"        priceScale="1.0"/>
-        <!-- Liquid equivalents -->
-        <fillType name="LIQUID_UREA"      priceScale="1.0"/>
-        <fillType name="LIQUID_AMS"       priceScale="1.0"/>
-        <fillType name="LIQUID_MAP"       priceScale="1.0"/>
-        <fillType name="LIQUID_DAP"       priceScale="1.0"/>
-        <fillType name="LIQUID_POTASH"    priceScale="1.0"/>
-        <!-- Crop protection -->
-        <fillType name="INSECTICIDE"      priceScale="1.0"/>
-        <fillType name="FUNGICIDE"        priceScale="1.0"/>
-        <!-- Organics and amendments -->
-        <fillType name="GYPSUM"           priceScale="1.0"/>
-        <fillType name="COMPOST"          priceScale="1.0"/>
-        <fillType name="BIOSOLIDS"        priceScale="1.0"/>
-        <fillType name="CHICKEN_MANURE"   priceScale="1.0"/>
-        <fillType name="PELLETIZED_MANURE" priceScale="1.0"/>
-        <!-- Liquid lime -->
-        <fillType name="LIQUIDLIME"       priceScale="1.0"/>
-    </buyingStation>
 
     <hotspots>
         <hotspot type="LOADING" linkNode="mapPosition" teleportNode="teleportNode"/>

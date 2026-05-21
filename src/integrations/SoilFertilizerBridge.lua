@@ -30,22 +30,20 @@ function SoilFertilizerBridge:getFillTypeList()
 
     local list = {}
 
-    if self:isInstalled() then
-        -- Build from SF's registered fill type names
-        for _, name in ipairs(DepotConstants.SF_FILL_TYPE_NAMES) do
-            local ftIndex = g_fillTypeManager and
-                g_fillTypeManager:getFillTypeIndexByName(name)
-            if ftIndex and ftIndex > 0 then
-                local ft = g_fillTypeManager:getFillTypeByIndex(ftIndex)
-                local price = (ft and ft.economy and ft.economy.pricePerLiter) or 1.00
-                local title = (ft and ft.title) or name
-                table.insert(list, {
-                    name          = name,
-                    fillTypeIndex = ftIndex,
-                    pricePerLiter = price,
-                    displayName   = title,
-                })
-            end
+    -- Always try SF custom types first — skip gracefully if not installed
+    for _, name in ipairs(DepotConstants.SF_FILL_TYPE_NAMES) do
+        local ftIndex = g_fillTypeManager and
+            g_fillTypeManager:getFillTypeIndexByName(name)
+        if ftIndex and ftIndex > 0 then
+            local ft = g_fillTypeManager:getFillTypeByIndex(ftIndex)
+            local price = (ft and ft.economy and ft.economy.pricePerLiter) or 1.00
+            local title = (ft and ft.title) or name
+            table.insert(list, {
+                name          = name,
+                fillTypeIndex = ftIndex,
+                pricePerLiter = price,
+                displayName   = title,
+            })
         end
     end
 
