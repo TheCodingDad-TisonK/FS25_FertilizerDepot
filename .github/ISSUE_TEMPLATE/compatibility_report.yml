@@ -1,0 +1,99 @@
+name: Compatibility Report
+description: This mod conflicts with or behaves incorrectly alongside another mod.
+labels: ["compatibility", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when FS25_FertilizerDepot causes or experiences problems specifically because of another mod being loaded at the same time.
+
+        If the issue happens without any other mods loaded, use the Bug Report template instead.
+
+  - type: input
+    id: mod_version
+    attributes:
+      label: FertilizerDepot Version
+      placeholder: "e.g. 1.0.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: game_version
+    attributes:
+      label: Farming Simulator 25 Version
+      placeholder: "e.g. 1.4.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: other_mod
+    attributes:
+      label: Conflicting Mod Name
+      description: Exact name as shown in the mod manager or modDesc.xml.
+      placeholder: "e.g. FS25_SoilFertilizer"
+    validations:
+      required: true
+
+  - type: input
+    id: other_mod_version
+    attributes:
+      label: Conflicting Mod Version
+      placeholder: "e.g. 2.2.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: other_mod_source
+    attributes:
+      label: Where did you get the conflicting mod?
+      description: ModHub, GitHub link, or other source.
+      placeholder: "https://github.com/..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What is the conflict?
+      description: Describe exactly what goes wrong. Wrong prices? Dialog missing? Crash? Fill type not appearing? Be specific.
+      placeholder: "When FS25_SomeMod is loaded, the Depot dialog opens but the fill type list is empty — no types shown at all."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How to trigger the conflict reliably.
+      placeholder: |
+        1. Load both mods
+        2. Place the Depot building
+        3. Walk inside and press E
+        4. Fill type list is empty
+    validations:
+      required: true
+
+  - type: textarea
+    id: isolation
+    attributes:
+      label: Isolation Test
+      description: Did you confirm the issue disappears when the conflicting mod is removed? This is important — without this we cannot tell which mod is the source.
+      placeholder: "Yes — removing FS25_SomeMod makes the fill type list populate correctly."
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log Snippet
+      description: Paste all `[FertDepot]` lines from your log.txt, plus any errors in the same session. Include the full stack trace if there is one.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything Else?
+    validations:
+      required: false

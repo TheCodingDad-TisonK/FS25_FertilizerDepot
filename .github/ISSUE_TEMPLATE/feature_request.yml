@@ -1,0 +1,61 @@
+name: Feature Request
+description: Suggest a new feature or improvement.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before opening this request:**
+        - Check open issues to avoid duplicates.
+        - Keep requests scoped and specific. "Make the depot better" will be closed. "Show the current storage level as a progress bar in the dialog" is actionable.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation or frustration this would address. Focus on the problem, not the solution.
+      placeholder: "I can't tell how full my storage is for each fill type without counting the numbers manually in the dialog."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe what you want to happen. Be specific about the behaviour, not just the concept.
+      placeholder: "Add a small progress bar next to each fill type row showing current storage / max capacity at a glance."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you thought of other ways to solve this? Why are they not good enough?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the mod does this relate to?
+      options:
+        - Purchase Dialog / UI
+        - Pre-Order & Silo Fill Flow
+        - Sell-Back System
+        - Pricing & Seasonal Multipliers
+        - Storage & Capacity
+        - Admin Settings Panel
+        - Multiplayer
+        - FS25_SoilFertilizer Integration
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything Else?
+      description: Screenshots, mockups, or any extra context.
+    validations:
+      required: false

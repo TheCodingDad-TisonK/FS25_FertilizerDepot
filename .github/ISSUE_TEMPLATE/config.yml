@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussion
+    url: https://github.com/TheCodingDad-TisonK/FS25_FertilizerDepot/discussions
+    about: Ask questions or talk through ideas before opening an issue.
+  - name: Discord Community
+    url: https://discord.gg/Th2pnq36
+    about: Chat with other farmers and the mod author directly.
