@@ -37,6 +37,21 @@ source(modDir .. "src/ui/DepotSettingsDialog.lua")
 local function onMissionLoad(mission, ...)
     getfenv(0).g_DepotManager = DepotManager.new()
     g_DepotManager:initialize()
+
+    -- Load settings from our own XML file (same pattern as FuelCosts, SoilFertilizer).
+    -- FSCareerMissionInfo.loadFromXMLFile fires before g_DepotManager exists, so we
+    -- read directly here where the manager is guaranteed to be present.
+    local missionInfo = mission and mission.missionInfo
+    if missionInfo and missionInfo.savegameDirectory then
+        local path = missionInfo.savegameDirectory .. "/FS25_FertilizerDepot.xml"
+        local xmlFile = XMLFile.load("depotSettingsLoad", path)
+        if xmlFile then
+            g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
+            DepotLogger._debug = g_DepotManager.settings.debugLogging
+            xmlFile:delete()
+            DepotLogger.info("Settings loaded from savegame")
+        end
+    end
     DepotLogger.info("Mission load complete")
 end
 
@@ -94,26 +109,25 @@ local function onMissionDelete(mission, ...)
     end
 end
 
--- Save settings alongside savegame
+-- Save settings to our own XML file (same pattern as FuelCosts / SoilFertilizer).
+-- The xmlFile argument from FSCareerMissionInfo.saveToXMLFile is always nil for mods;
+-- we write directly to savegameDirectory instead.
 local function onSaveToXML(missionInfo, xmlFile, ...)
     if not g_DepotManager then return end
-    if not xmlFile then
-        -- FSCareerMissionInfo.saveToXMLFile can fire before the XML handle is
-        -- created (e.g. during onSaveStartComplete). Skip silently; the next
-        -- real save call will carry a valid handle.
-        DepotLogger.warning("onSaveToXML: xmlFile is nil — skipping settings save")
+    if not missionInfo or not missionInfo.savegameDirectory then
+        DepotLogger.warning("onSaveToXML: savegameDirectory not available — skipping")
         return
     end
-    g_DepotManager.settings:saveToXML(xmlFile, "fertilizerDepot.settings")
-    DepotLogger.debug("Settings saved")
-end
-
--- Load settings from savegame (mirrors saveToXML hook)
-local function onLoadFromXML(missionInfo, xmlFile, ...)
-    if not g_DepotManager then return end
-    if not xmlFile then return end
-    g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
-    DepotLogger.info("Settings loaded from savegame")
+    local path = missionInfo.savegameDirectory .. "/FS25_FertilizerDepot.xml"
+    local outFile = XMLFile.create("depotSettingsSave", path, "fertilizerDepot")
+    if not outFile then
+        DepotLogger.warning("onSaveToXML: could not create XML file")
+        return
+    end
+    g_DepotManager.settings:saveToXML(outFile, "fertilizerDepot.settings")
+    outFile:save()
+    outFile:delete()
+    DepotLogger.info("Settings saved to %s", path)
 end
 
 -- Send settings to a joining client so they start with the correct server values
@@ -130,7 +144,6 @@ FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.upd
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
 FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
-FSCareerMissionInfo.loadFromXMLFile   = Utils.appendedFunction(FSCareerMissionInfo.loadFromXMLFile,   onLoadFromXML)
 
 -- ─── Console Commands ────────────────────────────────────
 

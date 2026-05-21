@@ -6,7 +6,7 @@
         <functions>
             <function>$l10n_fd_silo_function</function>
         </functions>
-        <image>store/store_depot.dds</image>
+        <image>icon.dds</image>
         <price>15000</price>
         <dailyUpkeep>25</dailyUpkeep>
         <lifetime>1000</lifetime>
@@ -27,14 +27,16 @@
         <canBeRenamed>true</canBeRenamed>
     </base>
 
-    <!-- Hide silo storage, selling station, warehouse and safety tape — keep buying pipe only -->
-    <!-- Node indices verified against multifruitstation.i3d scene tree:                      -->
-    <!--   0>5  = silo (nodeId 105)                                                           -->
-    <!--   0>10 = warningStripes (nodeId 204)                                                 -->
-    <!--   0>11 = sellingStation (nodeId 207)                                                 -->
-    <!--   0>12 = warehouse (nodeId 213)                                                      -->
+    <!-- Keep buying pipe only (0>4). Delete all other functional/visual groups.  -->
+    <!-- Node indices verified against multifruitstation.i3d scene tree:          -->
+    <!--   0>5    = silo functional group (nodeId 105) — unload/load triggers     -->
+    <!--   0>6|0  = visuals/winter (nodeId 119) — snow heap, renders white blob   -->
+    <!--   0>10   = warningStripes (nodeId 204)                                   -->
+    <!--   0>11   = sellingStation (nodeId 207)                                   -->
+    <!--   0>12   = warehouse (nodeId 213)                                        -->
     <deletedNodes>
         <deletedNode node="0>5"/>
+        <deletedNode node="0>6|0"/>
         <deletedNode node="0>10"/>
         <deletedNode node="0>11"/>
         <deletedNode node="0>12"/>

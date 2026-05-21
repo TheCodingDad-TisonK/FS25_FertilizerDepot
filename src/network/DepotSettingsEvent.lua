@@ -65,6 +65,9 @@ function DepotSettingsEvent:run(connection)
         s.sellRatio = tonumber(self.value) or s.sellRatio
     elseif self.key == "buyMultiplier" then
         s.buyMultiplier = tonumber(self.value) or s.buyMultiplier
+    elseif self.key == "debugLogging" then
+        s.debugLogging = (self.value == "true")
+        DepotLogger._debug = s.debugLogging
     end
 
     -- Broadcast the full settings table to all clients
@@ -107,6 +110,7 @@ end
 function DepotSettingsSyncEvent:readStream(streamId, connection)
     if g_DepotManager then
         g_DepotManager.settings:readStream(streamId)
+        DepotLogger._debug = g_DepotManager.settings.debugLogging
     end
     -- Refresh settings dialog if open
     DepotSettingsDialog.refreshIfOpen()
