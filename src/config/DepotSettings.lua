@@ -18,6 +18,7 @@ DepotSettings.DEFAULTS = {
     storageCapacity = 50000,
     sellRatio       = 0.80,
     buyMultiplier   = 1.00,
+    debugLogging    = false,
 }
 
 function DepotSettings.new()
@@ -66,6 +67,7 @@ function DepotSettings:saveToXML(xmlFile, key)
     xmlFile:setFloat(key .. "#storageCapacity", self.storageCapacity)
     xmlFile:setFloat(key .. "#sellRatio",       self.sellRatio)
     xmlFile:setFloat(key .. "#buyMultiplier",   self.buyMultiplier)
+    xmlFile:setBool(key .. "#debugLogging",     self.debugLogging)
 end
 
 function DepotSettings:loadFromXML(xmlFile, key)
@@ -77,6 +79,8 @@ function DepotSettings:loadFromXML(xmlFile, key)
         DepotSettings.DEFAULTS.sellRatio)
     self.buyMultiplier = xmlFile:getFloat(key .. "#buyMultiplier",
         DepotSettings.DEFAULTS.buyMultiplier)
+    self.debugLogging = xmlFile:getBool(key .. "#debugLogging",
+        DepotSettings.DEFAULTS.debugLogging)
 end
 
 -- ─── Write / Read stream (for client sync) ───────────────
@@ -86,6 +90,7 @@ function DepotSettings:writeStream(streamId)
     streamWriteFloat32(streamId, self.storageCapacity)
     streamWriteFloat32(streamId, self.sellRatio)
     streamWriteFloat32(streamId, self.buyMultiplier)
+    streamWriteBool(streamId, self.debugLogging)
 end
 
 function DepotSettings:readStream(streamId)
@@ -93,4 +98,5 @@ function DepotSettings:readStream(streamId)
     self.storageCapacity = streamReadFloat32(streamId)
     self.sellRatio       = streamReadFloat32(streamId)
     self.buyMultiplier   = streamReadFloat32(streamId)
+    self.debugLogging    = streamReadBool(streamId)
 end

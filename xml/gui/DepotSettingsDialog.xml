@@ -40,6 +40,11 @@
             <MultiTextOption profile="depotSettingsOption" id="optBuyMultiplier"
                              position="150px -210px" onChanged="onBuyMultiplierChanged"/>
 
+            <!-- Debug Logging -->
+            <Text    profile="depotSettingsLabel"  position="-150px -250px" text="$l10n_fd_settings_debug"/>
+            <MultiTextOption profile="depotSettingsOption" id="optDebugLogging"
+                             position="150px -250px" onChanged="onDebugLoggingChanged"/>
+
         </GuiElement>
 
         <!-- Footer buttons -->
@@ -57,7 +62,7 @@
     <GUIProfiles>
 
         <Profile name="depotSettingsBg" extends="fs25_dialogBg">
-            <size value="720px 340px"/>
+            <size value="720px 380px"/>
         </Profile>
 
         <Profile name="depotAdminBadge" extends="fs25_dialogText" with="anchorTopCenter">

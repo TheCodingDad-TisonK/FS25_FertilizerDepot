@@ -34,21 +34,39 @@ source(modDir .. "src/ui/DepotSettingsDialog.lua")
 
 -- ─── Mission00 Lifecycle Hooks ───────────────────────────
 
+-- FSCareerMissionInfo.loadFromXMLFile fires with a valid xmlFile handle but
+-- before g_DepotManager exists. We buffer the raw values here, then apply
+-- them in onMissionLoad once the manager is created.
+local _settingsBuffer = nil
+
+local function onLoadFromXML(missionInfo, xmlFile, ...)
+    if not xmlFile then return end
+    local key = "fertilizerDepot.settings"
+    local d = DepotSettings.DEFAULTS
+    _settingsBuffer = {
+        seasonalPricing = xmlFile:getBool(key .. "#seasonalPricing", d.seasonalPricing),
+        storageCapacity = xmlFile:getFloat(key .. "#storageCapacity", d.storageCapacity),
+        sellRatio       = xmlFile:getFloat(key .. "#sellRatio",       d.sellRatio),
+        buyMultiplier   = xmlFile:getFloat(key .. "#buyMultiplier",   d.buyMultiplier),
+        debugLogging    = xmlFile:getBool(key .. "#debugLogging",     d.debugLogging),
+    }
+    DepotLogger.info("Settings buffered from savegame XML")
+end
+
 local function onMissionLoad(mission, ...)
     getfenv(0).g_DepotManager = DepotManager.new()
     g_DepotManager:initialize()
 
-    -- Load settings here, not via FSCareerMissionInfo.loadFromXMLFile, because
-    -- that hook fires before g_DepotManager exists (loadFromXMLFile precedes Mission00.load).
-    local missionInfo = mission and mission.missionInfo
-    if missionInfo and missionInfo.savegameDirectory then
-        local xmlPath = missionInfo.savegameDirectory .. "/careerSavegame.xml"
-        local xmlFile = XMLFile.load("depotSettingsLoad", xmlPath)
-        if xmlFile then
-            g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
-            xmlFile:delete()
-            DepotLogger.info("Settings loaded from savegame")
-        end
+    if _settingsBuffer then
+        local s = g_DepotManager.settings
+        s.seasonalPricing = _settingsBuffer.seasonalPricing
+        s.storageCapacity = _settingsBuffer.storageCapacity
+        s.sellRatio       = _settingsBuffer.sellRatio
+        s.buyMultiplier   = _settingsBuffer.buyMultiplier
+        s.debugLogging    = _settingsBuffer.debugLogging
+        DepotLogger._debug = s.debugLogging
+        _settingsBuffer = nil
+        DepotLogger.info("Settings applied from pre-load buffer")
     end
     DepotLogger.info("Mission load complete")
 end
@@ -135,6 +153,7 @@ FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.upd
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
 FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
+FSCareerMissionInfo.loadFromXMLFile   = Utils.appendedFunction(FSCareerMissionInfo.loadFromXMLFile,   onLoadFromXML)
 
 -- ─── Console Commands ────────────────────────────────────
 
