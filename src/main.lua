@@ -37,6 +37,19 @@ source(modDir .. "src/ui/DepotSettingsDialog.lua")
 local function onMissionLoad(mission, ...)
     getfenv(0).g_DepotManager = DepotManager.new()
     g_DepotManager:initialize()
+
+    -- Load settings here, not via FSCareerMissionInfo.loadFromXMLFile, because
+    -- that hook fires before g_DepotManager exists (loadFromXMLFile precedes Mission00.load).
+    local missionInfo = mission and mission.missionInfo
+    if missionInfo and missionInfo.savegameDirectory then
+        local xmlPath = missionInfo.savegameDirectory .. "/careerSavegame.xml"
+        local xmlFile = XMLFile.load("depotSettingsLoad", xmlPath)
+        if xmlFile then
+            g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
+            xmlFile:delete()
+            DepotLogger.info("Settings loaded from savegame")
+        end
+    end
     DepotLogger.info("Mission load complete")
 end
 
@@ -108,14 +121,6 @@ local function onSaveToXML(missionInfo, xmlFile, ...)
     DepotLogger.debug("Settings saved")
 end
 
--- Load settings from savegame (mirrors saveToXML hook)
-local function onLoadFromXML(missionInfo, xmlFile, ...)
-    if not g_DepotManager then return end
-    if not xmlFile then return end
-    g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
-    DepotLogger.info("Settings loaded from savegame")
-end
-
 -- Send settings to a joining client so they start with the correct server values
 local function onSendInitialClientState(mission, connection, ...)
     if not g_DepotManager then return end
@@ -130,7 +135,6 @@ FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.upd
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
 FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
-FSCareerMissionInfo.loadFromXMLFile   = Utils.appendedFunction(FSCareerMissionInfo.loadFromXMLFile,   onLoadFromXML)
 
 -- ─── Console Commands ────────────────────────────────────
 
