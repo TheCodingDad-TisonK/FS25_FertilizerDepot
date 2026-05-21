@@ -10,8 +10,7 @@ set -e
 
 MOD_NAME="FS25_FertilizerDepot"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OUTPUT_DIR="$SCRIPT_DIR/.."
-ZIP_PATH="$OUTPUT_DIR/${MOD_NAME}.zip"
+ZIP_PATH="$SCRIPT_DIR/${MOD_NAME}.zip"
 
 MODS_DIR="$USERPROFILE/Documents/My Games/FarmingSimulator2025/mods"
 
@@ -53,7 +52,7 @@ else
 import zipfile, os, sys
 
 MOD_DIR = os.getcwd()
-ZIP_PATH = os.path.join(os.path.dirname(MOD_DIR), os.path.basename(MOD_DIR) + ".zip")
+ZIP_PATH = os.path.join(MOD_DIR, os.path.basename(MOD_DIR) + ".zip")
 
 EXCLUDE_DIRS  = {".git", ".claude", ".github", "__MACOSX", "tools"}
 EXCLUDE_EXTS  = {".sh", ".py", ".md", ".DS_Store", ".zip"}
@@ -77,7 +76,7 @@ PYEOF
 fi
 
 echo ""
-echo "  Output: $ZIP_PATH"
+echo "  ZIP: $ZIP_PATH"
 
 if [[ "$1" == "--deploy" ]]; then
     echo ""
