@@ -93,11 +93,19 @@ end
 local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
     if not g_currentMission then return nil, nil end
 
-    for _, vehicle in pairs(g_currentMission.vehicles or {}) do
+    local vehicleList = g_currentMission.vehicleSystem and g_currentMission.vehicleSystem.vehicles or {}
+    local totalVehicles, inRange, rejectType, rejectFull = 0, 0, 0, 0
+
+    for _, vehicle in ipairs(vehicleList) do
         if vehicle and vehicle.rootNode then
+            totalVehicles = totalVehicles + 1
             local vx, _, vz = getWorldTranslation(vehicle.rootNode)
             local dx, dz = vx - px, vz - pz
-            if dx * dx + dz * dz <= VEHICLE_SEARCH_RADIUS_SQ then
+            local distSq = dx * dx + dz * dz
+            DepotLogger.debug("  vehicle '%s' dist=%.1fm (limit=60m) inRange=%s",
+                tostring(vehicle.typeName or "?"), math.sqrt(distSq), tostring(distSq <= VEHICLE_SEARCH_RADIUS_SQ))
+            if distSq <= VEHICLE_SEARCH_RADIUS_SQ then
+                inRange = inRange + 1
                 local targets = {}
                 collectVehiclesRecursive(vehicle, targets)
                 for _, veh in ipairs(targets) do
@@ -109,9 +117,16 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
                                     return veh, fuIdx
                                 end
                             else
-                                if vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex) then
-                                    local free = veh:getFillUnitFreeCapacity(fuIdx) or 0
-                                    if free > 0 then return veh, fuIdx end
+                                local accepts = vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex)
+                                local free = accepts and (veh:getFillUnitFreeCapacity(fuIdx) or 0) or 0
+                                DepotLogger.debug("    fu[%d] fillType=%s accepts=%s free=%.0f",
+                                    fuIdx, tostring(fillUnit.fillType), tostring(accepts), free)
+                                if accepts and free > 0 then
+                                    return veh, fuIdx
+                                elseif not accepts then
+                                    rejectType = rejectType + 1
+                                elseif free <= 0 then
+                                    rejectFull = rejectFull + 1
                                 end
                             end
                         end
@@ -120,6 +135,9 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
             end
         end
     end
+
+    DepotLogger.info("Vehicle search failed: origin=(%.0f,%.0f) ftIdx=%s total=%d inRange=%d rejectType=%d rejectFull=%d",
+        px, pz, tostring(fillTypeIndex), totalVehicles, inRange, rejectType, rejectFull)
     return nil, nil
 end
 
@@ -161,7 +179,7 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
 
     local farm = g_farmManager and g_farmManager:getFarmById(farmId)
     if not farm then return false, "fd_error_farm", 0 end
-    if farm.balance < cost then return false, "fd_depot_no_money", 0 end
+    if farm:getBalance() < cost then return false, "fd_depot_no_money", 0 end
 
     local fromStorage = math.min(liters, depot.storageLevel[fillTypeName] or 0)
     if fromStorage > 0 then
@@ -169,10 +187,12 @@ function DepotSystem:buyFillType(depotId, fillTypeName, fillTypeIndex, requested
     end
 
     g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
-    vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
-                                 ToolType.UNDEFINED, nil)
+    local actualFilled = vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
+                                                      ToolType.UNDEFINED, nil)
+    DepotLogger.info("Depot fill result: vehicle='%s' fu=%d requested=%.0f filled=%.0f type=%s",
+        tostring(vehicle.typeName or "?"), unitIndex, liters, actualFilled or 0, fillTypeName)
 
-    return true, "fd_depot_buy_success", liters
+    return true, "fd_depot_buy_success", actualFilled or liters
 end
 
 -- ─── Silo Fill (pre-order collected at Silo, vehicle must be near SILO) ──
@@ -232,7 +252,7 @@ function DepotSystem:buyFromSilo(depotId, siloNode, fillTypeName, fillTypeIndex,
 
     local farm = g_farmManager and g_farmManager:getFarmById(farmId)
     if not farm then return false, "fd_error_farm", 0 end
-    if farm.balance < cost then return false, "fd_depot_no_money", 0 end
+    if farm:getBalance() < cost then return false, "fd_depot_no_money", 0 end
 
     local fromStorage = math.min(liters, depot.storageLevel[fillTypeName] or 0)
     if fromStorage > 0 then
@@ -240,10 +260,12 @@ function DepotSystem:buyFromSilo(depotId, siloNode, fillTypeName, fillTypeIndex,
     end
 
     g_currentMission:addMoney(-cost, farmId, MoneyType.PURCHASE_FERTILIZER, true, true)
-    vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
-                                 ToolType.UNDEFINED, nil)
+    local actualFilled = vehicle:addFillUnitFillLevel(farmId, unitIndex, liters, fillTypeIndex,
+                                                      ToolType.UNDEFINED, nil)
+    DepotLogger.info("Silo fill result: vehicle='%s' fu=%d requested=%.0f filled=%.0f type=%s",
+        tostring(vehicle.typeName or "?"), unitIndex, liters, actualFilled or 0, fillTypeName)
 
-    return true, "fd_depot_buy_success", liters
+    return true, "fd_depot_buy_success", actualFilled or liters
 end
 
 -- ─── Sell Transaction ────────────────────────────────────

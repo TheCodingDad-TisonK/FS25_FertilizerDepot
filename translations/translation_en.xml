@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <l10n>
     <texts>
     <!-- Store -->
@@ -50,6 +50,7 @@
     <text name="fd_depot_tank_full"     text="Trailer tank is full."/>
     <text name="fd_depot_tank_empty"    text="Trailer tank is empty."/>
     <text name="fd_depot_storage_full"  text="Depot storage is full."/>
+    <text name="fd_depot_filling"       text="Filling %.0fL of %s into your vehicle..."/>
     <text name="fd_depot_buy_success"   text="Purchase complete."/>
     <text name="fd_depot_sell_success"  text="Sale complete."/>
 

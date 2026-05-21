@@ -56,6 +56,8 @@ function DepotDialog.new(depotId)
 
     -- [1..ROWS] = {nameEl, stockEl, priceEl, actionBtn, actionTxt}
     self.rows = {}
+    -- Cached sell list built each refresh: [{ft, liters, revenue}, ...]
+    self.sellList = {}
     return self
 end
 
@@ -253,6 +255,9 @@ function DepotDialog:refreshSellTab()
         end
     end
 
+    -- Cache so executeSell uses the same snapshot as what was displayed
+    self.sellList = sellTypes
+
     for slot = 1, DepotDialog.ROWS do
         local entry = sellTypes[self.pageIndex + slot]
         local row   = self.rows[slot]
@@ -300,16 +305,7 @@ function DepotDialog:updatePagination()
 end
 
 function DepotDialog:getSellCount()
-    if not g_DepotManager then return 0 end
-    local system = g_DepotManager.depotSystem
-    local count = 0
-    for _, ft in ipairs(self.fillTypes) do
-        if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
-            if v and u and v:getFillUnitFillLevel(u) > 0 then count = count + 1 end
-        end
-    end
-    return count
+    return #self.sellList
 end
 
 -- ─── Pre-order Actions ───────────────────────────────────
@@ -333,19 +329,34 @@ function DepotDialog:onConfirmOrder()
         self:showStatus(tr("fd_depot_select_first", "Select a fill type first."))
         return
     end
+
     local farmId = g_localPlayer and g_localPlayer.farmId or 1
-    if g_DepotManager then
-        g_DepotManager:setPendingOrder(
-            farmId, self.depotId,
-            self.selectedFillType.name,
-            self.selectedFillType.fillTypeIndex,
-            self.orderAmount,
-            self.selectedFillType.displayName or self.selectedFillType.name)
+    local ft     = self.selectedFillType
+    local system = g_DepotManager and g_DepotManager.depotSystem
+
+    -- If a compatible vehicle is already parked near the depot, fill it directly
+    local vehicle, unitIndex = system and system:findCompatibleVehicle(
+        self.depotId, ft.fillTypeIndex, false)
+
+    if vehicle and unitIndex then
+        DepotPurchaseEvent.sendToServer(
+            self.depotId, ft.name, ft.fillTypeIndex, self.orderAmount, farmId)
+        self:showStatus(string.format(
+            tr("fd_depot_filling", "Filling %.0fL of %s into your vehicle..."),
+            self.orderAmount, ft.displayName or ft.name))
+    else
+        -- No vehicle nearby — set pending order for silo collection
+        if g_DepotManager then
+            g_DepotManager:setPendingOrder(
+                farmId, self.depotId,
+                ft.name, ft.fillTypeIndex,
+                self.orderAmount,
+                ft.displayName or ft.name)
+        end
+        self:showStatus(string.format(
+            tr("fd_depot_order_set", "Order set: %s %.0fL — walk to silo to collect."),
+            ft.displayName or ft.name, self.orderAmount))
     end
-    self:showStatus(string.format(
-        tr("fd_depot_order_set", "Order set: %s %.0fL — drive to silo to collect."),
-        self.selectedFillType.displayName or self.selectedFillType.name,
-        self.orderAmount))
 end
 
 -- ─── Row Action (Select for Buy, Sell All for Sell) ──────
@@ -376,25 +387,14 @@ function DepotDialog:selectRow(rowSlot)
 end
 
 function DepotDialog:executeSell(rowSlot)
-    local system = g_DepotManager and g_DepotManager.depotSystem
-    if not system then return end
-    local count  = 0
-    local target = self.pageIndex + rowSlot
-    for _, ft in ipairs(self.fillTypes) do
-        if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-            local v, u = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
-            if v and u and v:getFillUnitFillLevel(u) > 0 then
-                count = count + 1
-                if count == target then
-                    local liters = v:getFillUnitFillLevel(u)
-                    local farmId = g_localPlayer and g_localPlayer.farmId or 1
-                    self:showStatus(string.format("Selling %.0fL %s...", liters, ft.displayName or ft.name))
-                    DepotSellEvent.sendToServer(self.depotId, ft.name, ft.fillTypeIndex, liters, farmId)
-                    return
-                end
-            end
-        end
-    end
+    local entry = self.sellList[self.pageIndex + rowSlot]
+    if not entry then return end
+    local farmId = g_localPlayer and g_localPlayer.farmId or 1
+    self:showStatus(string.format(
+        tr("fd_depot_filling", "Selling %.0fL %s..."),
+        entry.liters, entry.ft.displayName or entry.ft.name))
+    DepotSellEvent.sendToServer(
+        self.depotId, entry.ft.name, entry.ft.fillTypeIndex, entry.liters, farmId)
 end
 
 -- ─── Close ───────────────────────────────────────────────

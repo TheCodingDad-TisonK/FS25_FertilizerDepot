@@ -122,10 +122,9 @@ function PlaceableDepot:onReadStream(streamId, connection)
             }
         end
         g_DepotManager.depots[netId] = self
-        local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
         spec.netDepotId = netId
-        g_DepotManager.depotNodes[netId] = (spec and spec.playerTriggerNode) or self.rootNode
-        if spec and spec.unloadTriggerNode then
+        g_DepotManager.depotNodes[netId] = spec.playerTriggerNode or self.rootNode
+        if spec.unloadTriggerNode then
             g_DepotManager:registerDepotUnloadNode(netId, spec.unloadTriggerNode)
         end
     end

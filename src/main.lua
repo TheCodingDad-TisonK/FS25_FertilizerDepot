@@ -108,13 +108,29 @@ local function onSaveToXML(missionInfo, xmlFile, ...)
     DepotLogger.debug("Settings saved")
 end
 
+-- Load settings from savegame (mirrors saveToXML hook)
+local function onLoadFromXML(missionInfo, xmlFile, ...)
+    if not g_DepotManager then return end
+    if not xmlFile then return end
+    g_DepotManager.settings:loadFromXML(xmlFile, "fertilizerDepot.settings")
+    DepotLogger.info("Settings loaded from savegame")
+end
+
+-- Send settings to a joining client so they start with the correct server values
+local function onSendInitialClientState(mission, connection, ...)
+    if not g_DepotManager then return end
+    DepotSettingsSyncEvent.sendToClient(connection)
+end
+
 -- PREPEND so g_DepotManager exists before Mission00.load loads savegame placeables.
 -- appendedFunction would create it AFTER onPostFinalizePlacement fires → depotId never set.
 Mission00.load                        = Utils.prependedFunction(Mission00.load,                        onMissionLoad)
 Mission00.loadMission00Finished       = Utils.appendedFunction(Mission00.loadMission00Finished,       onMissionLoadFinished)
 FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.update,                  onMissionUpdate)
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
+FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)
+FSCareerMissionInfo.loadFromXMLFile   = Utils.appendedFunction(FSCareerMissionInfo.loadFromXMLFile,   onLoadFromXML)
 
 -- ─── Console Commands ────────────────────────────────────
 
