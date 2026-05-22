@@ -1,7 +1,7 @@
 <div align="center">
 
 # 🏭 FS25 Fertilizer Depot
-### *Buy, Store & Sell Fertilizer — Your Way*
+### *Buy, Store, Deliver & Sell Fertilizer — Your Way*
 
 [![Downloads](https://img.shields.io/github/downloads/TheCodingDad-TisonK/FS25_FertilizerDepot/total?style=for-the-badge&logo=github&color=4caf50&logoColor=white)](https://github.com/TheCodingDad-TisonK/FS25_FertilizerDepot/releases)
 [![Release](https://img.shields.io/github/v/release/TheCodingDad-TisonK/FS25_FertilizerDepot?style=for-the-badge&logo=tag&color=76c442&logoColor=white)](https://github.com/TheCodingDad-TisonK/FS25_FertilizerDepot/releases/latest)
@@ -16,9 +16,9 @@
 
 <br>
 
-**Base FS25 sells fertilizer through a static shop menu. This mod puts a building on your farm.**
+**Base FS25 sells fertilizer through a static shop menu. This mod puts the whole operation on your farm.**
 
-Walk into the Depot, pick what you need, check the price, and either fill the sprayer parked outside or set a pre-order for collection at the Silo. Prices move with the seasons. Sell surplus back when the market turns. Every litre tracked.
+Walk into the Depot, browse every fill type with live seasonal prices, fill a parked sprayer on the spot or set a pre-order for the Silo. Need a full restock? Place a delivery order and drive to the supplier — the depot stocks itself when you return. Sell surplus back when the market turns. Every litre tracked, every session saved.
 
 `Singleplayer` • `Multiplayer (server-authoritative)` • `Persistent saves` • `26 languages`
 
@@ -29,26 +29,44 @@ Walk into the Depot, pick what you need, check the price, and either fill the sp
 
 ---
 
-## ✨ Features
+## ✨ Features at a glance
 
-### 🏗️ Two-Building System
+| Feature | What it does |
+|---|---|
+| 🏗️ **Two-building system** | Depot (walk-in dialog) + Silo (vehicle drive-up collection) |
+| 🛒 **Direct fill** | Park within 60 m, select type & amount, fill immediately |
+| 📋 **Pre-order → Silo** | Set order at Depot, collect at Silo with any vehicle |
+| 🚚 **Player delivery** | Order a full restock, drive to supplier, haul it back yourself |
+| 📦 **Physical products** | Order bags and tanks that spawn at the Depot for pickup |
+| 💰 **Seasonal pricing** | Prices shift ±15% across spring/summer/autumn/winter |
+| 🔄 **Sell-back** | Return surplus at 80% of current buy price (configurable) |
+| 🗺️ **Delivery HUD** | Movable on-screen status panel — drag, resize, saves position |
+| ⚙️ **Admin panel** | Shift+D to tune capacity, pricing, sell ratio |
+| 🌿 **SoilFertilizer** | Optional integration unlocks 25+ specialist products |
 
-Place both buildings anywhere on your farm — they work together.
+---
 
-| Building | Access | What it does |
+## 🏗️ The Buildings
+
+Place both anywhere on your farm — they work together.
+
+| Building | Access | Purpose |
 |---|---|---|
-| **Fertilizer Depot** | Walk inside (5 m trigger) | Purchase dialog, pre-orders, sell-back, admin settings |
-| **Fertilizer Silo** | Walk or drive up (5 m trigger) | Collect pre-orders directly into a parked vehicle |
+| **Fertilizer Depot** | Walk inside (5 m trigger) | Purchase dialog, pre-orders, delivery orders, sell-back, admin settings |
+| **Fertilizer Silo** | Walk or drive up | Collect pre-orders directly into a parked vehicle |
+| **Supplier Pickup Zone** | Place near in-game shop | Pickup point for player-driven deliveries |
 
-Both appear in the shop under **Production → Factories**.
+All three appear in the shop under **Production → Factories**.
 
-### 🛒 Purchase Flow
+---
 
-Two ways to get fertilizer into your vehicle:
+## 🛒 Buying Fertilizer
 
-**Direct fill** — park your sprayer or tanker within 60 m of the Depot, walk inside, select a fill type and amount. If a compatible vehicle is close enough, it fills on the spot.
+### Direct fill
+Park your sprayer or tanker within 60 m of the Depot, walk inside, open the **BUY** tab, select a fill type and amount. If a compatible vehicle is close enough it fills on the spot.
 
-**Pre-order → Silo collect** — place an order at the Depot with no vehicle required. Drive your sprayer to the Silo building, dismount, walk up, and press **E** to confirm. The mod finds your vehicle nearby and fills it.
+### Pre-order → Silo collect
+No vehicle at the Depot? Set a pre-order in the BUY tab. Drive your sprayer to the Silo, dismount, walk up, and press **E** to confirm. The mod finds your vehicle and fills it.
 
 ```
 [Depot — walk inside]             [Silo — drive up, dismount]
@@ -56,12 +74,51 @@ Two ways to get fertilizer into your vehicle:
     Select fill type                   Confirm → vehicle filled
     Set amount
     Vehicle nearby? → fill now
-    No vehicle?     → pre-order
+    No vehicle?     → set pre-order
 ```
 
-### 💰 Seasonal Pricing
+---
 
-Fertilizer prices fluctuate across the year. Buy at the right time and save.
+## 🚚 Player-Driven Delivery System
+
+When your depot runs low, skip the shop entirely. The **ORDER tab** lets you place a full restock delivery and drive it yourself.
+
+### How it works
+
+```
+1. Walk into Depot → open ORDER tab
+2. Click "Place Delivery Order" — cost shown upfront
+3. Drive to the Supplier Pickup Zone (place it near the in-game shop)
+4. Press E → confirm pickup → money deducted
+5. Drive back to your Depot
+6. Walk inside → ORDER tab → "Complete Delivery" → all types restocked
+```
+
+### Delivery status HUD
+
+Once an order is active, a movable status panel appears on-screen:
+
+- 🟡 **Yellow** — "Drive to the pickup zone to collect your order"
+- 🟢 **Green** — "Return to your depot to complete the delivery"
+
+**Right-click** the panel to enter edit mode. Drag it anywhere, resize from any corner, right-click again to save. Position persists per savegame.
+
+> [!NOTE]
+> A 10% delivery fee is added to the order total. Cancelling a pending order (before pickup) costs 20% of the delivery value.
+
+---
+
+## 📦 Physical Products
+
+The **PRODUCTS tab** lets you order physical fertilizer bags and tanks that are spawned at the Depot for pickup — useful when you want to stockpile product rather than fill a vehicle directly.
+
+Select a fill type, choose bag or tank, set quantity, and confirm. Products appear at the Depot's spawn marker.
+
+---
+
+## 💰 Seasonal Pricing
+
+Fertilizer prices shift across the year. Buy at the right time and save.
 
 | Season | Price modifier |
 |---|---|
@@ -70,19 +127,28 @@ Fertilizer prices fluctuate across the year. Buy at the right time and save.
 | 🍂 Autumn | −10% — post-season dip |
 | ❄️ Winter | −15% — lowest prices |
 
+> [!TIP]
+> Stock up in winter at −15% and draw down through spring when prices peak. The per-type storage makes bulk buying effortless — watch the capacity bar and buy when it's cheap.
+
 Seasonal pricing can be toggled off in the admin settings panel.
 
-### 🔄 Sell-Back
+---
+
+## 🔄 Sell-Back
 
 Sell excess fertilizer back from a vehicle parked at the Depot's unload zone at **80% of the current buy price** (configurable). Drive into the zone, dismount, and press **E**.
 
-### 📦 Per-Type Storage
+---
 
-The Depot holds up to **50,000 L per fill type** — configurable by an admin up to 500,000 L. Storage persists in the savegame. Buy in bulk during winter, draw down through spring.
+## 📊 Per-Type Storage
 
-### 🌿 FS25_SoilFertilizer Integration
+The Depot holds up to **50,000 L per fill type** — configurable by an admin up to 500,000 L. Storage persists across sessions. Stock levels are visible in every tab of the dialog.
 
-When [FS25_SoilFertilizer](https://github.com/TheCodingDad-TisonK/FS25_SoilFertilizer) is installed, 25+ specialist products become available in the Depot dialog:
+---
+
+## 🌿 FS25_SoilFertilizer Integration
+
+When [FS25_SoilFertilizer](https://github.com/TheCodingDad-TisonK/FS25_SoilFertilizer) is installed, 25+ specialist products become available automatically.
 
 **Liquid nitrogen sources**
 
@@ -139,19 +205,30 @@ Press **`Shift+D`** anywhere in-game (on foot or in a vehicle) to open the admin
 ## 🎮 Quick Start
 
 ```
-1. Place the Fertilizer Depot building on your farm (Production → Factories)
+1. Place the Fertilizer Depot  (Production → Factories)
 2. Place the Fertilizer Silo nearby
-3. Walk into the Depot — press E to open the purchase dialog
-4. Select a fill type and set an amount
-5. Vehicle parked within 60 m? → fills immediately
-6. No vehicle? → place a pre-order, drive your sprayer to the Silo,
-   dismount, walk up, press E to collect
-7. Sell surplus: drive into the Depot unload zone, dismount, press E
-8. Adjust prices and capacity: press Shift+D anywhere
-```
+3. Optionally place the Supplier Pickup Zone near the in-game shop
+4. Walk into the Depot — press E to open the dialog
 
-> [!TIP]
-> Buy in winter (−15%) and store it. Draw down through spring when prices peak. The Depot's per-type storage makes this effortless — watch the capacity bar in the dialog and stock up when it's cheap.
+BUY tab:
+  → Select fill type, set amount
+  → Vehicle within 60 m? Fills immediately
+  → No vehicle? Sets a pre-order for the Silo
+
+ORDER tab:
+  → "Place Delivery Order" — review cost, confirm
+  → Drive to Supplier Pickup Zone, press E to collect
+  → Drive back, open dialog, "Complete Delivery"
+
+SELL tab:
+  → Drive into the Depot's unload zone, dismount, press E
+
+PRODUCTS tab:
+  → Order physical bags / tanks spawned at the Depot
+
+Admin panel (Shift+D):
+  → Tune capacity, prices, sell ratio
+```
 
 ---
 
@@ -176,11 +253,11 @@ Press **`Shift+D`** anywhere in-game (on foot or in a vehicle) to open the admin
 
 | Mod | Status |
 |---|---|
-| **FS25_SoilFertilizer** | Full integration — 25+ specialist fill types unlocked automatically |
-| **Courseplay / AutoDrive** | Compatible — no known conflicts |
-| **Precision Farming DLC** | Compatible |
-| **Multiplayer** | Fully supported — all transactions server-authoritative |
-| **Console** | Not tested |
+| **FS25_SoilFertilizer** | ✅ Full integration — 25+ specialist fill types unlocked automatically |
+| **Courseplay / AutoDrive** | ✅ Compatible — no known conflicts |
+| **Precision Farming DLC** | ✅ Compatible |
+| **Multiplayer** | ✅ Fully supported — all transactions server-authoritative |
+| **Console** | ❓ Not tested |
 
 ---
 
@@ -189,8 +266,7 @@ Press **`Shift+D`** anywhere in-game (on foot or in a vehicle) to open the admin
 | Issue | Details |
 |---|---|
 | 🚜 **Vehicle search radius** | The mod searches for a vehicle within 60 m of the Silo, Depot, and unload node. Vehicles parked further away will not be found — move closer and try again. |
-| 🌐 **Multiplayer settings sync** | Settings are pushed to all clients on change. Clients who join mid-session may need to reconnect if settings appear stale. |
-| 🏗️ **Save compatibility** | Upgrading from a significantly older version may require removing and re-placing buildings if save data is incompatible. Check the release notes before upgrading. |
+| 🌐 **Multiplayer settings sync** | Settings are pushed to all clients on change. Clients who join mid-session may see stale values until the next settings change or reconnect. |
 
 ---
 
@@ -198,7 +274,21 @@ Press **`Shift+D`** anywhere in-game (on foot or in a vehicle) to open the admin
 
 Found a bug? [Open an issue](https://github.com/TheCodingDad-TisonK/FS25_FertilizerDepot/issues/new/choose) — the template will guide you through what to include.
 
+Want to help translate? Open an issue with your language file and we'll include it in the next release. See [issue #20](https://github.com/TheCodingDad-TisonK/FS25_FertilizerDepot/issues/20) for the community translation thread.
+
 Want to contribute code? PRs are welcome on the `development` branch. See `CLAUDE.md` in the repo root for architecture notes and coding conventions.
+
+---
+
+## 🌍 Translations
+
+26 languages supported. Community contributions welcome.
+
+| Language | Status | Contributor |
+|---|---|---|
+| English | ✅ Native | — |
+| Danish | ✅ Native | DJWestDK |
+| German, French, Spanish, Italian, Polish, Portuguese, Russian, Ukrainian, Dutch, Norwegian, Swedish, Finnish, Czech, Hungarian, Romanian, Turkish, Japanese, Korean, Chinese (Traditional/Simplified), Indonesian, Vietnamese, Brazilian Portuguese | ✅ EN fallback | Community / AI-assisted |
 
 ---
 
@@ -221,7 +311,7 @@ This mod is licensed under **[CC BY-NC-ND 4.0](https://creativecommons.org/licen
 
 You may share it in its original form with attribution. You may not sell it, modify and redistribute it, or reupload it under a different name or authorship. Contributions via pull request are explicitly permitted and encouraged.
 
-**Author:** TisonK &nbsp;·&nbsp; **Version:** 1.0.0.0
+**Author:** TisonK &nbsp;·&nbsp; **Version:** 1.0.3.0
 
 © 2026 TisonK — See [LICENSE](LICENSE) for full terms.
 
