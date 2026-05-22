@@ -306,15 +306,14 @@ function DepotDialog:refreshSellTab()
     local sellTypes = {}
 
     if system and self.depotId then
+        -- Single vehicle scan across all fill types (avoids N separate 96-vehicle searches)
+        local nearbyFills = system:buildNearbyFillMap(self.depotId)
         for _, ft in ipairs(self.fillTypes) do
             if ft.fillTypeIndex and ft.fillTypeIndex > 0 then
-                local vehicle, unitIndex = system:findCompatibleVehicle(self.depotId, ft.fillTypeIndex, true)
-                if vehicle and unitIndex then
-                    local level = vehicle:getFillUnitFillLevel(unitIndex)
-                    if level and level > 0 then
-                        local rev = pricing and pricing:calculateSellRevenue(ft.name, level) or 0
-                        table.insert(sellTypes, { ft=ft, liters=level, revenue=rev })
-                    end
+                local entry = nearbyFills[ft.fillTypeIndex]
+                if entry then
+                    local rev = pricing and pricing:calculateSellRevenue(ft.name, entry.fillLevel) or 0
+                    table.insert(sellTypes, {ft = ft, liters = entry.fillLevel, revenue = rev})
                 end
             end
         end
