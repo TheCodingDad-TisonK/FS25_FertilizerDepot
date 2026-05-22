@@ -71,7 +71,7 @@
     </tipOcclusionUpdateAreas>
 
     <!-- Player dialog trigger: infoTrigger at building center (0,0,0) — truly inside -->
-    <fertilizerDepot playerTrigger="infoTrigger" unloadTrigger="unloadTriggerMarker"/>
+    <fertilizerDepot playerTrigger="infoTrigger" unloadTrigger="unloadTriggerMarker" productSpawnMarker="palletTrigger"/>
 
     <!-- Animated gates and doors (identical to vanilla farmersMarket) -->
     <animatedObjects>
@@ -209,6 +209,11 @@
         <triggerMarker node="unloadTriggerMarker"
                        filename="$data/shared/assets/marker/markerIconLoad.i3d"
                        adjustToGround="true"/>
+        <!-- Product output zone: bags/tanks spawn here -->
+        <triggerMarker node="palletTrigger"
+                       filename="$data/shared/assets/marker/markerIconPallet.i3d"
+                       adjustToGround="true"/>
+        <triggerMarker node="warningStripes01"/>
         <triggerMarker node="infoTrigger"
                        filename="$data/shared/assets/marker/markerIconWrench.i3d"
                        adjustToGround="true"/>
@@ -274,8 +279,11 @@
         <!-- Player dialog trigger (building center, collisionFilterMask=0x100000 = player) -->
         <i3dMapping id="infoTrigger"         node="0>6"/>
 
-        <!-- Selling station area (used for map hotspot and trigger marker) -->
+        <!-- Selling station area (vehicle unload / sell zone) -->
         <i3dMapping id="unloadTriggerMarker" node="0>8|0|1"/>
+        <!-- Product output zone (bags/tanks spawn here) -->
+        <i3dMapping id="palletTrigger"       node="0>8|1|1"/>
+        <i3dMapping id="warningStripes01"    node="0>8|1|3"/>
     </i3dMappings>
 
 </placeable>
