@@ -152,12 +152,20 @@ function DepotSystem:findCompatibleVehicle(depotId, fillTypeIndex, forSell)
     local v, u = findVehicleNearPosition(px, pz, fillTypeIndex, forSell)
     if v then return v, u end
 
-    -- Also search from the unload node — where physical products (bigBag/liquidTank) are placed.
-    -- Use a larger radius since spawned pallets may drift slightly after FS25 physics settles.
+    -- Search near unload node (vehicle sell zone)
     local unloadNode = g_DepotManager.depotUnloadNodes[depotId]
     if unloadNode then
         local ux, _, uz = getWorldTranslation(unloadNode)
-        return findVehicleNearPosition(ux, uz, fillTypeIndex, forSell, VEHICLE_UNLOAD_SEARCH_RADIUS_SQ)
+        local v, u = findVehicleNearPosition(ux, uz, fillTypeIndex, forSell, VEHICLE_UNLOAD_SEARCH_RADIUS_SQ)
+        if v then return v, u end
+    end
+
+    -- Search near product spawn node (palletTrigger) — bags/tanks are placed here after purchase.
+    -- Use the same larger radius since spawned pallets may drift slightly after physics settles.
+    local spawnNode = g_DepotManager.depotProductSpawnNodes[depotId]
+    if spawnNode then
+        local sx, _, sz = getWorldTranslation(spawnNode)
+        return findVehicleNearPosition(sx, sz, fillTypeIndex, forSell, VEHICLE_UNLOAD_SEARCH_RADIUS_SQ)
     end
 
     return nil, nil
