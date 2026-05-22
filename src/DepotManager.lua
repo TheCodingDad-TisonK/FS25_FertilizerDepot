@@ -110,6 +110,8 @@ function DepotManager.new()
     self._pendingDepotSell      = nil
     self._pendingDeliveryPickup = nil
 
+    self.hud = nil   -- created in initialize()
+
     return self
 end
 
@@ -118,6 +120,7 @@ function DepotManager:initialize()
     self._initialized = true
     self.deliverySystem = DeliverySystem.new(
         self.depotSystem, self.pricing, self.sfBridge, self.settings)
+    self.hud = DepotHUD.new()
     DepotLogger.info("DepotManager initialized (SF installed: %s)",
         tostring(self.sfBridge:isInstalled()))
     addConsoleCommand("SoilDebugDepot",   "Toggle FertDepot debug logging",            "cmdDebugDepot",      self)
@@ -130,6 +133,10 @@ function DepotManager:delete()
     if self.activeDialog then
         self.activeDialog:close()
         self.activeDialog = nil
+    end
+    if self.hud then
+        self.hud:delete()
+        self.hud = nil
     end
     if self._interactEventId and g_inputBinding then
         g_inputBinding:removeActionEvent(self._interactEventId)
@@ -278,6 +285,8 @@ end
 -- ─── Update ──────────────────────────────────────────────
 
 function DepotManager:update(dt)
+    if self.hud then self.hud:update(dt) end
+
     if self._siloFillCooldown > 0 then
         self._siloFillCooldown = self._siloFillCooldown - dt
     end
@@ -679,6 +688,16 @@ function DepotManager:_tryShowDeliveryPickupDialog()
     end
     if not delivery then return end
 
+    -- Client-side money pre-check — gives immediate feedback instead of silent server rejection
+    local farm = g_farmManager and g_farmManager:getFarmById(farmId)
+    if farm and farm:getBalance() < delivery.deliveryCost then
+        if g_currentMission and g_currentMission.hud then
+            g_currentMission.hud:showBlinkingWarning(
+                tr("fd_depot_no_money", "Not enough money."), 3000)
+        end
+        return
+    end
+
     self._pendingDeliveryPickup = { depotId = depotId, farmId = farmId }
 
     local costStr = g_i18n and g_i18n:formatMoney(delivery.deliveryCost, 0, true)
@@ -783,6 +802,12 @@ function DepotManager:_onDepotSellConfirm(result)
 
     DepotSellEvent.sendToServer(
         ctx.depotId, ctx.fillTypeName, ctx.fillTypeIndex, ctx.amount, ctx.farmId)
+end
+
+-- ─── HUD ─────────────────────────────────────────────────
+
+function DepotManager:drawHUD()
+    if self.hud then self.hud:draw() end
 end
 
 -- ─── Console Commands ────────────────────────────────────

@@ -39,6 +39,7 @@ source(modDir .. "src/placeable/PlaceableDepotPickup.lua")
 -- Phase 5: UI (lazy-loaded on first open, but class must be defined)
 source(modDir .. "src/ui/DepotDialog.lua")
 source(modDir .. "src/ui/DepotSettingsDialog.lua")
+source(modDir .. "src/ui/DepotHUD.lua")
 
 -- ─── Mission00 Lifecycle Hooks ───────────────────────────
 
@@ -110,6 +111,18 @@ local function onMissionUpdate(mission, dt)
     end
 end
 
+local function onMissionDraw(mission)
+    if g_DepotManager then
+        g_DepotManager:drawHUD()
+    end
+end
+
+local function onMissionMouseEvent(mission, posX, posY, isDown, isUp, button, ...)
+    if g_DepotManager and g_DepotManager.hud then
+        g_DepotManager.hud:onMouseEvent(posX, posY, isDown, isUp, button)
+    end
+end
+
 local function onMissionDelete(mission, ...)
     if g_DepotManager then
         g_DepotManager:delete()
@@ -155,6 +168,8 @@ end
 Mission00.load                        = Utils.prependedFunction(Mission00.load,                        onMissionLoad)
 Mission00.loadMission00Finished       = Utils.appendedFunction(Mission00.loadMission00Finished,       onMissionLoadFinished)
 FSBaseMission.update                  = Utils.appendedFunction(FSBaseMission.update,                  onMissionUpdate)
+FSBaseMission.draw                    = Utils.appendedFunction(FSBaseMission.draw,                    onMissionDraw)
+FSBaseMission.mouseEvent              = Utils.prependedFunction(FSBaseMission.mouseEvent,             onMissionMouseEvent)
 FSBaseMission.delete                  = Utils.appendedFunction(FSBaseMission.delete,                  onMissionDelete)
 FSBaseMission.sendInitialClientState  = Utils.appendedFunction(FSBaseMission.sendInitialClientState,  onSendInitialClientState)
 FSCareerMissionInfo.saveToXMLFile     = Utils.appendedFunction(FSCareerMissionInfo.saveToXMLFile,     onSaveToXML)

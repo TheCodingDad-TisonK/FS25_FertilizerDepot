@@ -2,122 +2,132 @@
 <l10n>
     <texts>
     <!-- Store -->
-    <text name="fd_shop_name"     text="Fertilizer Depot"/>
-    <text name="fd_shop_desc"     text="A placeable Fertilizer Depot where you can buy, store, and sell all fertilizer types at seasonally-adjusted prices."/>
-    <text name="fd_shop_function" text="Buy, store, and sell fertilizers"/>
+    <text name="fd_shop_name"     text="Gødningsdepot"/>
+    <text name="fd_shop_desc"     text="Et placerbart gødningsdepot, hvor du kan købe, opbevare og sælge alle typer gødning til sæsonjusterede priser."/>
+    <text name="fd_shop_function" text="Køb, opbevar og sælg gødning"/>
 
     <!-- Interaction prompt -->
-    <text name="fd_depot_open_action" text="Open Fertilizer Depot"/>
+    <text name="fd_depot_open_action" text="Åben Gødningsdepot"/>
 
     <!-- Dialog -->
-    <text name="fd_depot_title"       text="Fertilizer Depot"/>
-    <text name="fd_depot_buy"         text="Buy"/>
-    <text name="fd_depot_sell"        text="Sell"/>
-    <text name="fd_depot_close"       text="Close"/>
+    <text name="fd_depot_title"       text="Gødningsdepot"/>
+    <text name="fd_depot_buy"         text="Køb"/>
+    <text name="fd_depot_sell"        text="Sælg"/>
+    <text name="fd_depot_close"       text="Luk"/>
 
     <!-- Column headers -->
-    <text name="fd_col_type"  text="Fill Type"/>
-    <text name="fd_col_stock" text="Depot Stock"/>
-    <text name="fd_col_price" text="Price / 1kL"/>
+    <text name="fd_col_type"  text="Type"/>
+    <text name="fd_col_stock" text="Lager"/>
+    <text name="fd_col_price" text="Pris pr. 1.000 L"/>
 
     <!-- Buttons -->
-    <text name="fd_depot_buy_btn"     text="Buy"/>
-    <text name="fd_depot_sell_btn"    text="Sell All"/>
-    <text name="fd_depot_deposit_btn" text="Deposit"/>
+    <text name="fd_depot_buy_btn"     text="Køb"/>
+    <text name="fd_depot_sell_btn"    text="Sælg Alt"/>
+    <text name="fd_depot_deposit_btn" text="Indbetaling"/>
 
     <!-- Stock labels -->
-    <text name="fd_depot_stock_full"     text="Full"/>
-    <text name="fd_depot_stock_stocking" text="Stocking"/>
+    <text name="fd_depot_stock_full"     text="Fuld"/>
+    <text name="fd_depot_stock_stocking" text="Opfyldning"/>
 
     <!-- Seasons -->
-    <text name="fd_season_spring" text="Spring"/>
-    <text name="fd_season_summer" text="Summer"/>
-    <text name="fd_season_fall"   text="Fall"/>
-    <text name="fd_season_winter" text="Winter"/>
+    <text name="fd_season_spring" text="Forår"/>
+    <text name="fd_season_summer" text="Sommer"/>
+    <text name="fd_season_fall"   text="Efterår"/>
+    <text name="fd_season_winter" text="Vinter"/>
 
     <!-- Status / errors -->
-    <text name="fd_depot_no_money"      text="Not enough money."/>
-    <text name="fd_depot_no_trailer"    text="No compatible trailer nearby."/>
-    <text name="fd_depot_tank_full"     text="Trailer tank is full."/>
-    <text name="fd_depot_tank_empty"    text="Trailer tank is empty."/>
-    <text name="fd_depot_storage_full"  text="Depot storage is full."/>
-    <text name="fd_depot_buy_success"   text="Purchase complete."/>
-    <text name="fd_depot_sell_success"  text="Sale complete."/>
+    <text name="fd_depot_no_money"      text="Du har ikke nok penge"/>
+    <text name="fd_depot_no_trailer"    text="Ingen kompatibel vogn i nærheden."/>
+    <text name="fd_depot_tank_full"     text="Vognen er fuld"/>
+    <text name="fd_depot_tank_empty"    text="Vognen er tom"/>
+    <text name="fd_depot_storage_full"  text="Lageret er fuldt"/>
+    <text name="fd_depot_buy_success"   text="Køb gennemført"/>
+    <text name="fd_depot_sell_success"  text="Salg gennemført."/>
 
     <!-- Errors -->
-    <text name="fd_error_server" text="Server error."/>
-    <text name="fd_error_depot"  text="Depot not found."/>
-    <text name="fd_error_farm"   text="Farm not found."/>
+    <text name="fd_error_server" text="Serverfejl."/>
+    <text name="fd_error_depot"  text="Lageret er ikke fundet"/>
+    <text name="fd_error_farm"   text="Farmen findes ikke"/>
 
     <!-- Filling Silo (second building) -->
-    <text name="fd_silo_name"     text="Fertilizer Filling Silo"/>
-    <text name="fd_silo_function" text="Drive up with trailer to fill any fertilizer. Requires Fertilizer Depot."/>
-    <text name="fd_silo_desc"     text="The Fertilizer Filling Silo is the second half of the Fertilizer Depot system. Place it near your fields and drive up to fill."/>
+    <text name="fd_silo_name"     text="Silo til påfyldning af gødning"/>
+    <text name="fd_silo_function" text="Kør hen med vognen for at fylde enhver type gødning. Kræver gødningsdepot."/>
+    <text name="fd_silo_desc"     text="Gødningspåfyldningssiloen er den anden halvdel af gødningsdepotsystemet. Placer den nær dine marker, og kør hen for at fylde op."/>
 
     <!-- Settings dialog (Shift+D) -->
-    <text name="fd_settings_title"      text="Fertilizer Depot Settings"/>
-    <text name="fd_settings_seasonal"   text="Seasonal Pricing"/>
-    <text name="fd_settings_capacity"   text="Storage per Fill Type"/>
-    <text name="fd_settings_sell_ratio" text="Sell-Back Ratio"/>
-    <text name="fd_settings_buy_mult"   text="Buy Price Multiplier"/>
-    <text name="fd_settings_reset"      text="Reset Defaults"/>
-    <text name="fd_settings_apply"     text="Anvend"/>
-    <text name="fd_settings_debug"     text="Debug Logging"/>
-    <text name="fd_settings_admin_only" text="View only — admin required to change settings"/>
-    <text name="fd_settings_on"         text="ON"/>
-    <text name="fd_settings_off"        text="OFF"/>
+    <text name="fd_settings_title"      text="Indstillinger for gødningsdepot"/>
+    <text name="fd_settings_seasonal"   text="Sæsonbestemte priser"/>
+    <text name="fd_settings_capacity"   text="Lagerkapacitet pr. type"/>
+    <text name="fd_settings_sell_ratio" text="Tilbagekøbssats"/>
+    <text name="fd_settings_buy_mult"   text="Multiplikator for købspris"/>
+    <text name="fd_settings_reset"      text="Nulstil standardindstillinger"/>
+    <text name="fd_settings_apply"      text="Anvend"/>
+    <text name="fd_settings_debug"      text="Fejlretningslog"/>
+    <text name="fd_settings_admin_only" text="Kun visning — admin kræves for at ændre indstillinger"/>
+    <text name="fd_settings_on"         text="TÆND"/>
+    <text name="fd_settings_off"        text="SLUK"/>
         <!-- Input action display name -->
     <text name="input_FD_OPEN_SETTINGS" text="Åbn depotindstillinger"/>
 
-    <!-- [EN] Not yet translated -->
-    <text name="fd_depot_select_btn" text="[EN] Select"/>
-    <text name="fd_depot_select_first" text="[EN] Select a fill type first."/>
-    <text name="fd_depot_order_set" text="[EN] Order set: %s %.0fL — walk to silo to collect."/>
-    <text name="fd_silo_collect_action" text="[EN] Collect %s (%.0fL)"/>
-    <text name="fd_silo_no_order" text="[EN] No pending order. Confirm a type at the Depot first."/>
-    <text name="fd_silo_fill_confirm" text="[EN] Collect %.0fL of %s?&#10;&#10;Your vehicle will be filled."/>
-    <text name="fd_depot_sell_confirm" text="[EN] Sell %.0fL of %s to depot for %s?"/>
-    <text name="fd_depot_filling" text="[EN] Filling %.0fL of %s into your vehicle..."/>
-    <text name="input_FD_INTERACT" text="[EN] Interact with Fertilizer Depot"/>
-    <text name="fd_products_tab" text="[EN] Products"/>
-    <text name="fd_products_order_bag" text="[EN] Order Bag"/>
-    <text name="fd_products_order_tank" text="[EN] Order Tank"/>
-    <text name="fd_products_label_bag" text="[EN] Bag(s)"/>
-    <text name="fd_products_label_tank" text="[EN] Tank(s)"/>
-    <text name="fd_products_none" text="[EN] No physical products available."/>
-    <text name="fd_products_no_stock" text="[EN] Insufficient depot stock for this order."/>
-    <text name="fd_products_no_object" text="[EN] No physical object registered for this type."/>
-    <text name="fd_products_ordered" text="[EN] %d× %s %s ordered — delivering to depot."/>
-    <text name="fd_depot_selected" text="[EN] Selected"/>
-    <text name="fd_pickup_name" text="[EN] Fertilizer Supplier"/>
-    <text name="fd_pickup_function" text="[EN] Supplier pickup zone for delivery orders. Place near the in-game shop."/>
-    <text name="fd_col_needed" text="[EN] Needed"/>
-    <text name="fd_col_amount" text="[EN] Amount"/>
-    <text name="fd_col_revenue" text="[EN] Revenue"/>
-    <text name="fd_delivery_pickup_action" text="[EN] Collect Delivery"/>
-    <text name="fd_delivery_no_pending" text="[EN] No pending delivery."/>
-    <text name="fd_delivery_pickup_confirm" text="[EN] Collect delivery for %s?&#10;&#10;Goods will be stocked when you return to your depot."/>
-    <text name="fd_delivery_order_confirm" text="[EN] Place delivery order for %d fill type(s)?&#10;&#10;Total cost on pickup: %s&#10;(10%% delivery fee included)"/>
-    <text name="fd_delivery_cancel_confirm" text="[EN] Cancel delivery order?&#10;&#10;A penalty of %s (20%% of delivery cost) will be deducted."/>
-    <text name="fd_delivery_complete_confirm" text="[EN] Complete delivery and stock your depot?&#10;&#10;All ordered fill types will be added to storage."/>
-    <text name="fd_delivery_no_pickup_placed" text="[EN] Place a Fertilizer Supplier pickup zone near the in-game shop first."/>
-    <text name="fd_delivery_all_full" text="[EN] All fill types are at capacity — no delivery needed."/>
-    <text name="fd_delivery_cost_summary" text="[EN] Base: $%.2f  +  Fee: $%.2f  =  Total: $%.2f"/>
-    <text name="fd_delivery_status_pending" text="[EN] Delivery pending — drive to Pickup Zone to collect  |  Cancel penalty: %s"/>
-    <text name="fd_delivery_status_ready" text="[EN] Delivery ready — click to stock your depot."/>
-    <text name="fd_delivery_status_park" text="[EN] Park delivery vehicle within 25m of unload zone  (%.0fm away)"/>
-    <text name="fd_delivery_status_return" text="[EN] Return to depot and park near the unload zone."/>
-    <text name="fd_delivery_place_btn" text="[EN] Place Delivery Order"/>
-    <text name="fd_delivery_cancel_btn" text="[EN] Cancel Order"/>
-    <text name="fd_delivery_complete_btn" text="[EN] Complete Delivery"/>
-    <text name="fd_delivery_order_placed" text="[EN] Order placed — drive to the Pickup Zone."/>
-    <text name="fd_delivery_cancelled" text="[EN] Delivery cancelled."/>
-    <text name="fd_delivery_completing" text="[EN] Delivery complete! Stock has been added."/>
-    <text name="fd_delivery_already_active" text="[EN] A delivery is already in progress."/>
-    <text name="fd_delivery_no_pickup" text="[EN] No supplier pickup zone placed on this map."/>
-    <text name="fd_delivery_stock_full" text="[EN] All fill types are at capacity — no delivery needed."/>
-    <text name="fd_delivery_none" text="[EN] No active delivery."/>
-    <text name="fd_delivery_wrong_status" text="[EN] Delivery is not in the correct state for this action."/>
-    <text name="fd_delivery_wrong_farm" text="[EN] This delivery belongs to a different farm."/>
+    <text name="fd_depot_select_btn"    text="Vælg"/>
+    <text name="fd_depot_select_first"  text="Vælg først en type."/>
+    <text name="fd_depot_order_set"     text="Ordre oprettet: %s %.0fL — gå til siloen for at hente."/>
+    <text name="fd_silo_collect_action" text="Hent %s (%.0fL)"/>
+    <text name="fd_silo_no_order"       text="Ingen ventende ordre. Bekræft først en type ved depotet."/>
+    <text name="fd_silo_fill_confirm"   text="Hent %.0fL %s?&#10;&#10;Dit køretøj vil blive fyldt op."/>
+    <text name="fd_depot_sell_confirm"  text="Sælg %.0fL %s til depotet for %s?"/>
+    <text name="fd_depot_filling"       text="Fylder %.0fL %s i dit køretøj..."/>
+    <text name="input_FD_INTERACT"      text="Interager med gødningsdepot"/>
+    <text name="fd_products_tab"        text="Produkter"/>
+    <text name="fd_products_order_bag"  text="Bestil sæk"/>
+    <text name="fd_products_order_tank" text="Bestil tank"/>
+    <text name="fd_products_label_bag"  text="Sæk(ke)"/>
+    <text name="fd_products_label_tank" text="Tank(e)"/>
+    <text name="fd_products_none"       text="Ingen fysiske produkter tilgængelige."/>
+    <text name="fd_products_no_stock"   text="Utilstrækkelig lagerbeholdning i depotet til denne ordre."/>
+    <text name="fd_products_no_object"  text="Intet fysisk objekt registreret for denne type."/>
+    <text name="fd_products_ordered"    text="%d× %s %s bestilt — leveres til depotet."/>
+    <text name="fd_depot_selected"      text="Valgt"/>
+    <text name="fd_pickup_name"         text="Gødningsleverandør"/>
+    <text name="fd_pickup_function"     text="Leverandørens afhentningszone til leveringsordrer. Placér den nær butikken i spillet."/>
+    <text name="fd_col_needed"          text="Behøves"/>
+    <text name="fd_col_amount"          text="Mængde"/>
+    <text name="fd_col_revenue"         text="Indtægt"/>
+
+    <!-- Delivery system — Interaction prompts -->
+    <text name="fd_delivery_pickup_action" text="Hent levering"/>
+    <text name="fd_delivery_no_pending"    text="Ingen ventende levering."/>
+
+    <!-- Delivery system — HUD overlay (shown while driving) -->
+    <text name="fd_delivery_hud_header"  text="Gødningslevering"/>
+    <text name="fd_delivery_hud_pending" text="Kør til afhentningszonen for at hente din ordre"/>
+    <text name="fd_delivery_hud_loaded"  text="Returnér til dit depot for at fuldføre leveringen"/>
+
+    <!-- Delivery system — YesNo dialogs -->
+    <text name="fd_delivery_pickup_confirm"   text="Hent levering for %s?&#10;&#10;Varerne lægges på lager, når du vender tilbage til dit depot."/>
+    <text name="fd_delivery_order_confirm"    text="Afgiv leveringsordre for %d fyldtype(r)?&#10;&#10;Samlet pris ved afhentning: %s&#10;(10%% leveringsgebyr inkluderet)"/>
+    <text name="fd_delivery_cancel_confirm"   text="Annuller leveringsordre?&#10;&#10;En bøde på %s (20%% af leveringsomkostningen) vil blive trukket."/>
+    <text name="fd_delivery_complete_confirm" text="Fuldfør levering og fyld dit depot op?&#10;&#10;Alle bestilte fyldtyper tilføjes til lageret."/>
+
+    <!-- Delivery system — ORDER tab status messages -->
+    <text name="fd_delivery_no_pickup_placed"  text="Placér først en afhentningszone for gødningsleverandøren nær butikken i spillet."/>
+    <text name="fd_delivery_all_full"          text="Alle fyldtyper er på maksimal kapacitet — ingen levering nødvendig."/>
+    <text name="fd_delivery_cost_summary"      text="Basis: $%.2f  +  Gebyr: $%.2f  =  I alt: $%.2f"/>
+    <text name="fd_delivery_status_pending"    text="Levering afventer — kør til afhentningszonen for at hente  |  Annulleringsgebyr: %s"/>
+    <text name="fd_delivery_status_ready"      text="Levering klar — klik for at fylde dit depot op."/>
+    <text name="fd_delivery_status_park"       text="Parkér leveringskøretøjet inden for 25 m af aflæsningszonen (%.0fm væk)"/>
+    <text name="fd_delivery_status_return"     text="Returnér til depotet og parkér nær aflæsningszonen."/>
+    <text name="fd_delivery_place_btn"         text="Afgiv leveringsordre"/>
+    <text name="fd_delivery_cancel_btn"        text="Annuller ordre"/>
+    <text name="fd_delivery_complete_btn"      text="Fuldfør levering"/>
+    <text name="fd_delivery_order_placed"      text="Ordre afgivet — kør til afhentningszonen."/>
+    <text name="fd_delivery_cancelled"         text="Levering annulleret."/>
+    <text name="fd_delivery_completing"        text="Levering fuldført! Lageret er blevet opdateret."/>
+    <text name="fd_delivery_already_active"    text="En levering er allerede i gang."/>
+    <text name="fd_delivery_no_pickup"         text="Ingen leverandør-afhentningszone er placeret på dette kort."/>
+    <text name="fd_delivery_stock_full"        text="Alle fyldtyper er på maksimal kapacitet — ingen levering nødvendig."/>
+    <text name="fd_delivery_none"              text="Ingen aktiv levering."/>
+    <text name="fd_delivery_wrong_status"      text="Leveringen er ikke i korrekt status til denne handling."/>
+    <text name="fd_delivery_wrong_farm"        text="Denne levering tilhører en anden gård."/>
     </texts>
 </l10n>

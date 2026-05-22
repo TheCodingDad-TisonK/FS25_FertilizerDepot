@@ -105,7 +105,10 @@ function DeliverySystem:placeOrder(depotId, farmId)
     DepotLogger.info("Delivery order placed: depot=%d farm=%d types=%d total=$%.2f",
         depotId, farmId, #order.items, order.deliveryCost)
 
-    self:spawnDeliveryVehicle(depotId, farmId)
+    local spawnOk, spawnErr = pcall(function() self:spawnDeliveryVehicle(depotId, farmId) end)
+    if not spawnOk then
+        DepotLogger.warning("spawnDeliveryVehicle error (delivery still active): %s", tostring(spawnErr))
+    end
     return true
 end
 

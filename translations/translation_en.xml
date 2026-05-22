@@ -105,6 +105,11 @@
     <text name="fd_delivery_pickup_action" text="Collect Delivery"/>
     <text name="fd_delivery_no_pending"    text="No pending delivery."/>
 
+    <!-- Delivery system — HUD overlay (shown while driving) -->
+    <text name="fd_delivery_hud_header"  text="Fertilizer Delivery"/>
+    <text name="fd_delivery_hud_pending" text="Drive to the pickup zone to collect your order"/>
+    <text name="fd_delivery_hud_loaded"  text="Return to your depot to complete the delivery"/>
+
     <!-- Delivery system — YesNo dialogs -->
     <text name="fd_delivery_pickup_confirm"  text="Collect delivery for %s?&#10;&#10;Goods will be stocked when you return to your depot."/>
     <text name="fd_delivery_order_confirm"   text="Place delivery order for %d fill type(s)?&#10;&#10;Total cost on pickup: %s&#10;(10%% delivery fee included)"/>

@@ -79,6 +79,6 @@ DepotConstants.DELIVERY = {
     PROXIMITY_PICKUP  = 8.0,    -- metres: on-foot near pickup zone trigger
     TRUCK_DEPOT_RANGE = 25.0,   -- metres: delivery vehicle near depot unload node to enable Complete
     CANCEL_PENALTY    = 0.20,   -- fraction of deliveryCost forfeited when cancelling a PENDING delivery
-    TRUCK_XML         = "$data/vehicles/mack/anthem/anthem.xml",  -- delivery truck
+    TRUCK_XML         = "",  -- delivery truck (disabled: VehicleLoadingData requires a store item, not a raw vehicle XML)
     TRUCK_SPAWN_OFFSET = 8.0,   -- metres offset from unload node so truck doesn't overlap building
 }
