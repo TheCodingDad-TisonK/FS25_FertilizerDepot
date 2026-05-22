@@ -31,6 +31,13 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
         "Product output node — bags and tanks spawn here")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
+    schema:register(XMLValueType.INT,    basePath .. ".delivery#status",         "Delivery status (0=none 1=pending 2=loaded)")
+    schema:register(XMLValueType.INT,    basePath .. ".delivery#farmId",         "Delivery farm ID")
+    schema:register(XMLValueType.FLOAT,  basePath .. ".delivery#baseCost",       "Delivery base cost")
+    schema:register(XMLValueType.FLOAT,  basePath .. ".delivery#deliveryCost",   "Delivery total cost with fee")
+    schema:register(XMLValueType.STRING, basePath .. ".delivery.item(?)#name",   "Fill type name for delivery item")
+    schema:register(XMLValueType.FLOAT,  basePath .. ".delivery.item(?)#liters", "Liters for delivery item")
+    schema:register(XMLValueType.FLOAT,  basePath .. ".delivery.item(?)#cost",   "Base cost for delivery item")
     schema:setXMLSpecializationType()
 end
 
@@ -80,6 +87,10 @@ function PlaceableDepot:onPostFinalizePlacement()
         local sg = spec.savegame
         g_DepotManager.depotSystem:loadFromXML(
             sg.xmlFile, spec.depotId, sg.key .. ".storage")
+        if g_DepotManager.deliverySystem then
+            g_DepotManager.deliverySystem:loadDeliveryFromXML(
+                sg.xmlFile, spec.depotId, sg.key .. ".delivery")
+        end
     end
     spec.savegame = nil
 end
@@ -114,6 +125,24 @@ function PlaceableDepot:onWriteStream(streamId, connection)
         end
     else
         streamWriteUInt16(streamId, 0)
+    end
+
+    -- Delivery state for joining client
+    local rec = g_DepotManager and g_DepotManager.deliverySystem
+                and g_DepotManager.deliverySystem:getDelivery(spec.depotId)
+    streamWriteBool(streamId, rec ~= nil)
+    if rec then
+        streamWriteUInt8(streamId,   rec.status)
+        streamWriteUInt8(streamId,   rec.farmId)
+        streamWriteFloat32(streamId, rec.baseCost)
+        streamWriteFloat32(streamId, rec.deliveryCost)
+        streamWriteUInt8(streamId,   math.min(#rec.items, 255))
+        for i = 1, math.min(#rec.items, 255) do
+            local item = rec.items[i]
+            streamWriteString(streamId,  item.fillTypeName or "")
+            streamWriteFloat32(streamId, item.needed       or 0)
+            streamWriteFloat32(streamId, item.baseCost     or 0)
+        end
     end
 end
 
@@ -150,6 +179,42 @@ function PlaceableDepot:onReadStream(streamId, connection)
             depot.storageLevel[name] = liters
         end
     end
+
+    -- Read delivery state
+    local hasRec = streamReadBool(streamId)
+    if hasRec and g_DepotManager and g_DepotManager.deliverySystem then
+        local status       = streamReadUInt8(streamId)
+        local farmId       = streamReadUInt8(streamId)
+        local baseCost     = streamReadFloat32(streamId)
+        local deliveryCost = streamReadFloat32(streamId)
+        local itemCount    = streamReadUInt8(streamId)
+        local items        = {}
+        for _ = 1, itemCount do
+            local name   = streamReadString(streamId)
+            local liters = streamReadFloat32(streamId)
+            local cost   = streamReadFloat32(streamId)
+            local ftIdx  = g_fillTypeManager
+                           and g_fillTypeManager:getFillTypeIndexByName(name) or 0
+            table.insert(items, {
+                fillTypeName  = name,
+                fillTypeIndex = ftIdx,
+                displayName   = name,
+                needed        = liters,
+                baseCost      = cost,
+            })
+        end
+        g_DepotManager.deliverySystem.deliveries[netId] = {
+            status       = status,
+            depotId      = netId,
+            farmId       = farmId,
+            baseCost     = baseCost,
+            deliveryCost = deliveryCost,
+            items        = items,
+            vehicle      = nil,
+        }
+    elseif g_DepotManager and g_DepotManager.deliverySystem then
+        g_DepotManager.deliverySystem.deliveries[netId] = nil
+    end
 end
 
 -- ─── Save ────────────────────────────────────────────────
@@ -159,4 +224,7 @@ function PlaceableDepot:saveToXMLFile(xmlFile, key, usedModNames)
     if not spec or not spec.depotId then return end
     if not g_DepotManager then return end
     g_DepotManager.depotSystem:saveToXML(xmlFile, spec.depotId, key .. ".storage")
+    if g_DepotManager.deliverySystem then
+        g_DepotManager.deliverySystem:saveDeliveryToXML(xmlFile, key .. ".delivery", spec.depotId)
+    end
 end

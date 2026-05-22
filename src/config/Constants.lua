@@ -71,3 +71,14 @@ DepotConstants.LOG_PREFIX = "[FertDepot]"
 
 -- Debug default (override via SoilDebugDepot console command)
 DepotConstants.DEFAULT_DEBUG = false
+
+-- Delivery system
+DepotConstants.DELIVERY = {
+    SURCHARGE         = 1.10,   -- total cost multiplier (10% delivery fee)
+    MIN_ORDER_LITERS  = 500,    -- min liters short of capacity to include a fill type in the order
+    PROXIMITY_PICKUP  = 8.0,    -- metres: on-foot near pickup zone trigger
+    TRUCK_DEPOT_RANGE = 25.0,   -- metres: delivery vehicle near depot unload node to enable Complete
+    CANCEL_PENALTY    = 0.20,   -- fraction of deliveryCost forfeited when cancelling a PENDING delivery
+    TRUCK_XML         = "$data/vehicles/mack/anthem/anthem.xml",  -- delivery truck
+    TRUCK_SPAWN_OFFSET = 8.0,   -- metres offset from unload node so truck doesn't overlap building
+}

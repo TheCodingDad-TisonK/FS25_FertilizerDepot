@@ -91,5 +91,51 @@
     <text name="fd_products_no_object"   text="No physical object registered for this type."/>
     <text name="fd_products_ordered"     text="%d× %s %s ordered — delivering to depot."/>
     <text name="fd_depot_selected"       text="Selected"/>
+
+    <!-- Delivery system — Pickup zone placeable -->
+    <text name="fd_pickup_name"     text="Fertilizer Supplier"/>
+    <text name="fd_pickup_function" text="Supplier pickup zone for delivery orders. Place near the in-game shop."/>
+
+    <!-- Delivery system — Column headers (ORDER tab) -->
+    <text name="fd_col_needed"  text="Needed"/>
+    <text name="fd_col_amount"  text="Amount"/>
+    <text name="fd_col_revenue" text="Revenue"/>
+
+    <!-- Delivery system — Interaction prompts -->
+    <text name="fd_delivery_pickup_action" text="Collect Delivery"/>
+    <text name="fd_delivery_no_pending"    text="No pending delivery."/>
+
+    <!-- Delivery system — YesNo dialogs -->
+    <text name="fd_delivery_pickup_confirm"  text="Collect delivery for %s?&#10;&#10;Goods will be stocked when you return to your depot."/>
+    <text name="fd_delivery_order_confirm"   text="Place delivery order for %d fill type(s)?&#10;&#10;Total cost on pickup: %s&#10;(10%% delivery fee included)"/>
+    <text name="fd_delivery_cancel_confirm"  text="Cancel delivery order?&#10;&#10;A penalty of %s (20%% of delivery cost) will be deducted."/>
+    <text name="fd_delivery_complete_confirm" text="Complete delivery and stock your depot?&#10;&#10;All ordered fill types will be added to storage."/>
+
+    <!-- Delivery system — ORDER tab status messages -->
+    <text name="fd_delivery_no_pickup_placed" text="Place a Fertilizer Supplier pickup zone near the in-game shop first."/>
+    <text name="fd_delivery_all_full"         text="All fill types are at capacity — no delivery needed."/>
+    <text name="fd_delivery_cost_summary"     text="Base: $%.2f  +  Fee: $%.2f  =  Total: $%.2f"/>
+    <text name="fd_delivery_status_pending"   text="Delivery pending — drive to Pickup Zone to collect  |  Cancel penalty: %s"/>
+    <text name="fd_delivery_status_ready"     text="Delivery ready — click to stock your depot."/>
+    <text name="fd_delivery_status_park"      text="Park delivery vehicle within 25m of unload zone  (%.0fm away)"/>
+    <text name="fd_delivery_status_return"    text="Return to depot and park near the unload zone."/>
+
+    <!-- Delivery system — ORDER tab buttons -->
+    <text name="fd_delivery_place_btn"    text="Place Delivery Order"/>
+    <text name="fd_delivery_cancel_btn"   text="Cancel Order"/>
+    <text name="fd_delivery_complete_btn" text="Complete Delivery"/>
+
+    <!-- Delivery system — Status feedback -->
+    <text name="fd_delivery_order_placed" text="Order placed — drive to the Pickup Zone."/>
+    <text name="fd_delivery_cancelled"    text="Delivery cancelled."/>
+    <text name="fd_delivery_completing"   text="Delivery complete! Stock has been added."/>
+
+    <!-- Delivery system — Error keys -->
+    <text name="fd_delivery_already_active" text="A delivery is already in progress."/>
+    <text name="fd_delivery_no_pickup"      text="No supplier pickup zone placed on this map."/>
+    <text name="fd_delivery_stock_full"     text="All fill types are at capacity — no delivery needed."/>
+    <text name="fd_delivery_none"           text="No active delivery."/>
+    <text name="fd_delivery_wrong_status"   text="Delivery is not in the correct state for this action."/>
+    <text name="fd_delivery_wrong_farm"     text="This delivery belongs to a different farm."/>
     </texts>
 </l10n>

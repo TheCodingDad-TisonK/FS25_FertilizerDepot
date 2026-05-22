@@ -103,6 +103,9 @@ Features:
         <specialization name="fertilizerSilo"
                         className="PlaceableSilo"
                         filename="src/placeable/PlaceableSilo.lua"/>
+        <specialization name="fertilizerDepotPickup"
+                        className="PlaceableDepotPickup"
+                        filename="src/placeable/PlaceableDepotPickup.lua"/>
     </placeableSpecializations>
 
     <placeableTypes>
@@ -118,11 +121,18 @@ Features:
               filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="fertilizerSilo"/>
         </type>
+        <!-- Pickup zone: place near the in-game shop as the supplier pickup point for deliveries -->
+        <type name="fertilizerDepotPickupType"
+              parent="simplePlaceable"
+              filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="fertilizerDepotPickup"/>
+        </type>
     </placeableTypes>
 
     <storeItems>
         <storeItem xmlFilename="xml/depotPlaceable.xml"/>
         <storeItem xmlFilename="xml/siloPlaceable.xml"/>
+        <storeItem xmlFilename="xml/depotPickupPlaceable.xml"/>
     </storeItems>
 
     <l10n filenamePrefix="translations/translation" defaultLanguage="en"/>

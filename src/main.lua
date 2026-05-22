@@ -15,6 +15,7 @@ source(modDir .. "src/DepotLogger.lua")
 source(modDir .. "src/integrations/SoilFertilizerBridge.lua")
 source(modDir .. "src/DepotPricing.lua")
 source(modDir .. "src/DepotSystem.lua")
+source(modDir .. "src/delivery/DeliverySystem.lua")
 source(modDir .. "src/DepotManager.lua")
 
 -- Phase 3: Network
@@ -24,10 +25,16 @@ source(modDir .. "src/network/DepotSiloFillEvent.lua")
 source(modDir .. "src/network/DepotSyncEvent.lua")
 source(modDir .. "src/network/DepotSettingsEvent.lua")
 source(modDir .. "src/network/DepotProductOrderEvent.lua")
+source(modDir .. "src/network/DepotDeliverySyncEvent.lua")
+source(modDir .. "src/network/DepotDeliveryOrderEvent.lua")
+source(modDir .. "src/network/DepotDeliveryPickupEvent.lua")
+source(modDir .. "src/network/DepotDeliveryCompleteEvent.lua")
+source(modDir .. "src/network/DepotDeliveryCancelEvent.lua")
 
 -- Phase 4: Placeables
 source(modDir .. "src/placeable/PlaceableDepot.lua")
 source(modDir .. "src/placeable/PlaceableSilo.lua")
+source(modDir .. "src/placeable/PlaceableDepotPickup.lua")
 
 -- Phase 5: UI (lazy-loaded on first open, but class must be defined)
 source(modDir .. "src/ui/DepotDialog.lua")
@@ -131,10 +138,16 @@ local function onSaveToXML(missionInfo, xmlFile, ...)
     DepotLogger.info("Settings saved to %s", path)
 end
 
--- Send settings to a joining client so they start with the correct server values
+-- Send settings + delivery state to a joining client
 local function onSendInitialClientState(mission, connection, ...)
     if not g_DepotManager then return end
     DepotSettingsSyncEvent.sendToClient(connection)
+    -- Sync active deliveries so the ORDER tab is correct for joining players
+    if g_DepotManager.deliverySystem then
+        for depotId in pairs(g_DepotManager.depots) do
+            DepotDeliverySyncEvent.sendToClient(connection, depotId)
+        end
+    end
 end
 
 -- PREPEND so g_DepotManager exists before Mission00.load loads savegame placeables.

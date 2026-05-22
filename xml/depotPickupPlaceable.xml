@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<placeable type="fertilizerDepotPickupType">
+
+    <storeData>
+        <name>$l10n_fd_pickup_name</name>
+        <functions>
+            <function>$l10n_fd_pickup_function</function>
+        </functions>
+        <image>icon.dds</image>
+        <price>5000</price>
+        <dailyUpkeep>10</dailyUpkeep>
+        <lifetime>1000</lifetime>
+        <brand>NONE</brand>
+        <species>placeable</species>
+        <category>productionPoints</category>
+        <canBeSold>true</canBeSold>
+        <showInStore>true</showInStore>
+        <brush>
+            <type>placeable</type>
+            <category>production</category>
+            <tab>factories</tab>
+        </brush>
+    </storeData>
+
+    <!-- Reuse the bundled silo i3d — already in memory, compact, map-agnostic. -->
+    <base>
+        <filename>i3d/multifruitstation.i3d</filename>
+        <canBeDeleted>true</canBeDeleted>
+        <canBeRenamed>true</canBeRenamed>
+    </base>
+
+    <!-- Same deletedNodes as the silo to strip unused visual groups -->
+    <deletedNodes>
+        <deletedNode node="0>5"/>
+        <deletedNode node="0>4|3|3"/>
+        <deletedNode node="0>10"/>
+        <deletedNode node="0>11"/>
+        <deletedNode node="0>12"/>
+    </deletedNodes>
+
+    <!-- playerTrigger: mapPosition node (0>4|2) — used as world-position anchor
+         for DepotManager's on-foot proximity check (no collision trigger needed). -->
+    <fertilizerDepotPickup playerTrigger="mapPosition"/>
+
+    <placement useRandomYRotation="false" useManualYRotation="true">
+        <testAreas>
+            <testArea startNode="testAreaStart01" endNode="testAreaEnd01"/>
+        </testAreas>
+        <sounds>
+            <place template="smallImp"/>
+        </sounds>
+    </placement>
+
+    <clearAreas>
+        <clearArea startNode="clearAreaStart01" widthNode="clearAreaWidth01"
+                   heightNode="clearAreaHeight01"/>
+    </clearAreas>
+
+    <leveling requireLeveling="true" maxSmoothDistance="1" maxSlope="75" maxEdgeAngle="30">
+        <levelAreas>
+            <levelArea startNode="levelAreaStart01" widthNode="levelAreaWidth01"
+                       heightNode="levelAreaHeight01" groundType="asphalt"/>
+        </levelAreas>
+    </leveling>
+
+    <indoorAreas/>
+
+    <ai>
+        <updateAreas>
+            <updateArea startNode="tipOcclusionUpdateAreaStart01"
+                        endNode="tipOcclusionUpdateAreaEnd01"/>
+        </updateAreas>
+    </ai>
+
+    <tipOcclusionUpdateAreas>
+        <tipOcclusionUpdateArea startNode="tipOcclusionUpdateAreaStart01"
+                                endNode="tipOcclusionUpdateAreaEnd01"/>
+    </tipOcclusionUpdateAreas>
+
+    <!-- Permanent map hotspot: shows supplier location at all times -->
+    <hotspots>
+        <hotspot type="LOADING" linkNode="mapPosition" teleportNode="teleportNode"/>
+    </hotspots>
+
+    <triggerMarkers>
+        <triggerMarker node="markerLoading"
+                       filename="$data/shared/assets/marker/markerIconLoad.i3d"/>
+    </triggerMarkers>
+
+    <i3dMappings>
+        <i3dMapping id="clearAreaStart01"  node="0>0|0"/>
+        <i3dMapping id="clearAreaWidth01"  node="0>0|0|0"/>
+        <i3dMapping id="clearAreaHeight01" node="0>0|0|1"/>
+
+        <i3dMapping id="levelAreaStart01"  node="0>1|0"/>
+        <i3dMapping id="levelAreaWidth01"  node="0>1|0|0"/>
+        <i3dMapping id="levelAreaHeight01" node="0>1|0|1"/>
+
+        <i3dMapping id="testAreaStart01" node="0>2|0"/>
+        <i3dMapping id="testAreaEnd01"   node="0>2|0|0"/>
+
+        <i3dMapping id="tipOcclusionUpdateAreaStart01" node="0>3|0"/>
+        <i3dMapping id="tipOcclusionUpdateAreaEnd01"   node="0>3|0|0"/>
+
+        <i3dMapping id="teleportNode"     node="0>4|0"/>
+        <i3dMapping id="markerLoading"    node="0>4|1"/>
+        <i3dMapping id="mapPosition"      node="0>4|2"/>
+    </i3dMappings>
+
+</placeable>
