@@ -6,7 +6,7 @@ echo "Checking for global variable leaks..."
 
 # Pattern: indented assignment that looks like parameter reassignment
 # Matches: "    variable = variable or"
-LEAKS=$(grep -rn '^\s\+[a-z][a-zA-Z0-9_]*\s*=\s*[a-z][a-zA-Z0-9_]*\s*or\s*' src/ --include="*.lua" \
+LEAKS=$(grep -rn '^\s\+[a-z][a-zA-Z0-9_]*\s*=\s*[a-z][a-zA-Z0-9_]*\s\+or\s\+' src/ --include="*.lua" \
     | grep -v 'local ' \
     | grep -v ',\s*$')
 
