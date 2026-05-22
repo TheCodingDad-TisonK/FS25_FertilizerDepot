@@ -85,13 +85,10 @@
       <Normalmap fileId="9"/>
       <Glossmap fileId="10"/>
     </Material>
-    <Material name="fs25_multifruit_mat" materialId="11" customShaderId="16">
+    <Material name="fs25_multifruit_mat" materialId="11" customShaderId="11">
       <Texture fileId="8"/>
       <Normalmap fileId="9"/>
       <Glossmap fileId="10"/>
-      <Custommap name="detailSpecular" fileId="17"/>
-      <Custommap name="detailNormal" fileId="18"/>
-      <Custommap name="detailDiffuse" fileId="19"/>
     </Material>
     <Material name="hangingDecoration_mat" materialId="12">
       <Texture fileId="39"/>
@@ -220,9 +217,7 @@
         <Shape name="infoTrigger" translation="0 0.01 0" shapeId="6" static="true" trigger="true" collisionFilterGroup="0x20000000" collisionFilterMask="0x100000" nodeId="117" castsShadows="true" receiveShadows="true" nonRenderable="true" materialIds="13"/>
       </TransformGroup>
       <TransformGroup name="visuals" nodeId="118">
-        <TransformGroup name="winter" nodeId="119">
-          <Shape name="snow" rotation="90 -0 0" shapeId="7" clipDistance="300" nodeId="120" castsShadows="true" receiveShadows="true" materialIds="16"/>
-        </TransformGroup>
+        <TransformGroup name="winter" nodeId="119"/>
         <Shape name="multifruit_station" scale="0.79 0.789991 0.789991" shapeId="8" clipDistance="300" nodeId="121" castsShadows="true" receiveShadows="true" materialIds="10,11,10"/>
       </TransformGroup>
       <TransformGroup name="collisions" nodeId="122">

@@ -29,14 +29,15 @@
 
     <!-- Keep buying pipe (0>4), visuals mesh (0>6|1), collisions (0>7), decoration (0>8), lights (0>9). -->
     <!-- Node indices verified against multifruitstation.i3d scene tree:                                -->
-    <!--   0>5    = silo functional group (nodeId 105)                                                  -->
-    <!--   0>6|0  = winter/snow cover (nodeId 119) — no seasonal hooks wired, shows as white dome      -->
-    <!--   0>10   = warningStripes (nodeId 204)                                                         -->
-    <!--   0>11   = sellingStation (nodeId 207)                                                         -->
-    <!--   0>12   = warehouse (nodeId 213)                                                              -->
+    <!--   0>5      = silo functional group (nodeId 105)                                                -->
+    <!--   0>4|3|3  = dischargeEffect1 (nodeIds 102-104): pipeEffect/pipeEffectSmoke flat quads —      -->
+    <!--              render as static gray blobs without the production point particle system          -->
+    <!--   0>10     = warningStripes (nodeId 204)                                                       -->
+    <!--   0>11     = sellingStation (nodeId 207)                                                       -->
+    <!--   0>12     = warehouse (nodeId 213)                                                            -->
     <deletedNodes>
         <deletedNode node="0>5"/>
-        <deletedNode node="0>6|0"/>
+        <deletedNode node="0>4|3|3"/>
         <deletedNode node="0>10"/>
         <deletedNode node="0>11"/>
         <deletedNode node="0>12"/>
@@ -134,8 +135,6 @@
         <i3dMapping id="loadingTrigger"   node="0>4|3|0"/>
         <i3dMapping id="dischargeNode"    node="0>4|3|1"/>
         <i3dMapping id="aiNodeLoading"    node="0>4|3|2"/>
-        <i3dMapping id="pipeEffect"       node="0>4|3|3|0"/>
-        <i3dMapping id="pipeEffectSmoke"  node="0>4|3|3|1"/>
 
         <!-- Lights -->
         <i3dMapping id="light150_0"    node="0>9|0|0"/>
