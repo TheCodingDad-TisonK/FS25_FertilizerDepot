@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <l10n>
     <texts>
     <!-- Store -->
@@ -68,5 +68,56 @@
     <text name="fd_settings_off"        text="OFF"/>
         <!-- Input action display name -->
     <text name="input_FD_OPEN_SETTINGS" text="Deschide setările depozitului"/>
+
+    <!-- [EN] Not yet translated -->
+    <text name="fd_depot_select_btn" text="[EN] Select"/>
+    <text name="fd_depot_select_first" text="[EN] Select a fill type first."/>
+    <text name="fd_depot_order_set" text="[EN] Order set: %s %.0fL — walk to silo to collect."/>
+    <text name="fd_silo_collect_action" text="[EN] Collect %s (%.0fL)"/>
+    <text name="fd_silo_no_order" text="[EN] No pending order. Confirm a type at the Depot first."/>
+    <text name="fd_silo_fill_confirm" text="[EN] Collect %.0fL of %s?&#10;&#10;Your vehicle will be filled."/>
+    <text name="fd_depot_sell_confirm" text="[EN] Sell %.0fL of %s to depot for %s?"/>
+    <text name="fd_depot_filling" text="[EN] Filling %.0fL of %s into your vehicle..."/>
+    <text name="input_FD_INTERACT" text="[EN] Interact with Fertilizer Depot"/>
+    <text name="fd_products_tab" text="[EN] Products"/>
+    <text name="fd_products_order_bag" text="[EN] Order Bag"/>
+    <text name="fd_products_order_tank" text="[EN] Order Tank"/>
+    <text name="fd_products_label_bag" text="[EN] Bag(s)"/>
+    <text name="fd_products_label_tank" text="[EN] Tank(s)"/>
+    <text name="fd_products_none" text="[EN] No physical products available."/>
+    <text name="fd_products_no_stock" text="[EN] Insufficient depot stock for this order."/>
+    <text name="fd_products_no_object" text="[EN] No physical object registered for this type."/>
+    <text name="fd_products_ordered" text="[EN] %d× %s %s ordered — delivering to depot."/>
+    <text name="fd_depot_selected" text="[EN] Selected"/>
+    <text name="fd_pickup_name" text="[EN] Fertilizer Supplier"/>
+    <text name="fd_pickup_function" text="[EN] Supplier pickup zone for delivery orders. Place near the in-game shop."/>
+    <text name="fd_col_needed" text="[EN] Needed"/>
+    <text name="fd_col_amount" text="[EN] Amount"/>
+    <text name="fd_col_revenue" text="[EN] Revenue"/>
+    <text name="fd_delivery_pickup_action" text="[EN] Collect Delivery"/>
+    <text name="fd_delivery_no_pending" text="[EN] No pending delivery."/>
+    <text name="fd_delivery_pickup_confirm" text="[EN] Collect delivery for %s?&#10;&#10;Goods will be stocked when you return to your depot."/>
+    <text name="fd_delivery_order_confirm" text="[EN] Place delivery order for %d fill type(s)?&#10;&#10;Total cost on pickup: %s&#10;(10%% delivery fee included)"/>
+    <text name="fd_delivery_cancel_confirm" text="[EN] Cancel delivery order?&#10;&#10;A penalty of %s (20%% of delivery cost) will be deducted."/>
+    <text name="fd_delivery_complete_confirm" text="[EN] Complete delivery and stock your depot?&#10;&#10;All ordered fill types will be added to storage."/>
+    <text name="fd_delivery_no_pickup_placed" text="[EN] Place a Fertilizer Supplier pickup zone near the in-game shop first."/>
+    <text name="fd_delivery_all_full" text="[EN] All fill types are at capacity — no delivery needed."/>
+    <text name="fd_delivery_cost_summary" text="[EN] Base: $%.2f  +  Fee: $%.2f  =  Total: $%.2f"/>
+    <text name="fd_delivery_status_pending" text="[EN] Delivery pending — drive to Pickup Zone to collect  |  Cancel penalty: %s"/>
+    <text name="fd_delivery_status_ready" text="[EN] Delivery ready — click to stock your depot."/>
+    <text name="fd_delivery_status_park" text="[EN] Park delivery vehicle within 25m of unload zone  (%.0fm away)"/>
+    <text name="fd_delivery_status_return" text="[EN] Return to depot and park near the unload zone."/>
+    <text name="fd_delivery_place_btn" text="[EN] Place Delivery Order"/>
+    <text name="fd_delivery_cancel_btn" text="[EN] Cancel Order"/>
+    <text name="fd_delivery_complete_btn" text="[EN] Complete Delivery"/>
+    <text name="fd_delivery_order_placed" text="[EN] Order placed — drive to the Pickup Zone."/>
+    <text name="fd_delivery_cancelled" text="[EN] Delivery cancelled."/>
+    <text name="fd_delivery_completing" text="[EN] Delivery complete! Stock has been added."/>
+    <text name="fd_delivery_already_active" text="[EN] A delivery is already in progress."/>
+    <text name="fd_delivery_no_pickup" text="[EN] No supplier pickup zone placed on this map."/>
+    <text name="fd_delivery_stock_full" text="[EN] All fill types are at capacity — no delivery needed."/>
+    <text name="fd_delivery_none" text="[EN] No active delivery."/>
+    <text name="fd_delivery_wrong_status" text="[EN] Delivery is not in the correct state for this action."/>
+    <text name="fd_delivery_wrong_farm" text="[EN] This delivery belongs to a different farm."/>
     </texts>
 </l10n>
