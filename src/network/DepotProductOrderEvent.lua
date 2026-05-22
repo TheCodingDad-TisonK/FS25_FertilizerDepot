@@ -47,10 +47,11 @@ function DepotProductOrderEvent:run(connection)
     local placeable = g_DepotManager.depots[self.depotId]
     local spawnX, spawnZ = 0, 0
 
-    -- Use unload node position as spawn point (vehicles park there anyway)
-    local unloadNode = g_DepotManager.depotUnloadNodes[self.depotId]
-    if unloadNode then
-        local wx, wy, wz = getWorldTranslation(unloadNode)
+    -- Prefer dedicated product spawn node (palletTrigger), fall back to unload node, then root
+    local spawnNode = g_DepotManager.depotProductSpawnNodes[self.depotId]
+                   or g_DepotManager.depotUnloadNodes[self.depotId]
+    if spawnNode then
+        local wx, wy, wz = getWorldTranslation(spawnNode)
         spawnX, spawnZ = wx, wz
     elseif placeable and placeable.rootNode then
         local wx, wy, wz = getWorldTranslation(placeable.rootNode)

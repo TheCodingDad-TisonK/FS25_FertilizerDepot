@@ -77,6 +77,7 @@ function DepotManager.new()
     self.depots       = {}
     self.depotNodes   = {}
     self.depotUnloadNodes = {}
+    self.depotProductSpawnNodes = {}
     self.silos        = {}
     self.siloNodes    = {}
     self._nextSiloId  = 1
@@ -144,6 +145,7 @@ function DepotManager:unregisterDepot(depotId)
     self.depots[depotId] = nil
     self.depotNodes[depotId] = nil
     self.depotUnloadNodes[depotId] = nil
+    self.depotProductSpawnNodes[depotId] = nil
     if self._nearDepotId == depotId then
         self._nearDepotId = nil
         self:_updateInteractPrompt()
@@ -157,6 +159,11 @@ end
 function DepotManager:registerDepotUnloadNode(depotId, node)
     self.depotUnloadNodes[depotId] = node
     DepotLogger.info("Depot #%d unload node registered: %s", depotId, tostring(node))
+end
+
+function DepotManager:registerDepotProductSpawnNode(depotId, node)
+    self.depotProductSpawnNodes[depotId] = node
+    DepotLogger.info("Depot #%d product spawn node registered: %s", depotId, tostring(node))
 end
 
 -- ─── Silo Registration ───────────────────────────────────

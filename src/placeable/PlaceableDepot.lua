@@ -27,6 +27,8 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
         "Player walk-in trigger node (inside building)")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#unloadTrigger",
         "Vehicle unload marker node (front of selling area)")
+    schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#productSpawnMarker",
+        "Product output node — bags and tanks spawn here")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:setXMLSpecializationType()
@@ -48,6 +50,10 @@ function PlaceableDepot:onLoad(savegame)
         "placeable.fertilizerDepot#unloadTrigger", nil,
         self.components, self.i3dMappings)
 
+    spec.productSpawnNode = self.xmlFile:getValue(
+        "placeable.fertilizerDepot#productSpawnMarker", nil,
+        self.components, self.i3dMappings)
+
     if spec.playerTriggerNode == nil then
         DepotLogger.warning("playerTrigger node not found — check i3dMappings")
     else
@@ -64,6 +70,9 @@ function PlaceableDepot:onPostFinalizePlacement()
         spec.depotId = g_DepotManager:registerDepot(self)
         if spec.unloadTriggerNode then
             g_DepotManager:registerDepotUnloadNode(spec.depotId, spec.unloadTriggerNode)
+        end
+        if spec.productSpawnNode then
+            g_DepotManager:registerDepotProductSpawnNode(spec.depotId, spec.productSpawnNode)
         end
     end
 
@@ -126,6 +135,9 @@ function PlaceableDepot:onReadStream(streamId, connection)
         g_DepotManager.depotNodes[netId] = spec.playerTriggerNode or self.rootNode
         if spec.unloadTriggerNode then
             g_DepotManager:registerDepotUnloadNode(netId, spec.unloadTriggerNode)
+        end
+        if spec.productSpawnNode then
+            g_DepotManager:registerDepotProductSpawnNode(netId, spec.productSpawnNode)
         end
     end
 

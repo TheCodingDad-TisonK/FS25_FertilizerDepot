@@ -380,6 +380,12 @@ function DepotSystem:sellFillType(depotId, fillTypeName, fillTypeIndex, requeste
     local depot = self._depots[depotId]
     if not depot then return false, "fd_error_depot", 0, 0 end
 
+    -- Re-resolve fill type index from name to guard against SoilFertilizer index drift
+    if fillTypeName and g_fillTypeManager then
+        local resolvedIdx = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+        if resolvedIdx and resolvedIdx > 0 then fillTypeIndex = resolvedIdx end
+    end
+
     local vehicle, unitIndex = self:findCompatibleVehicle(depotId, fillTypeIndex, true)
     if not vehicle then return false, "fd_depot_no_trailer", 0, 0 end
 
