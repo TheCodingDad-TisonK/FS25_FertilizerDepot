@@ -204,16 +204,27 @@
                 </GuiElement>
             </GuiElement>
 
+            <!-- Order panel (visible on ORDER tab only) -->
+            <GuiElement profile="depotOrderPanel" id="orderPanel" position="0px -288px">
+                <Text profile="depotOrderCostText" id="orderCostText" position="-185px -5px" text=""/>
+                <GuiElement profile="depotOrderBtnContainer" id="orderActionBtn" position="315px 0px">
+                    <Bitmap  profile="depotOrderBtnBg"  position="0px 0px"/>
+                    <Text    profile="depotOrderBtnTxt" id="orderActionTxt" position="0px 0px" text="Place Order"/>
+                    <Button  profile="depotOrderBtnHit" position="0px 0px" onClick="onOrderAction"/>
+                </GuiElement>
+            </GuiElement>
+
             <!-- Status line -->
             <Text profile="depotStatusText" id="statusText" position="0px -332px" text=""/>
 
         </GuiElement>
 
-        <!-- Footer: Close | Sell tab | Products tab | Buy tab -->
+        <!-- Footer: Close | Sell | Products | Buy | Order -->
         <BoxLayout profile="fs25_dialogButtonBox">
             <Button profile="buttonBack"     id="closeButton"       text="Close"    onClick="onClickClose"/>
             <Button profile="buttonBack"     id="tabSellFooter"     text="Sell"     onClick="onTabSell"/>
             <Button profile="buttonBack"     id="tabProductsFooter" text="Products" onClick="onTabProducts"/>
+            <Button profile="buttonBack"     id="tabOrderFooter"    text="Order"    onClick="onTabOrder"/>
             <Button profile="buttonActivate" id="tabBuyFooter"      text="Buy"      onClick="onTabBuy"/>
         </BoxLayout>
 
@@ -416,6 +427,37 @@
             <textSize value="12px"/>
             <textColor value="0.85 0.85 0.85 1"/>
             <textAlignment value="center"/>
+        </Profile>
+
+        <!-- ORDER tab panel -->
+        <Profile name="depotOrderPanel" extends="emptyPanel" with="anchorTopCenter">
+            <size value="860px 36px"/>
+        </Profile>
+        <Profile name="depotOrderCostText" extends="fs25_textDefault" with="anchorTopCenter">
+            <size value="580px 28px"/>
+            <textSize value="12px"/>
+            <textColor value="0.82 0.82 0.82 1"/>
+            <textAlignment value="left"/>
+        </Profile>
+
+        <!-- ORDER action button -->
+        <Profile name="depotOrderBtnContainer" extends="emptyPanel" with="anchorTopCenter">
+            <size value="160px 28px"/>
+        </Profile>
+        <Profile name="depotOrderBtnBg" extends="baseReference" with="anchorTopCenter">
+            <size value="160px 28px"/>
+            <imageColor value="0.08 0.28 0.12 0.95"/>
+        </Profile>
+        <Profile name="depotOrderBtnTxt" extends="fs25_textDefault" with="anchorTopCenter">
+            <size value="160px 28px"/>
+            <textSize value="11px"/>
+            <textBold value="true"/>
+            <textColor value="0.4 1 0.5 1"/>
+            <textAlignment value="center"/>
+        </Profile>
+        <Profile name="depotOrderBtnHit" extends="emptyPanel" with="anchorTopCenter">
+            <size value="160px 28px"/>
+            <isFocusable value="true"/>
         </Profile>
 
     </GUIProfiles>
