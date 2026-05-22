@@ -29,6 +29,11 @@ function PlaceableDepot.registerXMLPaths(schema, basePath)
         "Vehicle unload marker node (front of selling area)")
     schema:register(XMLValueType.NODE_INDEX, basePath .. ".fertilizerDepot#productSpawnMarker",
         "Product output node — bags and tanks spawn here")
+    schema:setXMLSpecializationType()
+end
+
+function PlaceableDepot.registerSavegameXMLPaths(schema, basePath)
+    schema:setXMLSpecializationType("FertilizerDepot")
     schema:register(XMLValueType.STRING, basePath .. ".storage.fill(?)#type",   "Fill type name")
     schema:register(XMLValueType.FLOAT,  basePath .. ".storage.fill(?)#liters", "Stored liters")
     schema:register(XMLValueType.INT,    basePath .. ".delivery#status",         "Delivery status (0=none 1=pending 2=loaded)")

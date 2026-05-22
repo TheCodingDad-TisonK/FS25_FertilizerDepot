@@ -104,8 +104,10 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell, radiusSq)
             local vx, _, vz = getWorldTranslation(vehicle.rootNode)
             local dx, dz = vx - px, vz - pz
             local distSq = dx * dx + dz * dz
-            DepotLogger.debug("  vehicle '%s' dist=%.1fm inRange=%s",
-                tostring(vehicle.typeName or "?"), math.sqrt(distSq), tostring(distSq <= rSq))
+            if DepotLogger._debug then
+                DepotLogger.debug("  vehicle '%s' dist=%.1fm inRange=%s",
+                    tostring(vehicle.typeName or "?"), math.sqrt(distSq), tostring(distSq <= rSq))
+            end
             if distSq <= rSq then
                 inRange = inRange + 1
                 local targets = {}
@@ -121,8 +123,10 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell, radiusSq)
                             else
                                 local accepts = vehicleFillUnitAccepts(veh, fuIdx, fillTypeIndex)
                                 local free = accepts and (veh:getFillUnitFreeCapacity(fuIdx) or 0) or 0
-                                DepotLogger.debug("    fu[%d] fillType=%s accepts=%s free=%.0f",
-                                    fuIdx, tostring(fillUnit.fillType), tostring(accepts), free)
+                                if DepotLogger._debug then
+                                    DepotLogger.debug("    fu[%d] fillType=%s accepts=%s free=%.0f",
+                                        fuIdx, tostring(fillUnit.fillType), tostring(accepts), free)
+                                end
                                 if accepts and free > 0 then
                                     return veh, fuIdx
                                 elseif not accepts then
@@ -138,9 +142,71 @@ local function findVehicleNearPosition(px, pz, fillTypeIndex, forSell, radiusSq)
         end
     end
 
-    DepotLogger.info("Vehicle search failed: origin=(%.0f,%.0f) ftIdx=%s total=%d inRange=%d rejectType=%d rejectFull=%d",
+    DepotLogger.debug("Vehicle search failed: origin=(%.0f,%.0f) ftIdx=%s total=%d inRange=%d rejectType=%d rejectFull=%d",
         px, pz, tostring(fillTypeIndex), totalVehicles, inRange, rejectType, rejectFull)
     return nil, nil
+end
+
+-- Single-pass scan: returns {[fillTypeIndex] = {vehicle, unitIndex, fillLevel}} for all
+-- fill units that have content AND are within range of any of the depot's search nodes.
+-- Used by refreshSellTab to avoid N separate vehicle scans (one per fill type).
+function DepotSystem:buildNearbyFillMap(depotId)
+    local placeable = g_DepotManager and g_DepotManager.depots[depotId]
+    if not placeable or not placeable.rootNode then return {} end
+    if not g_currentMission then return {} end
+
+    local positions = {}
+    local px, _, pz = getWorldTranslation(placeable.rootNode)
+    table.insert(positions, {x = px, z = pz, rSq = VEHICLE_SEARCH_RADIUS_SQ})
+
+    local unloadNode = g_DepotManager.depotUnloadNodes[depotId]
+    if unloadNode then
+        local ux, _, uz = getWorldTranslation(unloadNode)
+        table.insert(positions, {x = ux, z = uz, rSq = VEHICLE_UNLOAD_SEARCH_RADIUS_SQ})
+    end
+
+    local spawnNode = g_DepotManager.depotProductSpawnNodes[depotId]
+    if spawnNode then
+        local sx, _, sz = getWorldTranslation(spawnNode)
+        table.insert(positions, {x = sx, z = sz, rSq = VEHICLE_UNLOAD_SEARCH_RADIUS_SQ})
+    end
+
+    local result = {}
+    local vehicleList = g_currentMission.vehicleSystem and g_currentMission.vehicleSystem.vehicles or {}
+
+    for _, vehicle in ipairs(vehicleList) do
+        if vehicle and vehicle.rootNode then
+            local vx, _, vz = getWorldTranslation(vehicle.rootNode)
+            local inRange = false
+            for _, pos in ipairs(positions) do
+                local dx, dz = vx - pos.x, vz - pos.z
+                if dx * dx + dz * dz <= pos.rSq then
+                    inRange = true
+                    break
+                end
+            end
+            if inRange then
+                local targets = {}
+                collectVehiclesRecursive(vehicle, targets)
+                for _, veh in ipairs(targets) do
+                    local spec = veh.spec_fillUnit
+                    if spec and spec.fillUnits then
+                        for fuIdx, fillUnit in ipairs(spec.fillUnits) do
+                            local ftIdx = fillUnit.fillType
+                            if ftIdx and ftIdx > 0 and not result[ftIdx] then
+                                local level = fillUnit.fillLevel or 0
+                                if level > 0 then
+                                    result[ftIdx] = {vehicle = veh, unitIndex = fuIdx, fillLevel = level}
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    return result
 end
 
 -- Public wrapper using the depot's root node as search origin.

@@ -96,6 +96,11 @@
     <text name="fd_col_revenue" text="[EN] Revenue"/>
     <text name="fd_delivery_pickup_action" text="[EN] Collect Delivery"/>
     <text name="fd_delivery_no_pending" text="[EN] No pending delivery."/>
+
+    <!-- Delivery system -- HUD overlay (shown while driving) -->
+    <text name="fd_delivery_hud_header"  text="[EN] Fertilizer Delivery"/>
+    <text name="fd_delivery_hud_pending" text="[EN] Drive to the pickup zone to collect your order"/>
+    <text name="fd_delivery_hud_loaded"  text="[EN] Return to your depot to complete the delivery"/>
     <text name="fd_delivery_pickup_confirm" text="[EN] Collect delivery for %s?&#10;&#10;Goods will be stocked when you return to your depot."/>
     <text name="fd_delivery_order_confirm" text="[EN] Place delivery order for %d fill type(s)?&#10;&#10;Total cost on pickup: %s&#10;(10%% delivery fee included)"/>
     <text name="fd_delivery_cancel_confirm" text="[EN] Cancel delivery order?&#10;&#10;A penalty of %s (20%% of delivery cost) will be deducted."/>
