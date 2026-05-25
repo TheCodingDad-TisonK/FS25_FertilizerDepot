@@ -90,11 +90,15 @@ function PlaceableDepot:onPostFinalizePlacement()
 
     if g_server and spec.depotId and spec.savegame then
         local sg = spec.savegame
+        -- The game appends ".<specName>" to the base key before calling saveToXMLFile,
+        -- so save paths are sg.key .. ".fertilizerDepot.storage" / ".fertilizerDepot.delivery".
+        -- We must use the same prefix here so load paths match save paths.
+        local specKey = sg.key .. ".fertilizerDepot"
         g_DepotManager.depotSystem:loadFromXML(
-            sg.xmlFile, spec.depotId, sg.key .. ".storage")
+            sg.xmlFile, spec.depotId, specKey .. ".storage")
         if g_DepotManager.deliverySystem then
             g_DepotManager.deliverySystem:loadDeliveryFromXML(
-                sg.xmlFile, spec.depotId, sg.key .. ".delivery")
+                sg.xmlFile, spec.depotId, specKey .. ".delivery")
         end
     end
     spec.savegame = nil

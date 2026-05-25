@@ -492,12 +492,14 @@ end
 function DepotSystem:saveToXML(xmlFile, depotId, basePath)
     local depot = self._depots[depotId]
     if not depot then return end
+    DepotLogger.info("DepotSystem: Saving depot #%d to path '%s'", depotId, basePath)
     local i = 0
     for name, liters in pairs(depot.storageLevel) do
         if liters and liters > 0 then
             local path = basePath .. ".fill(" .. i .. ")"
             xmlFile:setString(path .. "#type", name)
             xmlFile:setFloat(path  .. "#liters", liters)
+            DepotLogger.info("DepotSystem: Saved key='%s', name='%s', value=%.0fL", path, name, liters)
             i = i + 1
         end
     end
@@ -506,14 +508,19 @@ end
 function DepotSystem:loadFromXML(xmlFile, depotId, basePath)
     local depot = self._depots[depotId]
     if not depot then return end
+    DepotLogger.info("DepotSystem: Loading depot #%d from path '%s'", depotId, basePath)
     local i = 0
     while true do
         local path = basePath .. ".fill(" .. i .. ")"
         local name = xmlFile:getString(path .. "#type")
-        if not name then break end
+        if not name then 
+            DepotLogger.info("DepotSystem: No more fill types found at index %d", i)
+            break 
+        end
         local liters = xmlFile:getFloat(path .. "#liters", 0)
         local cap = (g_DepotManager and g_DepotManager.settings.storageCapacity) or DepotConstants.STORAGE_CAPACITY
         depot.storageLevel[name] = math.max(0, math.min(cap, liters))
+        DepotLogger.info("DepotSystem: Loaded key='%s', name='%s', value=%.0fL", path, name, liters)
         i = i + 1
     end
 end
