@@ -77,6 +77,8 @@ end
 
 function PlaceableDepot:onPostFinalizePlacement()
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+    DepotLogger.info("onPostFinalizePlacement fired for depotId=%s savegame=%s", 
+        tostring(spec.depotId), tostring(spec.savegame ~= nil))
 
     if g_server and g_DepotManager then
         spec.depotId = g_DepotManager:registerDepot(self)
@@ -90,15 +92,21 @@ function PlaceableDepot:onPostFinalizePlacement()
 
     if g_server and spec.depotId and spec.savegame then
         local sg = spec.savegame
-        -- The game appends ".<specName>" to the base key before calling saveToXMLFile,
-        -- so save paths are sg.key .. ".fertilizerDepot.storage" / ".fertilizerDepot.delivery".
-        -- We must use the same prefix here so load paths match save paths.
-        local specKey = sg.key .. ".fertilizerDepot"
+        
+        DepotLogger.info("PlaceableDepot:load attempt. sg.key=%s", tostring(sg.key))
+        
+        -- The engine passes the key to saveToXMLFile that *already includes* the specialization path.
+        -- When loading, sg.key is just the placeable path, so we must manually append the specialization.
+        -- We previously used .fertilizerDepot, but the save log shows .FS25_FertilizerDepot.fertilizerDepot
+        local loadKey = sg.key .. ".FS25_FertilizerDepot.fertilizerDepot"
+        
+        DepotLogger.info("PlaceableDepot:loading from key=%s", loadKey)
+        
         g_DepotManager.depotSystem:loadFromXML(
-            sg.xmlFile, spec.depotId, specKey .. ".storage")
+            sg.xmlFile, spec.depotId, loadKey .. ".storage")
         if g_DepotManager.deliverySystem then
             g_DepotManager.deliverySystem:loadDeliveryFromXML(
-                sg.xmlFile, spec.depotId, specKey .. ".delivery")
+                sg.xmlFile, spec.depotId, loadKey .. ".delivery")
         end
     end
     spec.savegame = nil
@@ -230,8 +238,13 @@ end
 
 function PlaceableDepot:saveToXMLFile(xmlFile, key, usedModNames)
     local spec = self[PlaceableDepot.SPEC_TABLE_NAME]
+    
+    DepotLogger.info("PlaceableDepot:saveToXMLFile fired. spec=%s, depotId=%s, key=%s", 
+        tostring(spec ~= nil), tostring(spec and spec.depotId), tostring(key))
+    
     if not spec or not spec.depotId then return end
     if not g_DepotManager then return end
+    
     g_DepotManager.depotSystem:saveToXML(xmlFile, spec.depotId, key .. ".storage")
     if g_DepotManager.deliverySystem then
         g_DepotManager.deliverySystem:saveDeliveryToXML(xmlFile, key .. ".delivery", spec.depotId)
